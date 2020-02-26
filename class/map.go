@@ -13,6 +13,23 @@ type Map struct {
 	Shots 			[]Shot
 } 
 
+func (_map *Map) Init(windowSize int32) {
+	_map.BorderSize = 5
+	_map.Width = windowSize - _map.BorderSize
+	_map.Height = windowSize - _map.BorderSize
+	_map.Players = make([]Player, 1)
+	_map.ShotsCount = 0
+	_map.Shots = make([]Shot, 50)
+	_map.Players[0] = Player {
+		_map.Width / 2 + 40,
+		_map.Height / 2 + 40,
+		WEST,
+		0,
+		[4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS},
+		[4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown},
+		rl.Red}
+}
+
 func (_map *Map) PlayerMove(index int, delta int32) {
 	savedX := _map.Players[index].X
 	savedY := _map.Players[index].Y

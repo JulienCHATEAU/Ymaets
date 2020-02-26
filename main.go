@@ -7,26 +7,12 @@ import (
 
 var WINDOW_SIZE int32 = 800
 var WINDOW_BCK rl.Color = rl.NewColor(245, 239, 220, 255) // Light Beige
-var PLAYERS_COUNT int32 = 1
 var BORDER_COLOR rl.Color = rl.Gold
 
 func main() {
 
 	var _map ym.Map
-	_map.BorderSize = 5
-	_map.Width = WINDOW_SIZE - _map.BorderSize
-	_map.Height = WINDOW_SIZE - _map.BorderSize
-	_map.Players = make([]ym.Player, PLAYERS_COUNT)
-	_map.ShotsCount = 0
-	_map.Shots = make([]ym.Shot, 50)
-	_map.Players[0] = ym.Player {
-		_map.Width / 2 + 40,
-		_map.Height / 2 + 40,
-		ym.WEST,
-		0,
-		[4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS},
-		[4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown},
-		rl.Red}
+	_map.Init(WINDOW_SIZE)
 
 	rl.InitWindow(_map.Width, _map.Height, "Ymaets")
 	rl.SetTargetFPS(60)
