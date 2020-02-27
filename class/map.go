@@ -28,7 +28,7 @@ func (_map *Map) Init(windowSize int32) {
 	_map.Height = windowSize - _map.BorderSize
 	_map.ShotsCount = 0
 	_map.Shots = make([]Shot, 50)
-	_map.CurrPlayer.Init(_map.Width / 2 + 40, _map.Height / 2 + 40)
+	_map.CurrPlayer.Init(_map.Width - 50, _map.Height - 50)
 	_map.Curs.Init()
 	_map.MonstersCount = 1
 	_map.Monsters = make([]Monster, 50)
