@@ -33,13 +33,24 @@ func main() {
 			var index int32 
 			for index = 0; index < _map.ShotsCount; index++ {
 				_map.Shots[index].Draw()
-				_map.ShotMove(&index)
+				_map.ShotMove(index)
+				_map.ShotCheckMoveCollision(&index)
+			}
+
+			var savedX int32
+			var savedY int32
+			for index = 0; index < _map.MonstersCount; index++ {
+				savedX = _map.Monsters[index].X
+				savedY = _map.Monsters[index].Y
+				_map.Monsters[index].Draw()
+				_map.MonsterMove(index)
+				_map.MonsterCheckMoveCollision(index, savedX, savedY)
 			}
 
 			_map.WallsDraw()
 
-			savedX := _map.CurrPlayer.X
-			savedY := _map.CurrPlayer.Y
+			savedX = _map.CurrPlayer.X
+			savedY = _map.CurrPlayer.Y
 			savedOri := _map.CurrPlayer.Ori
 			_map.PlayerOri(mouseX, mouseY)
 			_map.PlayerCheckOriCollision(savedOri)
