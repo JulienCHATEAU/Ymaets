@@ -23,31 +23,33 @@ func main() {
 	rl.HideCursor()
 	rl.SetTargetFPS(60)
 	
-
 	for !rl.WindowShouldClose() {
 
 		rl.BeginDrawing()
 			rl.ClearBackground(WINDOW_BCK)
-			rl.DrawRectangle(0, 0, _map.Width, _map.BorderSize, BORDER_COLOR)
-			rl.DrawRectangle(0, 0, _map.BorderSize, _map.Width, BORDER_COLOR)
-			rl.DrawRectangle(0, _map.Height - _map.BorderSize, _map.Width, _map.BorderSize, BORDER_COLOR)
-			rl.DrawRectangle(_map.Width - _map.BorderSize, 0, _map.BorderSize, _map.Width, BORDER_COLOR)
+			mouseX := rl.GetMouseX()
+			mouseY := rl.GetMouseY()
 
 			var index int32 
 			for index = 0; index < _map.ShotsCount; index++ {
 				_map.Shots[index].Draw()
 				_map.ShotMove(&index)
 			}
-			
-			mouseX := rl.GetMouseX()
-			mouseY := rl.GetMouseY()
-			_map.CursorMove(mouseX, mouseY)
-			_map.CursorDraw()
 
+			_map.WallsDraw()
+
+			savedX := _map.CurrPlayer.X
+			savedY := _map.CurrPlayer.Y
+			savedOri := _map.CurrPlayer.Ori
 			_map.PlayerOri(mouseX, mouseY)
+			_map.PlayerCheckOriCollision(savedOri)
 			_map.PlayerMove()
+			_map.PlayerCheckMoveCollision(savedX, savedY)
 			_map.PlayerFire()
 			_map.PlayerDraw()
+
+			_map.CursorMove(mouseX, mouseY)
+			_map.CursorDraw()
 		rl.EndDrawing()
 	}
 

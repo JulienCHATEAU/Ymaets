@@ -21,3 +21,7 @@ func (shot *Shot) Draw() {
 		rl.DrawRectangle(shot.X, shot.Y, shot.Height, shot.Width, shot.Color);
 	}
 }
+
+func (shot *Shot) GetHitbox() rl.Rectangle {
+	return rl.Rectangle{float32(shot.X), float32(shot.Y), float32(shot.Width), float32(shot.Height)}
+}

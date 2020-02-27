@@ -18,8 +18,6 @@ var PBS int32 = 28
 var PCW int32 = 6
 // Player canon height
 var PCH int32 = 8
-// Player wheels size
-var PWS float32 = 3
 // Player shot width
 var PSW int32 = 10
 // Player shot height
@@ -27,7 +25,7 @@ var PSH int32 = 4
 // Player shot speed
 var PSS int32 = 5
 // Player shot color
-var PSC rl.Color = rl.Brown
+var PSC rl.Color = rl.Red
 // Player fire cooldown
 var PFC int32 = 8
 // Player move speed
@@ -55,6 +53,39 @@ func (player *Player) Init(x, y int32) {
 		player.Color = rl.Blue
 }
 
+func (player *Player) GetHitbox() rl.Rectangle {
+	var x int32 = 0
+	var y int32 = 0
+	width := PBS
+	height := PBS
+	switch player.Ori {
+	case NORTH:
+		x = player.X
+		y = player.Y - PCH
+		height += PCH
+		break
+
+	case SOUTH:
+		x = player.X
+		y = player.Y
+		height += PCH
+		break
+
+	case EAST:
+		x = player.X
+		y = player.Y
+		width += PCH
+		break
+
+	case WEST:
+		x = player.X - PCH
+		y = player.Y
+		width += PCH
+		break
+	}
+	return rl.Rectangle {float32(x), float32(y), float32(width), float32(height)}
+}
+
 func (player *Player) ReduceCooldown() {
 	if player.FireCooldown > 0 {
 		player.FireCooldown--
@@ -67,13 +98,13 @@ func (player *Player) GetCenter() (int32, int32) {
 
 func (player *Player) SetOriFromMouse(mouseX, mouseY int32) {
 	centerX, centerY := player.GetCenter()
-	if mouseX > mouseY && mouseX + mouseY < centerX + centerY {
+	if mouseX - mouseY > centerX - centerY && mouseX + mouseY < centerX + centerY {
 		player.Ori = NORTH
-	} else if mouseX < mouseY && mouseX + mouseY > centerX + centerY {
+	} else if mouseX - mouseY < centerX - centerY && mouseX + mouseY > centerX + centerY {
 		player.Ori = SOUTH
-	} else if mouseX > mouseY && mouseX + mouseY > centerX + centerY {
+	} else if mouseX - mouseY > centerX - centerY && mouseX + mouseY > centerX + centerY {
 		player.Ori = EAST
-	} else if mouseX < mouseY && mouseX + mouseY < centerX + centerY {
+	} else if mouseX - mouseY < centerX - centerY && mouseX + mouseY < centerX + centerY {
 		player.Ori = WEST
 	}
 }
@@ -90,22 +121,22 @@ func (player *Player) GetShot() Shot {
 	case NORTH:
 		shot.X = player.X + PBS/2-PCW/2
 		shot.Y = player.Y - PCH - shot.Height
-		break;
+		break
 
 	case SOUTH:
 		shot.X = player.X + PBS/2-PCW/2
 		shot.Y = player.Y + PBS
-		break;
+		break
 
 	case EAST:
 		shot.X = player.X + PBS
 		shot.Y = player.Y + PBS/2-PCW/2
-		break;
+		break
 
 	case WEST:
 		shot.X = player.X - PCH - shot.Width
 		shot.Y = player.Y + PBS/2-PCW/2
-		break;
+		break
 	}
 	return shot
 }
@@ -117,23 +148,18 @@ func (player *Player) Draw() {
 	switch player.Ori {
 	case NORTH:
 		rl.DrawRectangle(player.X + PBS/2-PCW/2, player.Y - PCH, PCW, PCH, rl.Black);
-		break;
+		break
 
 	case SOUTH:
 		rl.DrawRectangle(player.X + PBS/2-PCW/2, player.Y + PBS, PCW, PCH, rl.Black);
-		break;
+		break
 
 	case EAST:
 		rl.DrawRectangle(player.X + PBS, player.Y + PBS/2-PCW/2, PCH, PCW, rl.Black);
-		break;
+		break
 
 	case WEST:
 		rl.DrawRectangle(player.X - PCH, player.Y + PBS/2-PCW/2, PCH, PCW, rl.Black);
-		break;
+		break
 	}
-	// Wheels
-	rl.DrawCircle(player.X, player.Y, PWS, rl.Black);
-	rl.DrawCircle(player.X + PBS, player.Y, PWS, rl.Black);
-	rl.DrawCircle(player.X, player.Y + PBS, PWS, rl.Black);
-	rl.DrawCircle(player.X + PBS, player.Y + PBS, PWS, rl.Black);
 }
