@@ -30,20 +30,51 @@ var PSS int32 = 5
 var PSC rl.Color = rl.Brown
 // Player fire cooldown
 var PFC int32 = 8
+// Player move speed
+var PMS int32 = 4
 
 type Player struct {
 	X 						int32
 	Y 						int32
 	Ori 					Orientation
+	MoveSpeed		 	int32
 	FireCooldown 	int32
 	Move_keys 		[4]int32 // right, left, up, down
 	Ori_keys 			[4]int32 // east, west, north, south
 	Color 				rl.Color
 }
 
+func (player *Player) Init(x, y int32) {
+		player.X = x
+		player.Y = y
+		player.Ori = WEST
+		player.MoveSpeed = PMS
+		player.FireCooldown = 0
+		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
+		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
+		player.Color = rl.Blue
+}
+
 func (player *Player) ReduceCooldown() {
 	if player.FireCooldown > 0 {
 		player.FireCooldown--
+	}
+}
+
+func (player *Player) GetCenter() (int32, int32) {
+	return player.X + PBS / 2, player.Y + PBS / 2
+}
+
+func (player *Player) SetOriFromMouse(mouseX, mouseY int32) {
+	centerX, centerY := player.GetCenter()
+	if mouseX > mouseY && mouseX + mouseY < centerX + centerY {
+		player.Ori = NORTH
+	} else if mouseX < mouseY && mouseX + mouseY > centerX + centerY {
+		player.Ori = SOUTH
+	} else if mouseX > mouseY && mouseX + mouseY > centerX + centerY {
+		player.Ori = EAST
+	} else if mouseX < mouseY && mouseX + mouseY < centerX + centerY {
+		player.Ori = WEST
 	}
 }
 

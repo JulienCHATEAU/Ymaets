@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	ym "Ymaets/class"
 	"github.com/gen2brain/raylib-go/raylib"
 )
@@ -14,9 +15,15 @@ func main() {
 	var _map ym.Map
 	_map.Init(WINDOW_SIZE)
 
+	fmt.Println("Ymaets")
+	// screenW := rl.GetScreenWidth()
+	// screenH := rl.GetScreenHeight()
 	rl.InitWindow(_map.Width, _map.Height, "Ymaets")
+	// rl.InitWindow(int32(screenW), int32(screenH), "Ymaets")
+	rl.HideCursor()
 	rl.SetTargetFPS(60)
 	
+
 	for !rl.WindowShouldClose() {
 
 		rl.BeginDrawing()
@@ -31,11 +38,16 @@ func main() {
 				_map.Shots[index].Draw()
 				_map.ShotMove(&index)
 			}
-			for index, player := range _map.Players {
-				_map.PlayerMove(index, 4)
-				_map.PlayerFire(index)
-				player.Draw()
-			}
+			
+			mouseX := rl.GetMouseX()
+			mouseY := rl.GetMouseY()
+			_map.CursorMove(mouseX, mouseY)
+			_map.CursorDraw()
+
+			_map.PlayerOri(mouseX, mouseY)
+			_map.PlayerMove()
+			_map.PlayerFire()
+			_map.PlayerDraw()
 		rl.EndDrawing()
 	}
 
