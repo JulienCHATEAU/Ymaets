@@ -30,9 +30,12 @@ func (_map *Map) Init(windowSize int32) {
 	_map.Shots = make([]Shot, 50)
 	_map.CurrPlayer.Init(_map.Width - 50, _map.Height - 50)
 	_map.Curs.Init()
-	_map.MonstersCount = 1
+	_map.MonstersCount = 4
 	_map.Monsters = make([]Monster, 50)
 	_map.Monsters[0].Init(50, 50) 
+	_map.Monsters[1].Init(150, 350) 
+	_map.Monsters[2].Init(250, 50) 
+	_map.Monsters[3].Init(100, 450) 
 	//Borders
 	_map.Walls = make([]Wall, 7)
 	_map.Walls[0].InitBorder(0, 0, _map.Width, _map.BorderSize)
@@ -62,20 +65,21 @@ func (_map *Map) MonsterMove(index int32) {
 	_map.Monsters[index].Y += dy
 }
 
-func (_map *Map) MonsterCheckMoveCollision(index, savedX, savedY int32) {
-	center, radius := _map.Monsters[index].GetHitbox()
+func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
+	center, radius := _map.Monsters[*index].GetHitbox()
 	for _, wall := range _map.Walls {
 		if rl.CheckCollisionCircleRec(center, radius, wall.GetHitbox()) {
-			_map.Monsters[index].X = savedX
-			_map.Monsters[index].Y = savedY
+			_map.Monsters[*index].X = savedX
+			_map.Monsters[*index].Y = savedY
 			return
 		}
 	}
 	playerHitbox := _map.CurrPlayer.GetHitbox()
 	if rl.CheckCollisionCircleRec(center, radius, playerHitbox) {
-		_map.Monsters[index].X = savedX
-		_map.Monsters[index].Y = savedY
-		_map.CurrPlayer.Color = rl.NewColor(0, 0, 255, 255)
+		_map.Monsters[*index].X = savedX
+		_map.Monsters[*index].Y = savedY
+		_map.removeMonster(index)
+		_map.CurrPlayer.TakeDamage(22)
 		return
 	}
 }
@@ -184,7 +188,8 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
 			_map.CurrPlayer.X = savedX
 			_map.CurrPlayer.Y = savedY
-			_map.CurrPlayer.Color = rl.NewColor(0, 0, 255, 255)
+			_map.removeMonster(&index)
+			_map.CurrPlayer.TakeDamage(22)
 			return
 		}
 	}
@@ -220,13 +225,23 @@ func (_map *Map) ShotMove(index int32) {
 	}
 }
 
+func (_map *Map) removeMonster(index *int32) {
+	_map.Monsters[*index] = _map.Monsters[_map.MonstersCount-1]
+	_map.MonstersCount--
+	*(index)--
+}
+
+func (_map *Map) removeShot(index *int32) {
+	_map.Shots[*index] = _map.Shots[_map.ShotsCount-1]
+	_map.ShotsCount--
+	*(index)--
+}
+
 func (_map *Map) ShotCheckMoveCollision(index *int32) {
 	hitbox := _map.Shots[*index].GetHitbox()
 	for _, wall := range _map.Walls {
 		if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
-			_map.Shots[*index] = _map.Shots[_map.ShotsCount-1]
-			_map.ShotsCount--
-			(*index)--
+			_map.removeShot(index)
 			return
 		}
 	}
@@ -236,12 +251,8 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 	for i = 0; i < _map.MonstersCount; i++ {
 		center, radius = _map.Monsters[i].GetHitbox()
 		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
-			_map.Monsters[i] = _map.Monsters[_map.MonstersCount-1]
-			_map.MonstersCount--
-			i--
-			_map.Shots[*index] = _map.Shots[_map.ShotsCount-1]
-			_map.ShotsCount--
-			(*index)--
+			_map.removeMonster(&i)
+			_map.removeShot(index)
 			return
 		}
 	}

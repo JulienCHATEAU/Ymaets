@@ -44,7 +44,7 @@ func main() {
 				savedY = _map.Monsters[index].Y
 				_map.Monsters[index].Draw()
 				_map.MonsterMove(index)
-				_map.MonsterCheckMoveCollision(index, savedX, savedY)
+				_map.MonsterCheckMoveCollision(&index, savedX, savedY)
 			}
 
 			_map.WallsDraw()

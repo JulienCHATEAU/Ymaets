@@ -30,6 +30,8 @@ var PSC rl.Color = rl.Red
 var PFC int32 = 8
 // Player move speed
 var PMS int32 = 4
+// Player health max
+var PHM int32 = 100
 
 type Player struct {
 	X 						int32
@@ -38,6 +40,8 @@ type Player struct {
 	MoveSpeed		 	int32
 	MaxSpeed		 	int32
 	FireCooldown 	int32
+	Hp						int32
+	MaxHp					int32
 	Move_keys 		[4]int32 // right, left, up, down
 	Ori_keys 			[4]int32 // east, west, north, south
 	Color 				rl.Color
@@ -50,6 +54,8 @@ func (player *Player) Init(x, y int32) {
 		player.MoveSpeed = 0
 		player.MaxSpeed = PMS
 		player.FireCooldown = 0
+		player.Hp = PHM
+		player.MaxHp = PHM
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
 		player.Color = rl.Blue
@@ -143,6 +149,12 @@ func (player *Player) GetShot() Shot {
 	return shot
 }
 
+func (player *Player) TakeDamage(damage int32) {
+	if player.Hp - damage >= 0 {
+		player.Hp -= damage
+	}
+}
+
 func (player *Player) Draw() {
 	// Body
 	rl.DrawRectangle(player.X, player.Y, PBS, PBS, player.Color);
@@ -164,4 +176,16 @@ func (player *Player) Draw() {
 		rl.DrawRectangle(player.X - PCH, player.Y + PBS/2-PCW/2, PCH, PCW, rl.Black);
 		break
 	}
+	// Health bar
+	var healthBarColor rl.Color = rl.Gray
+	hpPercentage := float32(player.Hp) / float32(player.MaxHp)
+	if hpPercentage > 0.5 {
+		healthBarColor = rl.Green
+	} else if hpPercentage > 0.15 {
+		healthBarColor = rl.Orange
+	} else if hpPercentage > 0 {
+		healthBarColor = rl.Red
+	}
+	healthBarMaxWidth := float32(PBS + 4)
+	rl.DrawRectangle(player.X - 2, player.Y - PCH - 5 - 2, int32(healthBarMaxWidth * hpPercentage), 2, healthBarColor);
 }
