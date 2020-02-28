@@ -95,7 +95,9 @@ func (_map *Map) PlayerMove() {
 }
 
 func (_map *Map) PlayerOri(mouseX, mouseY int32) {
-	_map.CurrPlayer.SetOriFromMouse(mouseX, mouseY)
+	if mouseX > 0 && mouseX < _map.Width && mouseY > 0 && mouseY < _map.Height {
+		_map.CurrPlayer.SetOriFromMouse(mouseX, mouseY)
+	}
 	if rl.IsKeyDown(_map.CurrPlayer.Ori_keys[0]) {
 		_map.CurrPlayer.Ori = EAST;
 	}
