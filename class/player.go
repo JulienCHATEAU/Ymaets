@@ -36,6 +36,7 @@ type Player struct {
 	Y 						int32
 	Ori 					Orientation
 	MoveSpeed		 	int32
+	MaxSpeed		 	int32
 	FireCooldown 	int32
 	Move_keys 		[4]int32 // right, left, up, down
 	Ori_keys 			[4]int32 // east, west, north, south
@@ -46,7 +47,8 @@ func (player *Player) Init(x, y int32) {
 		player.X = x
 		player.Y = y
 		player.Ori = WEST
-		player.MoveSpeed = PMS
+		player.MoveSpeed = 0
+		player.MaxSpeed = PMS
 		player.FireCooldown = 0
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}

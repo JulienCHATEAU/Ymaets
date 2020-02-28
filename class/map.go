@@ -79,18 +79,27 @@ func (_map *Map) CursorDraw() {
 	_map.Curs.Draw()
 }
 
+var lastKeyPressedIndex int
+var ops [4]int32 = [4]int32 {1, -1, -1, 1}
+
 func (_map *Map) PlayerMove() {
-	if rl.IsKeyDown(_map.CurrPlayer.Move_keys[0]) {
-		_map.CurrPlayer.X += _map.CurrPlayer.MoveSpeed;
+	var oneKeyPressed bool = false
+	var dests [4]*int32 = [4]*int32 {&(_map.CurrPlayer.X), &(_map.CurrPlayer.X), &(_map.CurrPlayer.Y), &(_map.CurrPlayer.Y)}
+	for index, key := range _map.CurrPlayer.Move_keys {
+		if rl.IsKeyDown(key) {
+			lastKeyPressedIndex = index
+			if !oneKeyPressed && _map.CurrPlayer.MoveSpeed < _map.CurrPlayer.MaxSpeed {
+				_map.CurrPlayer.MoveSpeed += 1
+			}
+			oneKeyPressed = true
+			*(dests[index]) += ops[index] * _map.CurrPlayer.MoveSpeed;
+		}
 	}
-	if rl.IsKeyDown(_map.CurrPlayer.Move_keys[1]) {
-		_map.CurrPlayer.X -= _map.CurrPlayer.MoveSpeed;
-	}
-	if rl.IsKeyDown(_map.CurrPlayer.Move_keys[2]) {
-		_map.CurrPlayer.Y -= _map.CurrPlayer.MoveSpeed;
-	}
-	if rl.IsKeyDown(_map.CurrPlayer.Move_keys[3]) {
-		_map.CurrPlayer.Y += _map.CurrPlayer.MoveSpeed;
+	if !oneKeyPressed {
+		if _map.CurrPlayer.MoveSpeed > 0 {
+			*(dests[lastKeyPressedIndex]) += ops[lastKeyPressedIndex] * _map.CurrPlayer.MoveSpeed;
+			_map.CurrPlayer.MoveSpeed -= 1
+		}
 	}
 }
 
