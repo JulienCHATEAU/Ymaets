@@ -46,9 +46,18 @@ func (_map *Map) Init(windowSize int32) {
 }
 
 func (_map *Map) MonsterMove(index int32) {
-	speed := _map.Monsters[index].MoveSpeed
-	dx := (random.Int31() % speed) - speed/2
-	dy := (random.Int31() % speed)
+	var dx int32 = 0
+	var dy int32 = 0
+	if _map.Monsters[index].X < _map.CurrPlayer.X {
+		dx = _map.Monsters[index].MoveSpeed
+	} else {
+		dx = -_map.Monsters[index].MoveSpeed
+	}
+	if _map.Monsters[index].Y < _map.CurrPlayer.Y {
+		dy = _map.Monsters[index].MoveSpeed
+	} else {
+		dy = -_map.Monsters[index].MoveSpeed
+	}
 	_map.Monsters[index].X += dx
 	_map.Monsters[index].Y += dy
 }
@@ -66,6 +75,7 @@ func (_map *Map) MonsterCheckMoveCollision(index, savedX, savedY int32) {
 	if rl.CheckCollisionCircleRec(center, radius, playerHitbox) {
 		_map.Monsters[index].X = savedX
 		_map.Monsters[index].Y = savedY
+		_map.CurrPlayer.Color = rl.NewColor(0, 0, 255, 255)
 		return
 	}
 }
@@ -174,6 +184,7 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
 			_map.CurrPlayer.X = savedX
 			_map.CurrPlayer.Y = savedY
+			_map.CurrPlayer.Color = rl.NewColor(0, 0, 255, 255)
 			return
 		}
 	}
@@ -225,7 +236,9 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 	for i = 0; i < _map.MonstersCount; i++ {
 		center, radius = _map.Monsters[i].GetHitbox()
 		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
-			_map.Monsters[i].Color = rl.Orange
+			_map.Monsters[i] = _map.Monsters[_map.MonstersCount-1]
+			_map.MonstersCount--
+			i--
 			_map.Shots[*index] = _map.Shots[_map.ShotsCount-1]
 			_map.ShotsCount--
 			(*index)--

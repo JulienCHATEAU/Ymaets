@@ -7,7 +7,7 @@ import (
 // Monster body size
 var MBS int32 = 18
 // Monster move speed
-var MMS int32 = 5
+var MMS int32 = 3
 
 type Monster struct {
 	X 						int32
