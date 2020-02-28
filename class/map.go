@@ -251,7 +251,10 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 	for i = 0; i < _map.MonstersCount; i++ {
 		center, radius = _map.Monsters[i].GetHitbox()
 		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
-			_map.removeMonster(&i)
+			_map.Monsters[i].TakeDamage(25)
+			if _map.Monsters[i].Hp == 0 {
+				_map.removeMonster(&i)
+			}
 			_map.removeShot(index)
 			return
 		}

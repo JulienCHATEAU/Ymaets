@@ -2,6 +2,7 @@ package class
 
 import (
 	"github.com/gen2brain/raylib-go/raylib"
+	util "Ymaets/util"
 )
 
 type Orientation int32 
@@ -150,8 +151,9 @@ func (player *Player) GetShot() Shot {
 }
 
 func (player *Player) TakeDamage(damage int32) {
-	if player.Hp - damage >= 0 {
-		player.Hp -= damage
+	player.Hp -= damage
+	if player.Hp - damage < 0 {
+		player.Hp = 0
 	}
 }
 
@@ -177,15 +179,5 @@ func (player *Player) Draw() {
 		break
 	}
 	// Health bar
-	var healthBarColor rl.Color = rl.Gray
-	hpPercentage := float32(player.Hp) / float32(player.MaxHp)
-	if hpPercentage > 0.5 {
-		healthBarColor = rl.Green
-	} else if hpPercentage > 0.15 {
-		healthBarColor = rl.Orange
-	} else if hpPercentage > 0 {
-		healthBarColor = rl.Red
-	}
-	healthBarMaxWidth := float32(PBS + 4)
-	rl.DrawRectangle(player.X - 2, player.Y - PCH - 5 - 2, int32(healthBarMaxWidth * hpPercentage), 2, healthBarColor);
+	util.DrawHealthBar(player.Hp, player.MaxHp, player.X, player.Y - PCH, PBS)
 }
