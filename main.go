@@ -2,9 +2,14 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 	ym "Ymaets/class"
 	"github.com/gen2brain/raylib-go/raylib"
 )
+
+var s1 = rand.NewSource(time.Now().UnixNano())
+var r1 = rand.New(s1)
 
 var WINDOW_SIZE int32 = 800
 var MENU_SIZE int32 = 300
@@ -25,12 +30,52 @@ func getOpositeOri(ori ym.Orientation) ym.Orientation {
 	}
 }
 
+func generateOri(remainingMapCount, notCreatedYet *int, oppositeOri ym.Orientation) []ym.Orientation {
+	var oris []ym.Orientation = []ym.Orientation {ym.NORTH, ym.SOUTH, ym.WEST, ym.EAST}
+	var opening []ym.Orientation
+	possibleAmount := *remainingMapCount - *notCreatedYet
+	var toCreate int
+	if possibleAmount > 0 {
+		if possibleAmount > 3 {
+			possibleAmount = 3
+		}
+		toCreate = (r1.Int() % possibleAmount) + 1
+	} else {
+		toCreate = 0
+	}
+	*remainingMapCount--
+	*notCreatedYet += toCreate - 1
+	opening = make([]ym.Orientation, toCreate+1)
+	opening[0] = oppositeOri
+	var ori ym.Orientation = oppositeOri
+	var trouve bool
+	for i := 1; i<toCreate+1; i++ {
+		ori = oris[r1.Int() % 4]
+		trouve = true
+		for j := 0; j<i; j++ {
+			if ori == opening[j] {
+				trouve = false
+				break
+			}
+		}
+		if trouve {
+			opening[i] = ori
+		} else {
+			i--
+		}
+	}
+	return opening
+}
+
 func main() {
 
+	var remainingMapCount int = 10
+	var notCreatedYet int = 1
 	var _maps []ym.Map = make([]ym.Map, 1)
 	var currentMapIndex = 0
-	_maps[currentMapIndex].Init(WINDOW_SIZE, []ym.Orientation{ym.NORTH, ym.SOUTH, ym.WEST, ym.EAST})
+	_maps[currentMapIndex].Init(WINDOW_SIZE, []ym.Orientation{ym.NORTH})
 	_maps[currentMapIndex].CurrPlayer.Init(_maps[currentMapIndex].Width - 50, _maps[currentMapIndex].Height - 50, ym.NORTH)
+	remainingMapCount--
 
 	var mapsLink []map[ym.Orientation]int = make([]map[ym.Orientation]int, 1)
 	mapsLink[0] = make(map[ym.Orientation]int)
@@ -89,9 +134,8 @@ func main() {
 				if newMapIndex == -1 {
 					newMapIndex = len(_maps)
 					var _map ym.Map
-					var opening []ym.Orientation = make([]ym.Orientation, 1)
 					var oppositeOri ym.Orientation = getOpositeOri(changeMapOri)
-					opening[0] = oppositeOri
+					var opening []ym.Orientation = generateOri(&remainingMapCount, &notCreatedYet, oppositeOri)
 					_map.Init(WINDOW_SIZE, opening)
 					_map.MapChangeInit(_maps[currentMapIndex], changeMapOri, WINDOW_SIZE, opening)
 					_maps = append(_maps, _map)
@@ -115,5 +159,6 @@ func main() {
 			_maps[currentMapIndex].DrawMenu(MENU_SIZE)
 		rl.EndDrawing()
 	}
+	fmt.Println(len(_maps))
 	rl.CloseWindow()
 }
