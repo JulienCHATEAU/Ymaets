@@ -13,11 +13,6 @@ const (
 	WEST
 )
 
-type PlayerTimers int32
-const (
-	TAKE_DAMAGE = iota
-)
-
 // Player body size
 var PBS int32 = 28
 // Player canon width
@@ -39,7 +34,13 @@ var PMS int32 = 4
 // Player health max
 var PHM int32 = 100
 // Player timers count
-var PTC int32 = 1
+var PTC int32 = 2
+
+type PlayerTimers int32
+const (
+	TAKE_DAMAGE = iota
+	FIRE_COOLDOWN
+)
 
 type Player struct {
 	X 						int32
@@ -47,7 +48,6 @@ type Player struct {
 	Ori 					Orientation
 	MoveSpeed		 	int32
 	MaxSpeed		 	int32
-	FireCooldown 	int32
 	Hp						int32
 	MaxHp					int32
 	Move_keys 		[4]int32 // right, left, up, down
@@ -62,7 +62,6 @@ func (player *Player) Init(x, y int32) {
 		player.Ori = WEST
 		player.MoveSpeed = 0
 		player.MaxSpeed = PMS
-		player.FireCooldown = 0
 		player.Hp = PHM
 		player.MaxHp = PHM
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
@@ -102,12 +101,6 @@ func (player *Player) GetHitbox() rl.Rectangle {
 		break
 	}
 	return util.ToRectangle(x, y, width, height)
-}
-
-func (player *Player) ReduceCooldown() {
-	if player.FireCooldown > 0 {
-		player.FireCooldown--
-	}
 }
 
 func (player *Player) GetCenter() (int32, int32) {
@@ -160,11 +153,13 @@ func (player *Player) GetShot() Shot {
 }
 
 func (player *Player) TakeDamage(damage int32) {
-	player.Hp -= damage
-	if player.Hp - damage < 0 {
-		player.Hp = 0
+	if damage > 0 {
+		player.Hp -= damage
+		if player.Hp - damage < 0 {
+			player.Hp = 0
+		}
+		player.Animations.Values[TAKE_DAMAGE] = 5
 	}
-	player.Animations.SetTimer(TAKE_DAMAGE, 5)
 }
 
 func (player *Player) HandleAnimation(notEnded []int32) {
@@ -174,7 +169,7 @@ func (player *Player) HandleAnimation(notEnded []int32) {
 			rl.DrawRectangleLinesEx(util.ToRectangle(player.X, player.Y, PBS, PBS), 3, rl.Red)
 			break
 
-		//ADD ANNIMATION HANDLER HERE
+		//ADD ANIMATION HANDLER HERE
 		}
 	}
 }
@@ -203,6 +198,6 @@ func (player *Player) Draw() {
 	// Health bar
 	util.DrawHealthBar(player.Hp, player.MaxHp, player.X, player.Y - PCH, PBS)
 	//Animations
-	notEnded := player.Animations.Decrement()
+	notEnded, _ := player.Animations.Decrement()
 	player.HandleAnimation(notEnded)
 }

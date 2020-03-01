@@ -1,6 +1,7 @@
 package class
 
 import (
+	// "fmt"
 )
 
 type Timers struct {
@@ -11,19 +12,19 @@ func (timers *Timers) Init(count int32) {
 	timers.Values = make([]int32, count)
 }
 
-func (timers *Timers) SetTimer(index int32, value int32) {
-	timers.Values[index] = value
-}
-
-func (timers *Timers) Decrement() []int32 {
+func (timers *Timers) Decrement() ([]int32, []int32) {
 	notEnded := make([]int32, 0)
-	for index, timer := range timers.Values {
-		if timer > 0 {
+	justEnded := make([]int32, 0)
+	for index, _ := range timers.Values {
+		if timers.Values[index] > 0 {
 			timers.Values[index]--
-			if timer > 0 {
+			if timers.Values[index] > 0 {
 				notEnded = append(notEnded, int32(index))
+			}
+			if timers.Values[index] == 0 {
+				justEnded = append(justEnded, int32(index))
 			}
 		}
 	}
-	return notEnded
+	return notEnded, justEnded
 }

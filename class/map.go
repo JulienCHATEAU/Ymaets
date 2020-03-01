@@ -1,6 +1,7 @@
 package class
 
 import (
+	// "fmt"
 	"time"
 	"math/rand"
 	"github.com/gen2brain/raylib-go/raylib"
@@ -138,17 +139,16 @@ func (_map *Map) PlayerOri(mouseX, mouseY int32) {
 }
 
 func (_map *Map) PlayerFire() {
-	if (rl.IsMouseButtonDown(rl.MouseLeftButton) || rl.IsKeyDown(rl.KeySpace)) && _map.CurrPlayer.FireCooldown == 0 {
+	if (rl.IsMouseButtonDown(rl.MouseLeftButton) || rl.IsKeyDown(rl.KeySpace)) && _map.CurrPlayer.Animations.Values[FIRE_COOLDOWN] == 0 {
 		shot := _map.CurrPlayer.GetShot()
+		_map.CurrPlayer.Animations.Values[FIRE_COOLDOWN] = PFC
 		if int32(len(_map.Shots)) > _map.ShotsCount {
 			_map.Shots[_map.ShotsCount] = shot
 		} else {
 			_map.Shots = append(_map.Shots, shot)
 		}
 		_map.ShotsCount++
-		_map.CurrPlayer.FireCooldown = PFC
 	}
-	_map.CurrPlayer.ReduceCooldown()
 }
 
 func (_map *Map) PlayerCheckOriCollision(savedOri Orientation) {
@@ -177,12 +177,17 @@ func (_map *Map) PlayerCheckOriCollision(savedOri Orientation) {
 
 func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 	hitbox := _map.CurrPlayer.GetHitbox()
-	for _, wall := range _map.Walls {
-		if !wall.Walkable {
-			if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
+	for index, _ := range _map.Walls {
+		if rl.CheckCollisionRecs(hitbox, _map.Walls[index].GetHitbox()) {
+			if !_map.Walls[index].Walkable {
 				_map.CurrPlayer.X = savedX
 				_map.CurrPlayer.Y = savedY
 				return
+			} else {
+				if _map.Walls[index].Animations.Values[DAMAGE_DEALT] == 0 {
+					_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage)
+					_map.Walls[index].Animations.Values[DAMAGE_DEALT] = LDT
+				}
 			}
 		}
 	}
