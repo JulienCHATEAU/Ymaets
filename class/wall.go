@@ -42,11 +42,11 @@ func (wall *Wall) init(x, y, width, height int32, crossable, walkable bool, colo
 }
 
 func (wall *Wall) InitLava(x, y, width, height int32) {
-	wall.init(x, y, width, height, true, true, rl.NewColor(245, 90, 0, 255))
+	wall.init(x, y, width, height, true, true, rl.NewColor(245, 90, 0, 200))
 }
 
 func (wall *Wall) InitWater(x, y, width, height int32) {
-	wall.init(x, y, width, height, true, false, rl.NewColor(104, 215, 250, 255))
+	wall.init(x, y, width, height, true, false, rl.NewColor(104, 215, 250, 200))
 }
 
 func (wall *Wall) InitWall(x, y, width, height int32, color rl.Color) {

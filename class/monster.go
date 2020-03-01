@@ -10,6 +10,15 @@ var MBS int32 = 18
 var MMS int32 = 3
 // Monster max health
 var MMH int32 = 50
+// Monster aggro dist
+var MAD float64 = 150.0
+// Monster timers count
+var MTC int32 = 1
+
+type MonsterTimers int32
+const (
+	MONSTER_TAKE_DAMAGE = iota
+)
 
 type Monster struct {
 	X 						int32
@@ -18,6 +27,8 @@ type Monster struct {
 	MoveSpeed		 	int32
 	Hp					 	int32
 	MaxHp				 	int32
+	AggroDist			float64
+	Animations		Timers
 	Color 				rl.Color
 }
 
@@ -28,7 +39,9 @@ func (monster *Monster) Init(x, y int32) {
 	monster.MoveSpeed = MMS
 	monster.Hp = MMH
 	monster.MaxHp = MMH
-	monster.Color = rl.Magenta
+	monster.AggroDist = MAD
+	monster.Animations.Init(MTC)
+	monster.Color = rl.NewColor(57, 57, 57, 255)
 }
 
 func (monster *Monster) GetHitbox() (rl.Vector2, float32) {
@@ -37,13 +50,34 @@ func (monster *Monster) GetHitbox() (rl.Vector2, float32) {
 
 
 func (monster *Monster) TakeDamage(damage int32) {
-	monster.Hp -= damage
-	if monster.Hp - damage < 0 {
-		monster.Hp = 0
+	if damage > 0 {
+		monster.Hp -= damage
+		if monster.Hp - damage < 0 {
+			monster.Hp = 0
+		}
+		monster.Animations.Values[MONSTER_TAKE_DAMAGE] = 5
+	}
+}
+
+func (monster *Monster) HandleAnimation(notEnded []int32) {
+	for i := 0; i<len(notEnded); i++ {
+		switch notEnded[i] {
+		case MONSTER_TAKE_DAMAGE:
+			var i float32
+			for i = 0; i<2; i++ {
+				rl.DrawCircleLines(monster.X, monster.Y, monster.Radius-i, rl.Red)
+			}
+			break
+
+		//ADD ANIMATION HANDLER HERE
+		}
 	}
 }
 
 func (monster *Monster) Draw() {
-	// util.DrawHealthBar(monster.Hp, monster.MaxHp, monster.X - int32(monster.Radius), monster.Y - int32(monster.Radius), int32(monster.Radius) * 2)
+	// Monster
 	rl.DrawCircle(monster.X, monster.Y, monster.Radius, monster.Color)
+	// Animations
+	notEnded, _ := monster.Animations.Decrement()
+	monster.HandleAnimation(notEnded)
 }

@@ -38,7 +38,7 @@ var PTC int32 = 2
 
 type PlayerTimers int32
 const (
-	TAKE_DAMAGE = iota
+	PLAYER_TAKE_DAMAGE = iota
 	FIRE_COOLDOWN
 )
 
@@ -46,7 +46,7 @@ type Player struct {
 	X 						int32
 	Y 						int32
 	Ori 					Orientation
-	Speed		 	int32
+	Speed				 	int32
 	MaxSpeed		 	int32
 	Hp						int32
 	MaxHp					int32
@@ -158,14 +158,14 @@ func (player *Player) TakeDamage(damage int32) {
 		if player.Hp - damage < 0 {
 			player.Hp = 0
 		}
-		player.Animations.Values[TAKE_DAMAGE] = 5
+		player.Animations.Values[PLAYER_TAKE_DAMAGE] = 5
 	}
 }
 
 func (player *Player) HandleAnimation(notEnded []int32) {
 	for i := 0; i<len(notEnded); i++ {
 		switch notEnded[i] {
-		case TAKE_DAMAGE:
+		case PLAYER_TAKE_DAMAGE:
 			rl.DrawRectangleLinesEx(util.ToRectangle(player.X, player.Y, PBS, PBS), 3, rl.Red)
 			break
 

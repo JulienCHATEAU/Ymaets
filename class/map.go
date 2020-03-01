@@ -2,6 +2,7 @@ package class
 
 import (
 	// "fmt"
+	"Ymaets/util"
 	"strconv"
 	"time"
 	"math/rand"
@@ -25,7 +26,7 @@ type Map struct {
 } 
 
 func (_map *Map) Init(windowSize int32) {
-	_map.BorderSize = 10
+	_map.BorderSize = 20
 	_map.Width = windowSize - _map.BorderSize
 	_map.Height = windowSize - _map.BorderSize
 	_map.ShotsCount = 0
@@ -61,20 +62,22 @@ func (_map *Map) DrawMenu(size int32) {
 }
 
 func (_map *Map) MonsterMove(index int32) {
-	var dx int32 = 0
-	var dy int32 = 0
-	if _map.Monsters[index].X < _map.CurrPlayer.X {
-		dx = _map.Monsters[index].MoveSpeed
-	} else {
-		dx = -_map.Monsters[index].MoveSpeed
-	}
-	if _map.Monsters[index].Y < _map.CurrPlayer.Y {
-		dy = _map.Monsters[index].MoveSpeed
-	} else {
-		dy = -_map.Monsters[index].MoveSpeed
-	}
-	_map.Monsters[index].X += dx
-	_map.Monsters[index].Y += dy
+	if util.PointsDistance(_map.Monsters[index].X, _map.Monsters[index].Y, _map.CurrPlayer.X, _map.CurrPlayer.Y) <= _map.Monsters[index].AggroDist {
+		var dx int32 = 0
+		var dy int32 = 0
+		if _map.Monsters[index].X < _map.CurrPlayer.X {
+			dx = _map.Monsters[index].MoveSpeed
+		} else {
+			dx = -_map.Monsters[index].MoveSpeed
+		}
+		if _map.Monsters[index].Y < _map.CurrPlayer.Y {
+			dy = _map.Monsters[index].MoveSpeed
+		} else {
+			dy = -_map.Monsters[index].MoveSpeed
+		}
+		_map.Monsters[index].X += dx
+		_map.Monsters[index].Y += dy
+	}	
 }
 
 func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
