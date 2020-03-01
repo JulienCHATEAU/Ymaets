@@ -9,6 +9,9 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+//Map opening size
+var MOS int32 = 80
+
 var source = rand.NewSource(time.Now().UnixNano())
 var random = rand.New(source)
 
@@ -25,30 +28,78 @@ type Map struct {
 	Monsters 			[]Monster
 } 
 
-func (_map *Map) Init(windowSize int32) {
+func (_map *Map) InitBorders(opening []Orientation) {
+	//Borders
+	contentWallCount := 3
+	borderCount := 4 + len(opening)
+	_map.Walls = make([]Wall, borderCount + contentWallCount)
+	_map.Walls[0].InitBorder(0, 0, _map.Width, _map.BorderSize)
+	_map.Walls[1].InitBorder(0, 0, _map.BorderSize, _map.Height)
+	_map.Walls[2].InitBorder(0, _map.Height - _map.BorderSize, _map.Width, _map.BorderSize)
+	_map.Walls[3].InitBorder(_map.Width - _map.BorderSize, 0, _map.BorderSize, _map.Height)
+	for i := 0; i<len(opening); i++ {
+		switch opening[i] {
+		case NORTH:
+			_map.Walls[0].Width = _map.Walls[0].Width/2 - MOS/2
+			_map.Walls[4+i].InitBorder(_map.Walls[0].X + _map.Walls[0].Width + MOS, 0, _map.Walls[0].Width, _map.BorderSize)
+		break
+
+		case WEST:
+			_map.Walls[1].Height = _map.Walls[1].Height/2 - MOS/2
+			_map.Walls[4+i].InitBorder(0, _map.Walls[1].Y + _map.Walls[1].Height + MOS, _map.BorderSize, _map.Walls[1].Height)
+			break
+
+		case SOUTH:
+			_map.Walls[2].Width = _map.Walls[2].Width/2 - MOS/2
+			_map.Walls[4+i].InitBorder(_map.Walls[2].X + _map.Walls[2].Width + MOS, _map.Walls[2].Y, _map.Walls[2].Width, _map.BorderSize)
+			break
+
+		case EAST:
+			_map.Walls[3].Height = _map.Walls[3].Height/2 - MOS/2
+			_map.Walls[4+i].InitBorder(_map.Walls[3].X, _map.Walls[3].Y + _map.Walls[3].Height + MOS, _map.BorderSize, _map.Walls[3].Height)
+			break
+		}
+	}
+	//Obstacles
+	_map.Walls[borderCount].InitWall(150, 150, 40, 30, rl.Gray)
+	_map.Walls[borderCount+1].InitWater(500, 170, 20, 50)
+	_map.Walls[borderCount+2].InitLava(600, 540, 25, 45)
+}
+
+func (_map *Map) Init(windowSize int32, opening []Orientation) {
 	_map.BorderSize = 20
 	_map.Width = windowSize - _map.BorderSize
 	_map.Height = windowSize - _map.BorderSize
-	_map.ShotsCount = 0
-	_map.Shots = make([]Shot, 50)
-	_map.CurrPlayer.Init(_map.Width - 50, _map.Height - 50)
 	_map.Curs.Init()
 	_map.MonstersCount = 4
 	_map.Monsters = make([]Monster, 50)
 	_map.Monsters[0].Init(50, 50) 
 	_map.Monsters[1].Init(150, 350) 
 	_map.Monsters[2].Init(250, 50) 
-	_map.Monsters[3].Init(100, 450) 
-	//Borders
-	_map.Walls = make([]Wall, 7)
-	_map.Walls[0].InitBorder(0, 0, _map.Width, _map.BorderSize)
-	_map.Walls[1].InitBorder(0, 0, _map.BorderSize, _map.Width)
-	_map.Walls[2].InitBorder(0, _map.Height - _map.BorderSize, _map.Width, _map.BorderSize)
-	_map.Walls[3].InitBorder(_map.Width - _map.BorderSize, 0, _map.BorderSize, _map.Width)
-	//Obstacles
-	_map.Walls[4].InitWall(150, 150, 40, 30, rl.Gray)
-	_map.Walls[5].InitWater(500, 170, 20, 50)
-	_map.Walls[6].InitLava(600, 540, 25, 45)
+	_map.Monsters[3].Init(100, 450)
+	_map.InitBorders(opening)
+	_map.ShotsCount = 0
+	_map.Shots = make([]Shot, 50)
+}
+
+func (_map *Map) MapChangeInit(previousMap Map, ori Orientation, windowSize int32, opening []Orientation) {
+	_map.Init(windowSize, opening)
+	_map.CurrPlayer = previousMap.CurrPlayer
+	_map.Update(previousMap, ori, windowSize)
+}
+
+func (_map *Map) Update(previousMap Map, ori Orientation, windowSize int32) {
+	_map.ShotsCount = 0
+	_map.CurrPlayer = previousMap.CurrPlayer
+	if ori == NORTH {
+		_map.CurrPlayer.Y = windowSize - PBS
+	} else if ori == EAST {
+		_map.CurrPlayer.X = 0
+	} else if ori == SOUTH {
+		_map.CurrPlayer.Y = 0
+	} else if ori == WEST {
+		_map.CurrPlayer.X = windowSize - PBS
+	}
 }
 
 func (_map *Map) DrawMenu(size int32) {
@@ -58,6 +109,8 @@ func (_map *Map) DrawMenu(size int32) {
 	rl.DrawText("HP : " + strconv.Itoa(int(_map.CurrPlayer.Hp)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxHp)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
 	rl.DrawText("Move speed : " + strconv.Itoa(int(_map.CurrPlayer.Speed)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxSpeed)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	textCount++
+	rl.DrawText("Money : " + strconv.Itoa(int(_map.CurrPlayer.Money)) + " gold", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
 }
 
@@ -113,7 +166,23 @@ func (_map *Map) CursorDraw() {
 var lastKeyPressedIndex int
 var ops [4]int32 = [4]int32 {1, -1, -1, 1}
 
-func (_map *Map) PlayerMove() {
+func (_map *Map) getChangeMapOri() Orientation {
+	var ori Orientation
+	if _map.CurrPlayer.X < -PBS {
+		ori = WEST
+	} else if _map.CurrPlayer.X > _map.Width {
+		ori = EAST
+	} else if _map.CurrPlayer.Y < -PBS {
+		ori = NORTH
+	} else if _map.CurrPlayer.Y > _map.Height {
+		ori = SOUTH
+	} else {
+		ori = NONE
+	}
+	return ori
+}
+
+func (_map *Map) PlayerMove() Orientation {
 	var oneKeyPressed bool = false
 	var dests [4]*int32 = [4]*int32 {&(_map.CurrPlayer.X), &(_map.CurrPlayer.X), &(_map.CurrPlayer.Y), &(_map.CurrPlayer.Y)}
 	for index, key := range _map.CurrPlayer.Move_keys {
@@ -132,6 +201,7 @@ func (_map *Map) PlayerMove() {
 			_map.CurrPlayer.Speed -= 1
 		}
 	}
+	return _map.getChangeMapOri()
 }
 
 func (_map *Map) PlayerOri(mouseX, mouseY int32) {

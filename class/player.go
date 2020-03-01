@@ -7,9 +7,10 @@ import (
 
 type Orientation int32 
 const (
-	NORTH = iota
-	EAST
+	NONE = iota - 1
+	NORTH
 	SOUTH
+	EAST
 	WEST
 )
 
@@ -52,20 +53,22 @@ type Player struct {
 	MaxSpeed		 	int32
 	Hp						int32
 	MaxHp					int32
+	Money					int32
 	Move_keys 		[4]int32 // right, left, up, down
 	Ori_keys 			[4]int32 // east, west, north, south
 	Color 				rl.Color
 	Animations		Timers
 }
 
-func (player *Player) Init(x, y int32) {
+func (player *Player) Init(x, y int32, ori Orientation) {
 		player.X = x
 		player.Y = y
-		player.Ori = WEST
+		player.Ori = ori
 		player.Speed = 0
 		player.MaxSpeed = PMS
 		player.Hp = PHM
 		player.MaxHp = PHM
+		player.Money = 0
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
 		player.Color = rl.Blue

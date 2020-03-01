@@ -11,7 +11,7 @@ var MMS int32 = 3
 // Monster max health
 var MMH int32 = 50
 // Monster aggro dist
-var MAD float64 = 150.0
+var MAD float64 = 250.0
 // Monster timers count
 var MTC int32 = 1
 
