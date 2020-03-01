@@ -230,22 +230,27 @@ func (_map *Map) WallsDraw() {
 	}
 }
 
-func (_map *Map) ShotMove(index int32) {
-	switch _map.Shots[index].Ori {
+func (_map *Map) ShotMove(index *int32) {
+	if _map.Shots[*index].TravelDist >= _map.Shots[*index].Range {
+		_map.removeShot(index)
+		return
+	}
+	_map.Shots[*index].TravelDist += _map.Shots[*index].Speed
+	switch _map.Shots[*index].Ori {
 	case NORTH:
-		_map.Shots[index].Y -= _map.Shots[index].Speed
+		_map.Shots[*index].Y -= _map.Shots[*index].Speed
 		break;
 
 	case SOUTH:
-		_map.Shots[index].Y += _map.Shots[index].Speed
+		_map.Shots[*index].Y += _map.Shots[*index].Speed
 		break;
 
 	case EAST:
-		_map.Shots[index].X += _map.Shots[index].Speed		
+		_map.Shots[*index].X += _map.Shots[*index].Speed		
 		break;
 
 	case WEST:
-		_map.Shots[index].X -= _map.Shots[index].Speed		
+		_map.Shots[*index].X -= _map.Shots[*index].Speed		
 		break;
 	}
 }
@@ -253,13 +258,17 @@ func (_map *Map) ShotMove(index int32) {
 func (_map *Map) removeMonster(index *int32) {
 	_map.Monsters[*index] = _map.Monsters[_map.MonstersCount-1]
 	_map.MonstersCount--
-	*(index)--
+	if *(index) > 0 {
+		*(index)--
+	}
 }
 
 func (_map *Map) removeShot(index *int32) {
 	_map.Shots[*index] = _map.Shots[_map.ShotsCount-1]
 	_map.ShotsCount--
-	*(index)--
+	if *(index) > 0 {
+		*(index)--
+	}
 }
 
 func (_map *Map) ShotCheckMoveCollision(index *int32) {

@@ -37,7 +37,7 @@ func main() {
 			var index int32 
 			for index = 0; index < _map.ShotsCount; index++ {
 				_map.Shots[index].Draw()
-				_map.ShotMove(index)
+				_map.ShotMove(&index)
 				_map.ShotCheckMoveCollision(&index)
 			}
 

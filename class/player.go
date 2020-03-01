@@ -23,8 +23,10 @@ var PCH int32 = 8
 var PSW int32 = 10
 // Player shot height
 var PSH int32 = 4
-// Player shot speed
+// Player shot speed (px/frame)
 var PSS int32 = 5
+// Player shot range (px)
+var PSR int32 = 250
 // Player shot color
 var PSC rl.Color = rl.Red
 // Player fire cooldown
@@ -123,11 +125,7 @@ func (player *Player) SetOriFromMouse(mouseX, mouseY int32) {
 	// shot := Shot {50, 50, 4, 10, 3, NORTH, rl.Brown}
 func (player *Player) GetShot() Shot {
 	var shot Shot
-	shot.Ori = player.Ori
-	shot.Color = PSC
-	shot.Speed = PSS
-	shot.Width = PSH
-	shot.Height = PSW
+	shot.Init(player.Ori, PSC, PSS, PSH, PSW, PSR)
 	switch player.Ori {
 	case NORTH:
 		shot.X = player.X + PBS/2-PCW/2
