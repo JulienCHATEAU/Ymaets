@@ -5,23 +5,39 @@ import (
 )
 
 type Wall struct {
-	X 			int32
-	Y 			int32
-	Width		int32
-	Height	int32
-	Color 	rl.Color
+	X 				int32
+	Y 				int32
+	Width			int32
+	Height		int32
+	Crossable bool
+	Walkable 	bool
+	Color 		rl.Color
 }
 
-func (wall *Wall) Init(x, y, width, height int32, color rl.Color) {
+func (wall *Wall) init(x, y, width, height int32, crossable, walkable bool, color rl.Color) {
 	wall.X = x
 	wall.Y = y
 	wall.Width = width
 	wall.Height = height
+	wall.Crossable = crossable
+	wall.Walkable = walkable
 	wall.Color = color
 }
 
+func (wall *Wall) InitLava(x, y, width, height int32) {
+	wall.init(x, y, width, height, true, true, rl.NewColor(245, 90, 0, 255))
+}
+
+func (wall *Wall) InitWater(x, y, width, height int32) {
+	wall.init(x, y, width, height, true, false, rl.NewColor(104, 215, 250, 255))
+}
+
+func (wall *Wall) InitWall(x, y, width, height int32, color rl.Color) {
+	wall.init(x, y, width, height, false, false, color)
+}
+
 func (wall *Wall) InitBorder(x, y, width, height int32) {
-	wall.Init(x, y, width, height, rl.Brown)
+	wall.InitWall(x, y, width, height, rl.Brown)
 }
 
 func (wall *Wall) Draw() {

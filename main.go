@@ -30,6 +30,8 @@ func main() {
 			mouseX := rl.GetMouseX()
 			mouseY := rl.GetMouseY()
 
+			_map.WallsDraw()
+
 			var index int32 
 			for index = 0; index < _map.ShotsCount; index++ {
 				_map.Shots[index].Draw()
@@ -46,8 +48,6 @@ func main() {
 				_map.MonsterMove(index)
 				_map.MonsterCheckMoveCollision(&index, savedX, savedY)
 			}
-
-			_map.WallsDraw()
 
 			savedX = _map.CurrPlayer.X
 			savedY = _map.CurrPlayer.Y

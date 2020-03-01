@@ -43,9 +43,9 @@ func (_map *Map) Init(windowSize int32) {
 	_map.Walls[2].InitBorder(0, _map.Height - _map.BorderSize, _map.Width, _map.BorderSize)
 	_map.Walls[3].InitBorder(_map.Width - _map.BorderSize, 0, _map.BorderSize, _map.Width)
 	//Obstacles
-	_map.Walls[4].Init(150, 150, 40, 30, rl.Gray)
-	_map.Walls[5].Init(500, 170, 20, 50, rl.Gray)
-	_map.Walls[6].Init(600, 540, 25, 45, rl.Gray)
+	_map.Walls[4].InitWall(150, 150, 40, 30, rl.Gray)
+	_map.Walls[5].InitWater(500, 170, 20, 50)
+	_map.Walls[6].InitLava(600, 540, 25, 45)
 }
 
 func (_map *Map) MonsterMove(index int32) {
@@ -68,10 +68,12 @@ func (_map *Map) MonsterMove(index int32) {
 func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
 	center, radius := _map.Monsters[*index].GetHitbox()
 	for _, wall := range _map.Walls {
-		if rl.CheckCollisionCircleRec(center, radius, wall.GetHitbox()) {
-			_map.Monsters[*index].X = savedX
-			_map.Monsters[*index].Y = savedY
-			return
+		if !wall.Walkable {
+			if rl.CheckCollisionCircleRec(center, radius, wall.GetHitbox()) {
+				_map.Monsters[*index].X = savedX
+				_map.Monsters[*index].Y = savedY
+				return
+			}
 		}
 	}
 	playerHitbox := _map.CurrPlayer.GetHitbox()
@@ -152,9 +154,11 @@ func (_map *Map) PlayerFire() {
 func (_map *Map) PlayerCheckOriCollision(savedOri Orientation) {
 	hitbox := _map.CurrPlayer.GetHitbox()
 	for _, wall := range _map.Walls {
-		if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
-			_map.CurrPlayer.Ori = savedOri
-			return
+		if !wall.Walkable {
+			if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
+				_map.CurrPlayer.Ori = savedOri
+				return
+			}
 		}
 	}
 	var index int32
@@ -174,10 +178,12 @@ func (_map *Map) PlayerCheckOriCollision(savedOri Orientation) {
 func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 	hitbox := _map.CurrPlayer.GetHitbox()
 	for _, wall := range _map.Walls {
-		if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
-			_map.CurrPlayer.X = savedX
-			_map.CurrPlayer.Y = savedY
-			return
+		if !wall.Walkable {
+			if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
+				_map.CurrPlayer.X = savedX
+				_map.CurrPlayer.Y = savedY
+				return
+			}
 		}
 	}
 	var index int32
@@ -240,9 +246,11 @@ func (_map *Map) removeShot(index *int32) {
 func (_map *Map) ShotCheckMoveCollision(index *int32) {
 	hitbox := _map.Shots[*index].GetHitbox()
 	for _, wall := range _map.Walls {
-		if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
-			_map.removeShot(index)
-			return
+		if !wall.Crossable {
+			if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
+				_map.removeShot(index)
+				return
+			}
 		}
 	}
 	var i int32

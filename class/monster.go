@@ -2,7 +2,6 @@ package class
 
 import (
 	"github.com/gen2brain/raylib-go/raylib"
-	util "Ymaets/util"
 )
 
 // Monster body size
@@ -45,6 +44,6 @@ func (monster *Monster) TakeDamage(damage int32) {
 }
 
 func (monster *Monster) Draw() {
-	util.DrawHealthBar(monster.Hp, monster.MaxHp, monster.X - int32(monster.Radius), monster.Y - int32(monster.Radius), int32(monster.Radius) * 2)
+	// util.DrawHealthBar(monster.Hp, monster.MaxHp, monster.X - int32(monster.Radius), monster.Y - int32(monster.Radius), int32(monster.Radius) * 2)
 	rl.DrawCircle(monster.X, monster.Y, monster.Radius, monster.Color)
 }
