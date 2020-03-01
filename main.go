@@ -85,8 +85,6 @@ func main() {
 	mapsLink[0][ym.WEST] = -1
 
 	fmt.Println("Ymaets")
-	// screenW := rl.GetScreenWidth()
-	// screenH := rl.GetScreenHeight()
 	rl.InitWindow(_maps[currentMapIndex].Width + MENU_SIZE, _maps[currentMapIndex].Height, "Ymaets")
 	rl.HideCursor()
 	rl.SetTargetFPS(60)
