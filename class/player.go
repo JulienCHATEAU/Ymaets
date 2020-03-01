@@ -46,7 +46,7 @@ type Player struct {
 	X 						int32
 	Y 						int32
 	Ori 					Orientation
-	MoveSpeed		 	int32
+	Speed		 	int32
 	MaxSpeed		 	int32
 	Hp						int32
 	MaxHp					int32
@@ -60,7 +60,7 @@ func (player *Player) Init(x, y int32) {
 		player.X = x
 		player.Y = y
 		player.Ori = WEST
-		player.MoveSpeed = 0
+		player.Speed = 0
 		player.MaxSpeed = PMS
 		player.Hp = PHM
 		player.MaxHp = PHM

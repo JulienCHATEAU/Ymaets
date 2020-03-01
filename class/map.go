@@ -2,6 +2,7 @@ package class
 
 import (
 	// "fmt"
+	"strconv"
 	"time"
 	"math/rand"
 	"github.com/gen2brain/raylib-go/raylib"
@@ -47,6 +48,16 @@ func (_map *Map) Init(windowSize int32) {
 	_map.Walls[4].InitWall(150, 150, 40, 30, rl.Gray)
 	_map.Walls[5].InitWater(500, 170, 20, 50)
 	_map.Walls[6].InitLava(600, 540, 25, 45)
+}
+
+func (_map *Map) DrawMenu(size int32) {
+	var textStarting int32 = 30 
+	var textCount int32 = 0
+	rl.DrawRectangle(_map.Width, 0, size, _map.Height, rl.RayWhite)
+	rl.DrawText("HP : " + strconv.Itoa(int(_map.CurrPlayer.Hp)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxHp)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	textCount++
+	rl.DrawText("Move speed : " + strconv.Itoa(int(_map.CurrPlayer.Speed)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxSpeed)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	textCount++
 }
 
 func (_map *Map) MonsterMove(index int32) {
@@ -105,17 +116,17 @@ func (_map *Map) PlayerMove() {
 	for index, key := range _map.CurrPlayer.Move_keys {
 		if rl.IsKeyDown(key) {
 			lastKeyPressedIndex = index
-			if !oneKeyPressed && _map.CurrPlayer.MoveSpeed < _map.CurrPlayer.MaxSpeed {
-				_map.CurrPlayer.MoveSpeed += 1
+			if !oneKeyPressed && _map.CurrPlayer.Speed < _map.CurrPlayer.MaxSpeed {
+				_map.CurrPlayer.Speed += 1
 			}
 			oneKeyPressed = true
-			*(dests[index]) += ops[index] * _map.CurrPlayer.MoveSpeed;
+			*(dests[index]) += ops[index] * _map.CurrPlayer.Speed;
 		}
 	}
 	if !oneKeyPressed {
-		if _map.CurrPlayer.MoveSpeed > 0 {
-			*(dests[lastKeyPressedIndex]) += ops[lastKeyPressedIndex] * _map.CurrPlayer.MoveSpeed;
-			_map.CurrPlayer.MoveSpeed -= 1
+		if _map.CurrPlayer.Speed > 0 {
+			*(dests[lastKeyPressedIndex]) += ops[lastKeyPressedIndex] * _map.CurrPlayer.Speed;
+			_map.CurrPlayer.Speed -= 1
 		}
 	}
 }

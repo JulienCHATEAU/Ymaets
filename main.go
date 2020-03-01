@@ -7,6 +7,7 @@ import (
 )
 
 var WINDOW_SIZE int32 = 800
+var MENU_SIZE int32 = 300
 var WINDOW_BCK rl.Color = rl.NewColor(245, 239, 220, 255) // Light Beige
 var BORDER_COLOR rl.Color = rl.Gold
 
@@ -18,8 +19,7 @@ func main() {
 	fmt.Println("Ymaets")
 	// screenW := rl.GetScreenWidth()
 	// screenH := rl.GetScreenHeight()
-	rl.InitWindow(_map.Width, _map.Height, "Ymaets")
-	// rl.InitWindow(int32(screenW), int32(screenH), "Ymaets")
+	rl.InitWindow(_map.Width + MENU_SIZE, _map.Height, "Ymaets")
 	rl.HideCursor()
 	rl.SetTargetFPS(60)
 	
@@ -29,6 +29,8 @@ func main() {
 			rl.ClearBackground(WINDOW_BCK)
 			mouseX := rl.GetMouseX()
 			mouseY := rl.GetMouseY()
+
+			_map.DrawMenu(MENU_SIZE)
 
 			_map.WallsDraw()
 
