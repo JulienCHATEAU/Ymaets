@@ -4,6 +4,10 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+func ToRectangle(x, y, width, height int32) rl.Rectangle {
+	return rl.Rectangle {float32(x), float32(y), float32(width), float32(height)}
+}
+
 func DrawHealthBar(hp, maxHp, x, y, objectSize int32) {
 	var healthBarColor rl.Color = rl.Gray
 	hpPercentage := float32(hp) / float32(maxHp)

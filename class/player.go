@@ -7,10 +7,15 @@ import (
 
 type Orientation int32 
 const (
-	NORTH = iota + 1
+	NORTH = iota
 	EAST
 	SOUTH
 	WEST
+)
+
+type PlayerTimers int32
+const (
+	TAKE_DAMAGE = iota
 )
 
 // Player body size
@@ -33,6 +38,8 @@ var PFC int32 = 8
 var PMS int32 = 4
 // Player health max
 var PHM int32 = 100
+// Player timers count
+var PTC int32 = 1
 
 type Player struct {
 	X 						int32
@@ -46,6 +53,7 @@ type Player struct {
 	Move_keys 		[4]int32 // right, left, up, down
 	Ori_keys 			[4]int32 // east, west, north, south
 	Color 				rl.Color
+	Animations		Timers
 }
 
 func (player *Player) Init(x, y int32) {
@@ -60,6 +68,7 @@ func (player *Player) Init(x, y int32) {
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
 		player.Color = rl.Blue
+		player.Animations.Init(PTC)
 }
 
 func (player *Player) GetHitbox() rl.Rectangle {
@@ -92,7 +101,7 @@ func (player *Player) GetHitbox() rl.Rectangle {
 		width += PCH
 		break
 	}
-	return rl.Rectangle {float32(x), float32(y), float32(width), float32(height)}
+	return util.ToRectangle(x, y, width, height)
 }
 
 func (player *Player) ReduceCooldown() {
@@ -155,6 +164,19 @@ func (player *Player) TakeDamage(damage int32) {
 	if player.Hp - damage < 0 {
 		player.Hp = 0
 	}
+	player.Animations.SetTimer(TAKE_DAMAGE, 5)
+}
+
+func (player *Player) HandleAnimation(notEnded []int32) {
+	for i := 0; i<len(notEnded); i++ {
+		switch notEnded[i] {
+		case TAKE_DAMAGE:
+			rl.DrawRectangleLinesEx(util.ToRectangle(player.X, player.Y, PBS, PBS), 3, rl.Red)
+			break
+
+		//ADD ANNIMATION HANDLER HERE
+		}
+	}
 }
 
 func (player *Player) Draw() {
@@ -180,4 +202,7 @@ func (player *Player) Draw() {
 	}
 	// Health bar
 	util.DrawHealthBar(player.Hp, player.MaxHp, player.X, player.Y - PCH, PBS)
+	//Animations
+	notEnded := player.Animations.Decrement()
+	player.HandleAnimation(notEnded)
 }
