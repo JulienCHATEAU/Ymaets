@@ -8,6 +8,11 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+type Coord struct {
+	X int32
+	Y int32
+}
+
 var s1 = rand.NewSource(time.Now().UnixNano())
 var r1 = rand.New(s1)
 
@@ -58,14 +63,14 @@ func getNextCoord(ori ym.Orientation, coord Coord) Coord {
 	return newCoord
 }
 
-func generateOri(remainingMapCount, notCreatedYet *int, oppositeOri ym.Orientation) []ym.Orientation {
-	var oris []ym.Orientation = []ym.Orientation {ym.NORTH, ym.SOUTH, ym.WEST, ym.EAST}
+func generateOri(remainingMapCount, notCreatedYet *int, oppositeOri ym.Orientation, oris []ym.Orientation) []ym.Orientation {
 	var opening []ym.Orientation
 	possibleAmount := *remainingMapCount - *notCreatedYet
 	var toCreate int
+	orisLength := len(oris)
 	if possibleAmount > 0 {
-		if possibleAmount > 3 {
-			possibleAmount = 3
+		if possibleAmount > orisLength {
+			possibleAmount = orisLength
 		}
 		toCreate = (r1.Int() % possibleAmount) + 1
 	} else {
@@ -78,7 +83,7 @@ func generateOri(remainingMapCount, notCreatedYet *int, oppositeOri ym.Orientati
 	var ori ym.Orientation = oppositeOri
 	var trouve bool
 	for i := 1; i<toCreate+1; i++ {
-		ori = oris[r1.Int() % 4]
+		ori = oris[r1.Int() % orisLength]
 		trouve = true
 		for j := 0; j<i; j++ {
 			if ori == opening[j] {
@@ -95,9 +100,26 @@ func generateOri(remainingMapCount, notCreatedYet *int, oppositeOri ym.Orientati
 	return opening
 }
 
-type Coord struct {
-	X int32
-	Y int32
+
+func removeOrientation(oris []ym.Orientation, ori ym.Orientation) []ym.Orientation {
+	for index, val := range oris {
+		if val == ori {
+			oris[index] = oris[len(oris)-1]
+			return oris[:len(oris)-1]
+		}
+	}
+	return oris
+}
+
+func removeImpossibleOris(_maps map[Coord]*ym.Map, currentMapCoord Coord, oris []ym.Orientation) []ym.Orientation {
+	var coord Coord
+	for _, ori := range oris {
+		coord = getNextCoord(ori, currentMapCoord)
+		if _, ok := _maps[coord]; ok {
+			oris = removeOrientation(oris, ori)
+		}
+	}
+	return oris
 }
 
 func main() {
@@ -107,7 +129,7 @@ func main() {
 	var currentMapCoord Coord = Coord{0, 0}
 	var _maps map[Coord]*ym.Map = make(map[Coord]*ym.Map)
 	var _map *ym.Map = &ym.Map{}
-	_map.Init(WINDOW_SIZE, []ym.Orientation{ym.NORTH})
+	_map.Init(WINDOW_SIZE, []ym.Orientation {ym.NORTH})
 	_map.CurrPlayer.Init(_map.Width - 50, _map.Height - 50, ym.NORTH)
 	_maps[currentMapCoord] = _map
 	remainingMapCount--
@@ -165,8 +187,14 @@ func main() {
 					currentMapCoord = newMapIndex
 				} else {
 					var nextMap *ym.Map = &ym.Map{}
-					oppositeOri  = getOpositeOri(changeMapOri)
-					opening = generateOri(&remainingMapCount, &notCreatedYet, oppositeOri)
+					oppositeOri = getOpositeOri(changeMapOri)
+					var oris []ym.Orientation = []ym.Orientation {ym.NORTH, ym.SOUTH, ym.EAST, ym.WEST}
+					fmt.Println(oris)
+					oris = removeOrientation(oris, oppositeOri)
+					fmt.Println(oris)
+					oris = removeImpossibleOris(_maps, newMapIndex, oris)
+					fmt.Println(oris)
+					opening = generateOri(&remainingMapCount, &notCreatedYet, oppositeOri, oris)
 					nextMap.Init(WINDOW_SIZE, opening)
 					nextMap.MapChangeInit(*_maps[currentMapCoord], changeMapOri, WINDOW_SIZE, opening)
 					_maps[newMapIndex] = nextMap
