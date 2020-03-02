@@ -2,6 +2,10 @@
 
 Ymaets is a 2D game where you drive a small ship and defend yourself against wild enemies !
 
+## Requirements
+
+- golang : `sudo apt install golang-go`
+
 ## Installation
 
 I) If you already have a Go workspace go to II), otherwise let's create one.   
