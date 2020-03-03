@@ -11,6 +11,8 @@ import (
 
 //Map opening size
 var MOS int32 = 80
+//Map opening hitbox edge
+var MOHE int32 = 100
 
 var source = rand.NewSource(time.Now().UnixNano())
 var random = rand.New(source)
@@ -22,23 +24,48 @@ type Map struct {
 	CurrPlayer 		Player
 	Curs			 		Cursor
 	ShotsCount 		int32
+	Opening 			[]Orientation
 	Shots 				[]Shot
 	Walls 				[]Wall
 	MonstersCount	int32
 	Monsters 			[]Monster
 } 
 
-func (_map *Map) InitBorders(opening []Orientation) {
+func (_map *Map) GetOpeningHitboxes() []rl.Rectangle {
+	var hitboxes []rl.Rectangle = make([]rl.Rectangle, len(_map.Opening))
+	for index, opening := range _map.Opening {
+		switch opening {
+		case NORTH:
+			hitboxes[index] = rl.Rectangle {float32(_map.Width / 2 - MOS / 2), 0, float32(MOS), float32(MOHE)}
+			break
+
+		case WEST:
+			hitboxes[index] = rl.Rectangle {0, float32(_map.Height / 2 - MOS / 2), float32(MOHE), float32(MOS)}
+			break
+
+		case SOUTH:
+			hitboxes[index] = rl.Rectangle {float32(_map.Width / 2 - MOS / 2), float32(_map.Height - MOHE), float32(MOS), float32(MOHE)}
+			break
+
+		case EAST:
+			hitboxes[index] = rl.Rectangle {float32(_map.Width - MOHE), float32(_map.Height / 2 - MOS / 2), float32(MOHE), float32(MOS)}
+			break
+		}
+	}
+	return hitboxes
+}
+
+func (_map *Map) InitBorders() {
 	//Borders
 	contentWallCount := 3
-	borderCount := 4 + len(opening)
+	borderCount := 4 + len(_map.Opening)
 	_map.Walls = make([]Wall, borderCount + contentWallCount)
 	_map.Walls[0].InitBorder(0, 0, _map.Width, _map.BorderSize)
 	_map.Walls[1].InitBorder(0, 0, _map.BorderSize, _map.Height)
 	_map.Walls[2].InitBorder(0, _map.Height - _map.BorderSize, _map.Width, _map.BorderSize)
 	_map.Walls[3].InitBorder(_map.Width - _map.BorderSize, 0, _map.BorderSize, _map.Height)
-	for i := 0; i<len(opening); i++ {
-		switch opening[i] {
+	for i := 0; i<len(_map.Opening); i++ {
+		switch _map.Opening[i] {
 		case NORTH:
 			_map.Walls[0].Width = _map.Walls[0].Width/2 - MOS/2
 			_map.Walls[4+i].InitBorder(_map.Walls[0].X + _map.Walls[0].Width + MOS, 0, _map.Walls[0].Width, _map.BorderSize)
@@ -61,15 +88,17 @@ func (_map *Map) InitBorders(opening []Orientation) {
 		}
 	}
 	//Obstacles
-	_map.Walls[borderCount].InitWall(150, 150, 40, 30, rl.Gray)
-	_map.Walls[borderCount+1].InitWater(500, 170, 20, 50)
-	_map.Walls[borderCount+2].InitLava(600, 540, 25, 45)
+	// _map.Walls[borderCount].InitWall(150, 150, 40, 30, rl.Gray)
+	// _map.Walls[borderCount+1].InitWater(500, 170, 20, 50)
+	// _map.Walls[borderCount+2].InitLava(600, 540, 25, 45)
+	_map.Walls = append(_map.Walls, GenerateWalls(_map)...)
 }
 
 func (_map *Map) Init(windowSize int32, opening []Orientation) {
 	_map.BorderSize = 20
-	_map.Width = windowSize - _map.BorderSize
-	_map.Height = windowSize - _map.BorderSize
+	_map.Width = windowSize
+	_map.Height = windowSize
+	_map.Opening = opening
 	_map.Curs.Init()
 	_map.MonstersCount = 4
 	_map.Monsters = make([]Monster, 50)
@@ -77,13 +106,13 @@ func (_map *Map) Init(windowSize int32, opening []Orientation) {
 	_map.Monsters[1].Init(150, 350) 
 	_map.Monsters[2].Init(250, 50) 
 	_map.Monsters[3].Init(100, 450)
-	_map.InitBorders(opening)
 	_map.ShotsCount = 0
 	_map.Shots = make([]Shot, 50)
 }
 
 func (_map *Map) MapChangeInit(previousMap Map, ori Orientation, windowSize int32, opening []Orientation) {
 	_map.Init(windowSize, opening)
+	_map.InitBorders()
 	_map.CurrPlayer = previousMap.CurrPlayer
 	_map.Update(previousMap, ori, windowSize)
 }
@@ -91,15 +120,29 @@ func (_map *Map) MapChangeInit(previousMap Map, ori Orientation, windowSize int3
 func (_map *Map) Update(previousMap Map, ori Orientation, windowSize int32) {
 	_map.ShotsCount = 0
 	_map.CurrPlayer = previousMap.CurrPlayer
-	if ori == NORTH {
+	switch ori {
+	case NORTH:
 		_map.CurrPlayer.Y = windowSize - PBS
-	} else if ori == EAST {
+		break
+
+	case EAST:
 		_map.CurrPlayer.X = 0
-	} else if ori == SOUTH {
+		break
+
+	case SOUTH:
 		_map.CurrPlayer.Y = 0
-	} else if ori == WEST {
+		break
+
+	case WEST:
 		_map.CurrPlayer.X = windowSize - PBS
+		break
 	}
+}
+
+func (_map *Map) GetFreeSurface() int32 {
+	var freeSurface int32 = _map.Width * _map.Height
+	freeSurface -= ((_map.Width - _map.BorderSize) * _map.BorderSize) * 4
+	return freeSurface
 }
 
 func (_map *Map) DrawMenu(size int32) {
@@ -144,6 +187,21 @@ func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
 			}
 		}
 	}
+
+	var monsterCenter rl.Vector2
+	var monsterRadius float32
+	var i int32
+	for i = 0; i < _map.MonstersCount; i++ {
+		if i != *index {
+			monsterCenter, monsterRadius = _map.Monsters[i].GetHitbox()
+			if rl.CheckCollisionCircles(center, radius, monsterCenter, monsterRadius) {
+				_map.Monsters[*index].X = savedX
+				_map.Monsters[*index].X = savedX
+				return
+			}
+		}
+	}
+	
 	playerHitbox := _map.CurrPlayer.GetHitbox()
 	if rl.CheckCollisionCircleRec(center, radius, playerHitbox) {
 		_map.Monsters[*index].X = savedX

@@ -5,6 +5,31 @@ import (
 	util "Ymaets/util"
 )
 
+
+type Coord struct {
+	X int32
+	Y int32
+}
+
+func GetNextCoord(ori Orientation, coord Coord) Coord {
+	var newCoord Coord = coord
+	switch ori {
+		case NORTH:
+			newCoord.Y++
+			break
+		case SOUTH:
+			newCoord.Y--
+			break
+		case WEST:
+			newCoord.X--
+			break
+		case EAST:
+			newCoord.X++
+			break
+	}
+	return newCoord
+}
+
 type Orientation int32 
 const (
 	NONE = iota - 1
@@ -13,6 +38,56 @@ const (
 	EAST
 	WEST
 )
+
+func GetOpositeOri(ori Orientation) Orientation {
+	var oppositeOri Orientation
+	switch ori {
+		case NORTH:
+			oppositeOri = SOUTH
+			break
+		case SOUTH:
+			oppositeOri = NORTH
+			break
+		case WEST:
+			oppositeOri = EAST
+			break
+		case EAST:
+			oppositeOri = WEST
+			break
+
+		default:
+			oppositeOri = NONE
+			break
+	}
+	return oppositeOri
+}
+
+func RemoveOri(oris []Orientation, ori Orientation) []Orientation {
+	var oriss []Orientation = make([]Orientation, len(oris))
+	for index, ori := range oris {
+		oriss[index] = ori
+	}
+	for index, val := range oriss {
+		if val == ori {
+			oriss[index] = oriss[len(oriss)-1]
+			return oriss[:len(oriss)-1]
+		}
+	}
+	return oriss
+}
+
+func ContainsOri(oris []Orientation, ori Orientation) bool {
+	for _, val := range oris {
+		if val == ori {
+			return true
+		}
+	}
+	return false
+}
+
+func ChooseInOris(oris []Orientation) Orientation {
+	return oris[r1.Int() % len(oris)]
+}
 
 // Player body size
 var PBS int32 = 28
