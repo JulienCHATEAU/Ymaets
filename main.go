@@ -11,7 +11,7 @@ import (
 var s1 = rand.NewSource(time.Now().UnixNano())
 var r1 = rand.New(s1)
 
-var stageMapCount int32 = 25
+var stageMapCount int32 = 10
 var WINDOW_SIZE int32 = 800
 var MENU_SIZE int32 = 300
 var WINDOW_BCK rl.Color = rl.NewColor(245, 239, 220, 255) // Light Beige
@@ -42,11 +42,12 @@ func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, 
 	} else {
 		openings = []ym.Orientation {oppositeOri}
 	}
+	fmt.Println(openings)
 	deeperProba -= (100 / stageMapCount)
 	var _map *ym.Map = &ym.Map{}
+	_map.CurrPlayer = player
 	_map.Init(WINDOW_SIZE, openings)
 	_map.InitBorders()
-	_map.CurrPlayer = player
 	_maps[currentMapCoord] = _map
 	var nextCoord ym.Coord
 	remainingMapsToCreate, _ := ym.RemoveOri(openings, oppositeOri)

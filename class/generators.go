@@ -1,7 +1,7 @@
 package class
 
 import (
-	// "fmt"
+	"fmt"
 	"math/rand"
 	"time"
 	"github.com/gen2brain/raylib-go/raylib"
@@ -38,6 +38,8 @@ func GenerateOris(remainingMapCount *int32, oppositeOri Orientation, oriss []Ori
 			}
 		}
 	}
+	fmt.Print("oriss")
+	fmt.Println(oriss)
 	var start int32 = int32(len(opening))
 	var ori Orientation = oppositeOri
 	var trouve bool
