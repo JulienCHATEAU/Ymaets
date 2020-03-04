@@ -110,16 +110,8 @@ func (_map *Map) Init(windowSize int32, opening []Orientation) {
 	_map.Shots = make([]Shot, 50)
 }
 
-func (_map *Map) MapChangeInit(previousMap Map, ori Orientation, windowSize int32, opening []Orientation) {
-	_map.Init(windowSize, opening)
-	_map.InitBorders()
-	_map.CurrPlayer = previousMap.CurrPlayer
-	_map.Update(previousMap, ori, windowSize)
-}
-
-func (_map *Map) Update(previousMap Map, ori Orientation, windowSize int32) {
+func (_map *Map) Update(ori Orientation, windowSize int32) {
 	_map.ShotsCount = 0
-	_map.CurrPlayer = previousMap.CurrPlayer
 	switch ori {
 	case NORTH:
 		_map.CurrPlayer.Y = windowSize - PBS

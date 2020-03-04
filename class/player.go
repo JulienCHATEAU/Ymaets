@@ -62,7 +62,7 @@ func GetOpositeOri(ori Orientation) Orientation {
 	return oppositeOri
 }
 
-func RemoveOri(oris []Orientation, ori Orientation) []Orientation {
+func RemoveOri(oris []Orientation, ori Orientation) ([]Orientation, bool) {
 	var oriss []Orientation = make([]Orientation, len(oris))
 	for index, ori := range oris {
 		oriss[index] = ori
@@ -70,10 +70,10 @@ func RemoveOri(oris []Orientation, ori Orientation) []Orientation {
 	for index, val := range oriss {
 		if val == ori {
 			oriss[index] = oriss[len(oriss)-1]
-			return oriss[:len(oriss)-1]
+			return oriss[:len(oriss)-1], true
 		}
 	}
-	return oriss
+	return oriss, false
 }
 
 func ContainsOri(oris []Orientation, ori Orientation) bool {
@@ -87,6 +87,11 @@ func ContainsOri(oris []Orientation, ori Orientation) bool {
 
 func ChooseInOris(oris []Orientation) Orientation {
 	return oris[r1.Int() % len(oris)]
+}
+
+func ShuffleOris(oris []Orientation) []Orientation {
+	r1.Shuffle(len(oris), func(i, j int) { oris[i], oris[j] = oris[j], oris[i] })
+	return oris
 }
 
 // Player body size

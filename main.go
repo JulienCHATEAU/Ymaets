@@ -2,10 +2,16 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 	ym "Ymaets/class"
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+var s1 = rand.NewSource(time.Now().UnixNano())
+var r1 = rand.New(s1)
+
+var stageMapCount int32 = 25
 var WINDOW_SIZE int32 = 800
 var MENU_SIZE int32 = 300
 var WINDOW_BCK rl.Color = rl.NewColor(245, 239, 220, 255) // Light Beige
@@ -16,25 +22,57 @@ func removeImpossibleOris(_maps map[ym.Coord]*ym.Map, currentMapCoord ym.Coord, 
 	for _, ori := range oris {
 		coord = ym.GetNextCoord(ori, currentMapCoord)
 		if _, ok := _maps[coord]; ok {
-			oris = ym.RemoveOri(oris, ori)
+			oris, _ = ym.RemoveOri(oris, ori)
 		}
 	}
 	return oris
 }
 
-func main() {
-
-	var remainingMapCount int = 10
-	var notCreatedYet int = 1
-	var currentMapCoord ym.Coord = ym.Coord{0, 0}
-	var _maps map[ym.Coord]*ym.Map = make(map[ym.Coord]*ym.Map)
+func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, ori ym.Orientation, currentMapCoord ym.Coord, remainingMapCount *int32) map[ym.Coord]*ym.Map {
+	fmt.Println()
+	fmt.Println(currentMapCoord)
+	fmt.Printf("remainingMapCount : %d\n", *remainingMapCount)
+	var oppositeOri ym.Orientation = ym.GetOpositeOri(ori)
+	var openings []ym.Orientation
+	if *remainingMapCount > 0 && r1.Int31() % 100 < deeperProba {
+		var oris []ym.Orientation = []ym.Orientation {ym.NORTH, ym.SOUTH, ym.EAST, ym.WEST}
+		oris = removeImpossibleOris(_maps, currentMapCoord, oris)
+		openings = ym.GenerateOris(remainingMapCount, oppositeOri, oris, _maps, currentMapCoord)
+		openings = ym.ShuffleOris(openings)
+	} else {
+		openings = []ym.Orientation {oppositeOri}
+	}
+	deeperProba -= (100 / stageMapCount)
 	var _map *ym.Map = &ym.Map{}
-	_map.Init(WINDOW_SIZE, []ym.Orientation {ym.NORTH})
-	_map.CurrPlayer.Init(_map.Width - 50, _map.Height - 50, ym.NORTH)
+	_map.Init(WINDOW_SIZE, openings)
 	_map.InitBorders()
+	_map.CurrPlayer = player
 	_maps[currentMapCoord] = _map
-	remainingMapCount--
+	var nextCoord ym.Coord
+	remainingMapsToCreate, _ := ym.RemoveOri(openings, oppositeOri)
+	for _, opening := range remainingMapsToCreate {
+		nextCoord = ym.GetNextCoord(opening, currentMapCoord)
+		if _, ok := _maps[nextCoord]; !ok {
+			_maps = initStage(_maps, player, deeperProba, opening, nextCoord, remainingMapCount)
+		}
+	}
+	return _maps
+}
 
+func main() {
+	var remainingMapCount int32 = stageMapCount
+	remainingMapCount--
+	var currentMapCoord ym.Coord = ym.Coord{0, 0}
+	var _maps map[ym.Coord]*ym.Map
+	var player ym.Player
+	player.Init(WINDOW_SIZE - 50, WINDOW_SIZE - 50, ym.NORTH)
+	for int32(len(_maps)) < stageMapCount - 1 {
+		remainingMapCount = stageMapCount
+		_maps = initStage(make(map[ym.Coord]*ym.Map), player, 100, ym.NONE, currentMapCoord, &remainingMapCount)
+	}
+	fmt.Println(len(_maps))
+	fmt.Println(_maps)
+	
 	fmt.Println("Ymaets")
 	rl.InitWindow(_maps[currentMapCoord].Width + MENU_SIZE, _maps[currentMapCoord].Height, "Ymaets")
 	rl.HideCursor()
@@ -44,8 +82,6 @@ func main() {
 	var index int32 
 	var changeMapOri ym.Orientation
 	var newMapIndex ym.Coord
-	var oppositeOri ym.Orientation
-	var opening []ym.Orientation
 
 	for !rl.WindowShouldClose() {
 
@@ -87,22 +123,9 @@ func main() {
 				_maps[currentMapCoord].PlayerDraw()
 			} else {
 				newMapIndex = ym.GetNextCoord(changeMapOri, currentMapCoord)
-				if _, ok := _maps[newMapIndex]; ok {
-					_maps[newMapIndex].Update(*_maps[currentMapCoord], changeMapOri, WINDOW_SIZE)
-					currentMapCoord = newMapIndex
-				} else {
-					var nextMap *ym.Map = &ym.Map{}
-					oppositeOri = ym.GetOpositeOri(changeMapOri)
-					var oris []ym.Orientation = []ym.Orientation {ym.NORTH, ym.SOUTH, ym.EAST, ym.WEST}
-					oris = ym.RemoveOri(oris, oppositeOri)
-					oris = removeImpossibleOris(_maps, newMapIndex, oris)
-					opening = ym.GenerateOris(&remainingMapCount, &notCreatedYet, oppositeOri, oris, _maps, newMapIndex)
-					nextMap.Init(WINDOW_SIZE, opening)
-					nextMap.InitBorders()
-					nextMap.MapChangeInit(*_maps[currentMapCoord], changeMapOri, WINDOW_SIZE, opening)
-					_maps[newMapIndex] = nextMap
-					currentMapCoord = newMapIndex
-				}
+				_maps[newMapIndex].CurrPlayer = _maps[currentMapCoord].CurrPlayer
+				_maps[newMapIndex].Update(changeMapOri, WINDOW_SIZE)
+				currentMapCoord = newMapIndex
 			}
 			_maps[currentMapCoord].CursorMove(mouseX, mouseY)
 			_maps[currentMapCoord].CursorDraw()

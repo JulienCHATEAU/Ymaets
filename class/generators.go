@@ -11,45 +11,55 @@ var s1 = rand.NewSource(time.Now().UnixNano())
 var r1 = rand.New(s1)
 var oris []Orientation = []Orientation {NORTH, SOUTH, EAST, WEST}
 
-func GenerateOris(remainingMapCount, notCreatedYet *int, oppositeOri Orientation, oriss []Orientation, _maps map[Coord]*Map, currentCoord Coord) []Orientation {
+func GenerateOris(remainingMapCount *int32, oppositeOri Orientation, oriss []Orientation, _maps map[Coord]*Map, currentCoord Coord) []Orientation {
 	var opening []Orientation
-	possibleAmount := *remainingMapCount - *notCreatedYet
-	var toCreate int
-	orissLength := len(oriss)
+	var possibleAmount int32 = *remainingMapCount
+	var toCreate int32
+	var orissLength int32 = int32(len(oriss))
 	if possibleAmount > 0 {
 		if possibleAmount > orissLength {
-			possibleAmount = orissLength
+			if orissLength > 0 {
+				possibleAmount = orissLength
+				toCreate = (r1.Int31() % possibleAmount) + 1
+			} else {
+				toCreate = 0
+			}
 		}
-		toCreate = (r1.Int() % possibleAmount) + 1
 	} else {
 		toCreate = 0
 	}
-	*remainingMapCount--
-	*notCreatedYet += toCreate - 1
 	opening = make([]Orientation, 0)
-	start := 0
 	for _, ori := range oris {
 		if value, ok := _maps[GetNextCoord(ori, currentCoord)]; ok {
 			if ContainsOri(value.Opening, GetOpositeOri(ori)) {
 				opening = append(opening, ori)
-				start++
+			} else {
+				oriss, _ = RemoveOri(oriss, ori)
 			}
 		}
 	}
+	var start int32 = int32(len(opening))
 	var ori Orientation = oppositeOri
 	var trouve bool
-	for i := start; i<toCreate+1; i++ {
+	var i, j int32
+	var count int32 = 0
+	for i = start-1; i<toCreate; i++ {
+		if count > 10 {
+			break
+		}
 		ori = ChooseInOris(oriss)
 		trouve = true
-		for j := 0; j<i; j++ {
+		for j = 0; j<=i; j++ {
 			if ori == opening[j] {
 				trouve = false
 				break
 			}
 		}
 		if trouve {
-				opening = append(opening, ori)
+			*remainingMapCount--
+			opening = append(opening, ori)
 		} else {
+			count++
 			i--
 		}
 	}
@@ -65,11 +75,9 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 	switch ori {
 	case NORTH:
 		currY = y - highEdge
-		// fmt.Printf("NORTH : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		if currY < _map.BorderSize {
 			highEdge -= (currY - _map.BorderSize)
 			currY = _map.BorderSize
-			// fmt.Printf("NORTH : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		}
 		wall.InitWall(x, currY, lowEdge, highEdge, rl.Gray)
 		nextX = x 
@@ -77,10 +85,8 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 		break
 
 	case EAST:
-		// fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		if x + highEdge > _map.Width - _map.BorderSize {
 			highEdge = _map.Width - _map.BorderSize - x
-			// fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		}
 		wall.InitWall(x, y, highEdge, lowEdge, rl.Gray)
 		nextX = x + highEdge - nextLowEdge
@@ -88,10 +94,8 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 		break
 
 	case SOUTH:
-		// fmt.Printf("SOUTH : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		if y + highEdge > _map.Height - _map.BorderSize {
 			highEdge = _map.Height - _map.BorderSize - y
-			// fmt.Printf("SOUTH : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		}
 		wall.InitWall(x, y, lowEdge, highEdge, rl.Gray)
 		nextX = x
@@ -100,11 +104,9 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 
 	case WEST:
 		currX = x - highEdge
-		// fmt.Printf("WEST : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		if currX < _map.BorderSize {
 			highEdge -= (currX - _map.BorderSize)
 			currX = _map.BorderSize
-			// fmt.Printf("WEST : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		}
 		wall.InitWall(currX, y, highEdge, lowEdge, rl.Gray)
 		nextX = currX
@@ -128,6 +130,7 @@ func GenerateBigWall(_map *Map, bigWallSurface, x, y, cornerCount int32, current
 	var newX int32
 	var newY int32
 	var collision bool
+	var orisss []Orientation
 	for i = 0; i < wallCount; i++ {
 		wallSurface = bigWallSurface * (r1.Int31() % 11 + (100 / wallCount) - 11) / 100
 		if remainingSurface - wallSurface < 0 {
@@ -135,7 +138,9 @@ func GenerateBigWall(_map *Map, bigWallSurface, x, y, cornerCount int32, current
 		}
 		remainingSurface -= wallSurface
 		if wallSurface > 0 {
-			ori = ChooseInOris(RemoveOri(RemoveOri(oris, oppositeOri), ori))
+			orisss, _ = RemoveOri(oris, oppositeOri)
+			orisss, _ = RemoveOri(orisss, ori)
+			ori = ChooseInOris(orisss)
 			nextLowEdge = r1.Int31() % 30 + 30
 			highEdge = wallSurface / lowEdge
 			bigWall[i], newX, newY = GenerateWallWithOri(_map, ori, x, y, lowEdge, highEdge, nextLowEdge)
