@@ -234,31 +234,67 @@ func GenerateLake(_map *Map, rectCount, maxWidth, minWidth, maxHeight, minHeight
 }
 
 func GenerateWalls(_map *Map) []Wall {
+	var walls []Wall = make([]Wall, 0)
 	var freeSurface int32 = _map.GetFreeSurface()
-	var obstacleSurfaceProportion int32 = (r1.Int31() % 5) + 5
+	var obstacleSurfaceProportion int32 = (r1.Int31() % 10) + 15
 	var obstacleSurface int32 = freeSurface * obstacleSurfaceProportion / 100
 
-	var wallSurfaceProportion int32 = 80
-	// var wallSurfaceProportion int32 = (r1.Int31() % 50)
-	var wallSurface int32 = obstacleSurface * wallSurfaceProportion / 100
-	// obstacleSurface -= wallSurface
-	// var lavaSurfaceProportion int32 = (r1.Int31() % 50)
-	// var lavaSurface int32 = obstacleSurface * lavaSurfaceProportion
-	// obstacleSurface -= lavaSurface
-	// var waterSurfaceProportion int32 = obstacleSurface
-	var walls []Wall = make([]Wall, 0)
-	var pylonCornerCount int32 = r1.Int31() % 4 + 1
-	var bigWallCornerCount int32 = r1.Int31() % 2 + 1
-	fmt.Print("wallSurface : ")
-	fmt.Println(wallSurface)
-	walls = append(walls, GenerateLake(_map, 5, 150, 100, 50, 30, 100, 200, false)...)
-	walls = append(walls, GenerateLake(_map, 10, 150, 100, 40, 20, 400, 400, true)...)
-	walls = append(walls, GeneratePylon(_map, wallSurface / 2, 400, 400, pylonCornerCount)...)
-	// walls = append(walls, GeneratePylon(_map, wallSurface / 2, 50, 400, pylonCornerCount)...)
-	bigWallCornerCount = r1.Int31() % 2 + 1
-	walls = append(walls, GenerateBigWall(_map, wallSurface / 2, 400, 600, bigWallCornerCount)...)
-	// walls = append(walls, GenerateBigWall(_map, wallSurface, 200, 200, cornerCount, walls, openningHitboxes)...)
-	// cornerCount = r1.Int31() % 2 + 1
-	// walls = append(walls, GenerateBigWall(_map, wallSurface, 500, 200, cornerCount, walls, openningHitboxes)...)
+	var obstaclesCount int32 = r1.Int31() % 5 + 5
+	var bigWallsCount int32 = r1.Int31() % obstaclesCount
+	var bigWallsSurface int32 = obstacleSurface * bigWallsCount / obstaclesCount
+	obstaclesCount -= bigWallsCount
+	var pylonsCount int32 = r1.Int31() % (obstaclesCount+3)
+	var pylonsSurface int32 = obstacleSurface * pylonsCount / obstaclesCount
+	obstaclesCount -= pylonsCount
+	var waterLakesCount int32
+	var lavaLakesCount int32
+	if obstaclesCount > 0 {
+		waterLakesCount = r1.Int31() % obstaclesCount
+		obstaclesCount -= waterLakesCount
+		lavaLakesCount = r1.Int31() % obstaclesCount
+	}
+
+	var bigWallSurface int32
+	var bigWallCornerCount int32
+	var x, y int32
+	var i int32
+
+	var lakeRectCount int32
+	var lavaLake bool
+	for i = 0; i<waterLakesCount+lavaLakesCount; i++ {
+		x = r1.Int31() % 641 + 20
+		y = r1.Int31() % 641 + 20
+		lakeRectCount = r1.Int31() % 10 + 2
+		lavaLake = false
+		if i < lavaLakesCount {
+			lavaLake = true
+		}
+		walls = append(walls, GenerateLake(_map, lakeRectCount, 175, 75, 50, 30, x, y, lavaLake)...)
+	}
+
+	for i = 0; i<bigWallsCount; i++ {
+		bigWallSurface = (r1.Int31() % 10) + (bigWallsSurface / bigWallsCount)
+		x = r1.Int31() % 401 + 200
+		y = r1.Int31() % 401 + 200
+		bigWallCornerCount = r1.Int31() % 2 + 1
+		walls = append(walls, GenerateBigWall(_map, bigWallSurface, x, y, bigWallCornerCount)...)
+		bigWallsSurface -= bigWallSurface
+	}
+
+	var pylonSurface int32
+	var pylonCornerCount int32
+	var tmpSurface = pylonsSurface
+	for i = 0; i<pylonsCount; i++ {
+		pylonSurface = (r1.Int31() % 5) + (tmpSurface / pylonsCount)
+		if pylonSurface > 5000 {
+			pylonSurface = 5000
+		}
+		x = r1.Int31() % 741 + 20
+		y = r1.Int31() % 741 + 20
+		pylonCornerCount = r1.Int31() % 4 + 1
+		walls = append(walls, GeneratePylon(_map, pylonSurface, x, y, pylonCornerCount)...)
+		tmpSurface -= pylonSurface
+	}
+
 	return walls
 }

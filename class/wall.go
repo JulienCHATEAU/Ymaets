@@ -46,7 +46,7 @@ func (wall *Wall) InitLava(x, y, width, height int32) {
 }
 
 func (wall *Wall) InitWater(x, y, width, height int32) {
-	wall.init(x, y, width, height, true, false, rl.NewColor(104, 215, 250, 200))
+	wall.init(x, y, width, height, true, false, rl.NewColor(104, 215, 250, 255))
 }
 
 func (wall *Wall) InitWall(x, y, width, height int32, color rl.Color) {
