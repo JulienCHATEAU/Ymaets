@@ -30,6 +30,7 @@ func removeImpossibleOris(_maps map[ym.Coord]*ym.Map, currentMapCoord ym.Coord, 
 
 func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, ori ym.Orientation, currentMapCoord ym.Coord, remainingMapCount *int32) map[ym.Coord]*ym.Map {
 	fmt.Println()
+	fmt.Println(_maps)
 	fmt.Println(currentMapCoord)
 	fmt.Printf("remainingMapCount : %d\n", *remainingMapCount)
 	var oppositeOri ym.Orientation = ym.GetOpositeOri(ori)
@@ -92,7 +93,8 @@ func main() {
 			mouseY := rl.GetMouseY()
 
 			if rl.IsMouseButtonPressed(rl.MouseRightButton) {
-				fmt.Printf("(%d, %d)", mouseX, mouseY)
+				fmt.Printf("(%d, %d)\n", mouseX, mouseY)
+				fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
 			}
 
 			_maps[currentMapCoord].WallsDraw()

@@ -2,6 +2,7 @@ package class
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 	"github.com/gen2brain/raylib-go/raylib"
@@ -38,8 +39,6 @@ func GenerateOris(remainingMapCount *int32, oppositeOri Orientation, oriss []Ori
 			}
 		}
 	}
-	fmt.Print("oriss")
-	fmt.Println(oriss)
 	var start int32 = int32(len(opening))
 	var ori Orientation = oppositeOri
 	var trouve bool
@@ -78,9 +77,11 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 	case NORTH:
 		currY = y - highEdge
 		if currY < _map.BorderSize {
+			fmt.Printf("NORTH : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			highEdge -= (currY - _map.BorderSize)
 			currY = _map.BorderSize
 		}
+		fmt.Printf("NORTH : %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		wall.InitWall(x, currY, lowEdge, highEdge, rl.Gray)
 		nextX = x 
 		nextY = currY
@@ -88,8 +89,24 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 
 	case EAST:
 		if x + highEdge > _map.Width - _map.BorderSize {
+			fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			highEdge = _map.Width - _map.BorderSize - x
 		}
+		if y + lowEdge > _map.Height - _map.BorderSize {
+			fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+			lowEdge = _map.Height - _map.BorderSize - y
+		}
+		if x < _map.BorderSize {
+			fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+			highEdge += (x - _map.BorderSize)
+			x = _map.BorderSize
+		}
+		if y < _map.BorderSize {
+			fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+			lowEdge += (y - _map.BorderSize)
+			y = _map.BorderSize
+		}
+		fmt.Printf("EAST : %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		wall.InitWall(x, y, highEdge, lowEdge, rl.Gray)
 		nextX = x + highEdge - nextLowEdge
 		nextY = y
@@ -97,8 +114,10 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 
 	case SOUTH:
 		if y + highEdge > _map.Height - _map.BorderSize {
+			fmt.Printf("SOUTH : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			highEdge = _map.Height - _map.BorderSize - y
 		}
+		fmt.Printf("SOUTH : %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		wall.InitWall(x, y, lowEdge, highEdge, rl.Gray)
 		nextX = x
 		nextY = y + highEdge - nextLowEdge
@@ -107,9 +126,11 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 	case WEST:
 		currX = x - highEdge
 		if currX < _map.BorderSize {
+			fmt.Printf("WEST : out of map %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			highEdge -= (currX - _map.BorderSize)
 			currX = _map.BorderSize
 		}
+		fmt.Printf("WEST : %d, %d, %d, %d, %d, %d, %d\n", x, y, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		wall.InitWall(currX, y, highEdge, lowEdge, rl.Gray)
 		nextX = currX
 		nextY = y
@@ -118,13 +139,13 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 	return wall, nextX, nextY
 }
 
-func GenerateBigWall(_map *Map, bigWallSurface, x, y, cornerCount int32, currentWalls []Wall, openningHitboxes []rl.Rectangle) []Wall {
+func GenerateBigWall(_map *Map, bigWallSurface, x, y, cornerCount int32, openningHitboxes []rl.Rectangle) []Wall {
 	var wallCount int32 = cornerCount + 1
 	var ori Orientation = NONE
 	var oppositeOri Orientation
 	var bigWall []Wall = make([]Wall, wallCount)
 	var i int32
-	var lowEdge int32 = r1.Int31() % 30 + 30
+	var lowEdge int32 = r1.Int31() % 60 + 40
 	var nextLowEdge int32
 	var highEdge int32
 	var remainingSurface = bigWallSurface
@@ -150,12 +171,6 @@ func GenerateBigWall(_map *Map, bigWallSurface, x, y, cornerCount int32, current
 			if collision {
 				return bigWall[:i]
 			}
-			for _, currentWall := range currentWalls {
-				collision = rl.CheckCollisionRecs(currentWall.GetHitbox(), bigWall[i].GetHitbox())
-				if collision {
-					return bigWall[:i]
-				}
-			}
 			for _, openningHitbox := range openningHitboxes {
 				collision = rl.CheckCollisionRecs(openningHitbox, bigWall[i].GetHitbox())
 				if collision {
@@ -171,12 +186,33 @@ func GenerateBigWall(_map *Map, bigWallSurface, x, y, cornerCount int32, current
 	return bigWall
 }
 
+func GeneratePylon(_map *Map, wallSurface, centerX, centerY, cornerCount int32) []Wall {
+	var pylonLength int32 = cornerCount * 2 + 1
+	var pylon []Wall = make([]Wall, pylonLength)
+	var wEqualsH = int32(math.Sqrt(float64(wallSurface)))
+	var wHDiff int32 = 10
+	var centerRectWidth = wEqualsH + (((r1.Int31() % wHDiff)) * wEqualsH / 100)
+	var centerRectHeight = wEqualsH * 2 - centerRectWidth
+	var x int32 = centerX - centerRectWidth/2
+	var y int32 = centerY - centerRectHeight/2
+	pylon[0], _, _ = GenerateWallWithOri(_map, EAST, x, y, centerRectHeight, centerRectWidth, 0)
+	var i int32
+	var anglesLowEdge int32 = r1.Int31() % (centerRectWidth / 15) + 7
+	var iangles int32
+	for i = 1; i<cornerCount+1; i++ {
+		iangles = i * anglesLowEdge
+		pylon[i], _, _ = GenerateWallWithOri(_map, EAST, x + iangles, y - iangles, anglesLowEdge, centerRectWidth - iangles*2, 0)
+		pylon[pylonLength - i], _, _ = GenerateWallWithOri(_map, EAST, x + iangles, y + centerRectHeight + iangles - anglesLowEdge, anglesLowEdge, centerRectWidth - iangles*2, 0)
+	}
+	return pylon
+}
+
 func GenerateWalls(_map *Map) []Wall {
 	var freeSurface int32 = _map.GetFreeSurface()
 	var obstacleSurfaceProportion int32 = (r1.Int31() % 5) + 5
 	var obstacleSurface int32 = freeSurface * obstacleSurfaceProportion / 100
 
-	var wallSurfaceProportion int32 = 100
+	var wallSurfaceProportion int32 = 80
 	// var wallSurfaceProportion int32 = (r1.Int31() % 50)
 	var wallSurface int32 = obstacleSurface * wallSurfaceProportion / 100
 	// obstacleSurface -= wallSurface
@@ -185,12 +221,17 @@ func GenerateWalls(_map *Map) []Wall {
 	// obstacleSurface -= lavaSurface
 	// var waterSurfaceProportion int32 = obstacleSurface
 	var walls []Wall = make([]Wall, 0)
-	var cornerCount int32 = r1.Int31() % 2 + 2
+	var pylonCornerCount int32 = r1.Int31() % 4 + 1
+	var bigWallCornerCount int32 = r1.Int31() % 2 + 1
 	var openningHitboxes []rl.Rectangle = _map.GetOpeningHitboxes()
-	walls = append(walls, GenerateBigWall(_map, wallSurface, 400, 600, cornerCount, walls, openningHitboxes)...)
-	cornerCount = r1.Int31() % 2 + 2
-	walls = append(walls, GenerateBigWall(_map, wallSurface, 200, 200, cornerCount, walls, openningHitboxes)...)
-	cornerCount = r1.Int31() % 2 + 2
-	walls = append(walls, GenerateBigWall(_map, wallSurface, 500, 200, cornerCount, walls, openningHitboxes)...)
+	fmt.Print("wallSurface : ")
+	fmt.Println(wallSurface)
+	walls = append(walls, GeneratePylon(_map, wallSurface / 2, 400, 400, pylonCornerCount)...)
+	// walls = append(walls, GeneratePylon(_map, wallSurface / 2, 50, 400, pylonCornerCount)...)
+	bigWallCornerCount = r1.Int31() % 2 + 1
+	walls = append(walls, GenerateBigWall(_map, wallSurface / 2, 400, 600, bigWallCornerCount, openningHitboxes)...)
+	// walls = append(walls, GenerateBigWall(_map, wallSurface, 200, 200, cornerCount, walls, openningHitboxes)...)
+	// cornerCount = r1.Int31() % 2 + 1
+	// walls = append(walls, GenerateBigWall(_map, wallSurface, 500, 200, cornerCount, walls, openningHitboxes)...)
 	return walls
 }

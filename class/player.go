@@ -113,7 +113,7 @@ var PSC rl.Color = rl.Red
 // Player fire cooldown
 var PFC int32 = 8
 // Player move speed
-var PMS int32 = 4
+var PMS int32 = 6
 // Player health max
 var PHM int32 = 100
 // Player timers count
