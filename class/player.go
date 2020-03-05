@@ -113,7 +113,7 @@ var PSC rl.Color = rl.Red
 // Player fire cooldown
 var PFC int32 = 8
 // Player move speed
-var PMS int32 = 6
+var PMS int32 = 4
 // Player health max
 var PHM int32 = 100
 // Player timers count
@@ -156,35 +156,37 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 }
 
 func (player *Player) GetHitbox() rl.Rectangle {
-	var x int32 = 0
-	var y int32 = 0
+	// var x int32 = 0
+	// var y int32 = 0
+	var x int32 = player.X
+	var y int32 = player.Y
 	width := PBS
 	height := PBS
-	switch player.Ori {
-	case NORTH:
-		x = player.X
-		y = player.Y - PCH
-		height += PCH
-		break
+	// switch player.Ori {
+	// case NORTH:
+	// 	x = player.X
+	// 	y = player.Y - PCH
+	// 	height += PCH
+	// 	break
 
-	case SOUTH:
-		x = player.X
-		y = player.Y
-		height += PCH
-		break
+	// case SOUTH:
+	// 	x = player.X
+	// 	y = player.Y
+	// 	height += PCH
+	// 	break
 
-	case EAST:
-		x = player.X
-		y = player.Y
-		width += PCH
-		break
+	// case EAST:
+	// 	x = player.X
+	// 	y = player.Y
+	// 	width += PCH
+	// 	break
 
-	case WEST:
-		x = player.X - PCH
-		y = player.Y
-		width += PCH
-		break
-	}
+	// case WEST:
+	// 	x = player.X - PCH
+	// 	y = player.Y
+	// 	width += PCH
+	// 	break
+	// }
 	return util.ToRectangle(x, y, width, height)
 }
 
