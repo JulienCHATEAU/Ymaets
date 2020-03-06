@@ -47,7 +47,7 @@ func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, 
 	deeperProba -= (100 / stageMapCount)
 	var _map *ym.Map = &ym.Map{}
 	_map.CurrPlayer = player
-	_map.Init(WINDOW_SIZE, openings)
+	_map.Init(currentMapCoord, WINDOW_SIZE, openings)
 	_map.InitBorders()
 	_maps[currentMapCoord] = _map
 	var nextCoord ym.Coord

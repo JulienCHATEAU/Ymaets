@@ -1,23 +1,25 @@
 package class
 
 import (
-	// "fmt"
+	"fmt"
 	"Ymaets/util"
 	"strconv"
 	"time"
 	"math/rand"
 	"github.com/gen2brain/raylib-go/raylib"
+	"github.com/nickdavies/go-astar/astar"
 )
 
 //Map opening size
 var MOS int32 = 80
 //Map opening hitbox edge
-var MOHE int32 = 100
+var MOHE int32 = 50
 
 var source = rand.NewSource(time.Now().UnixNano())
 var random = rand.New(source)
 
 type Map struct {
+	Coords				Coord
 	Width 				int32
 	Height 				int32
 	BorderSize 		int32
@@ -91,10 +93,11 @@ func (_map *Map) InitBorders() {
 	// _map.Walls[borderCount].InitWall(150, 150, 40, 30, rl.Gray)
 	// _map.Walls[borderCount+1].InitWater(500, 170, 20, 50)
 	// _map.Walls[borderCount+2].InitLava(600, 540, 25, 45)
-	_map.Walls = append(_map.Walls, GenerateWalls(_map)...)
+	_map.Walls = append(_map.Walls, GeneratePossibleWalls(_map)...)
 }
 
-func (_map *Map) Init(windowSize int32, opening []Orientation) {
+func (_map *Map) Init(coord Coord, windowSize int32, opening []Orientation) {
+	_map.Coords = coord
 	_map.BorderSize = 20
 	_map.Width = windowSize
 	_map.Height = windowSize
@@ -345,8 +348,8 @@ func (_map *Map) PlayerDraw() {
 }
 
 func (_map *Map) WallsDraw() {
-	for _, wall := range _map.Walls {
-		wall.Draw()
+	for index := len(_map.Walls)-1; index >= 0; index-- {
+		_map.Walls[index].Draw()
 	}
 }
 
@@ -415,4 +418,49 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 			return
 		}
 	}
+}
+
+func (_map *Map) aStar(walls []Wall) bool {
+	rows := int(_map.Width / PBS)
+	cols := int(_map.Height / PBS)
+	fmt.Println(len(_map.Opening))
+	aStar := astar.NewAStar(rows, cols)
+	p2p := astar.NewPointToPoint()
+	for i := 0; i<rows; i++ {
+		for j := 0; j<cols; j++ {
+			for _, wall := range walls {
+				if !wall.Walkable && rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(i * rows), float32(j*rows), float32(PBS), float32(PBS)}) {
+					aStar.FillTile(astar.Point{i, j}, -1)
+					break
+				}
+			}
+		}
+	}
+
+	if len(_map.Opening) == 1 {
+		return true
+	}
+
+	var source, target []astar.Point
+	if _map.Coords.X == 0 && _map.Coords.Y == 0 {
+		for _, ori := range _map.Opening {
+			source = OriToAstarCoord(ori, rows, cols)
+			target = []astar.Point {astar.Point{rows-1, cols-1}}	
+			if aStar.FindPath(p2p, source, target) == nil {
+				return false
+			}
+		}
+	}
+
+	openingLength := len(_map.Opening)
+	for k := 0; k<openingLength; k++ {
+		for l := k+1; l<openingLength; l++ {
+			source = OriToAstarCoord(_map.Opening[k], rows, cols)
+			target = OriToAstarCoord(_map.Opening[l], rows, cols)
+			if aStar.FindPath(p2p, source, target) == nil {
+				return false
+			}
+		}
+	}
+	return true
 }

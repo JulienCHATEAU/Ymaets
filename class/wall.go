@@ -13,7 +13,7 @@ const (
 // Wall timers count
 var WTC int32 = 1
 // Lava walk damage
-var LWD int32 = 5
+var LWD int32 = 1
 // Lava damage tick
 var LDT int32 = 30
 
@@ -27,6 +27,12 @@ type Wall struct {
 	WalkDamage 	int32
 	Animations	Timers
 	Color 			rl.Color
+}
+
+func RemoveWall(index *int, walls []Wall) []Wall {
+	walls[*index] = walls[len(walls)-1]
+	*(index)--
+	return walls[:len(walls)-1]
 }
 
 func (wall *Wall) init(x, y, width, height int32, crossable, walkable bool, color rl.Color) {

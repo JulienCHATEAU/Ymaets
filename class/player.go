@@ -2,6 +2,7 @@ package class
 
 import (
 	"github.com/gen2brain/raylib-go/raylib"
+	"github.com/nickdavies/go-astar/astar"
 	util "Ymaets/util"
 )
 
@@ -92,6 +93,28 @@ func ChooseInOris(oris []Orientation) Orientation {
 func ShuffleOris(oris []Orientation) []Orientation {
 	r1.Shuffle(len(oris), func(i, j int) { oris[i], oris[j] = oris[j], oris[i] })
 	return oris
+}
+
+func OriToAstarCoord(ori Orientation, width, height int) []astar.Point {
+	var coord []astar.Point
+	switch ori {
+		case NORTH:
+			coord = []astar.Point{astar.Point{width/2, 0}}
+			break
+		case SOUTH:
+			coord = []astar.Point{astar.Point{width/2, height-1}}
+			break
+		case WEST:
+			coord = []astar.Point{astar.Point{0, height/2}}
+			break
+		case EAST:
+			coord = []astar.Point{astar.Point{width-1, height/2}}
+			break
+
+		default:
+			break
+	}
+	return coord
 }
 
 // Player body size

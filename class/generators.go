@@ -185,18 +185,24 @@ func GenerateBigWall(_map *Map, bigWallSurface, x, y, cornerCount int32) []Wall 
 }
 
 func GeneratePylon(_map *Map, wallSurface, centerX, centerY, cornerCount int32) []Wall {
-	var pylonLength int32 = cornerCount * 2 + 1
-	var pylon []Wall = make([]Wall, pylonLength)
+	
 	var wEqualsH = int32(math.Sqrt(float64(wallSurface)))
 	var wHDiff int32 = 10
 	var centerRectWidth = wEqualsH + (((r1.Int31() % wHDiff)) * wEqualsH / 100)
 	var centerRectHeight = wEqualsH * 2 - centerRectWidth
+	var anglesLowEdge int32 = r1.Int31() % (centerRectWidth / 15) + 7
+	
+	if centerRectWidth - cornerCount*anglesLowEdge*2 < 15 {
+		cornerCount -= 2
+	}
+	var pylonLength int32 = cornerCount * 2 + 1
+	var pylon []Wall = make([]Wall, pylonLength)
+	
 	var x int32 = centerX - centerRectWidth/2
 	var y int32 = centerY - centerRectHeight/2
 	currX, currY, currLowEdge, currHighEdge, _, _ := GenerateWallWithOri(_map, EAST, x, y, centerRectHeight, centerRectWidth, 0)
 	pylon[0].InitWall(currX, currY, currLowEdge, currHighEdge, rl.Gray)
 	var i int32
-	var anglesLowEdge int32 = r1.Int31() % (centerRectWidth / 15) + 7
 	var iangles int32
 	for i = 1; i<cornerCount+1; i++ {
 		iangles = i * anglesLowEdge
@@ -239,13 +245,16 @@ func GenerateWalls(_map *Map) []Wall {
 	var obstacleSurfaceProportion int32 = (r1.Int31() % 10) + 15
 	var obstacleSurface int32 = freeSurface * obstacleSurfaceProportion / 100
 
-	var obstaclesCount int32 = r1.Int31() % 5 + 5
+	var obstaclesCount int32 = r1.Int31() % 7 + 5
 	var bigWallsCount int32 = r1.Int31() % obstaclesCount
 	var bigWallsSurface int32 = obstacleSurface * bigWallsCount / obstaclesCount
+	if bigWallsCount >= 2 {
+		bigWallsCount -= 2
+	}
 	obstaclesCount -= bigWallsCount
-	var pylonsCount int32 = r1.Int31() % (obstaclesCount+3)
-	var pylonsSurface int32 = obstacleSurface * pylonsCount / obstaclesCount
+	var pylonsCount int32 = r1.Int31() % obstaclesCount
 	obstaclesCount -= pylonsCount
+	var pylonsSurface int32 = obstacleSurface * pylonsCount / obstaclesCount
 	var waterLakesCount int32
 	var lavaLakesCount int32
 	if obstaclesCount > 0 {
@@ -258,24 +267,10 @@ func GenerateWalls(_map *Map) []Wall {
 	var bigWallCornerCount int32
 	var x, y int32
 	var i int32
-
-	var lakeRectCount int32
-	var lavaLake bool
-	for i = 0; i<waterLakesCount+lavaLakesCount; i++ {
-		x = r1.Int31() % 641 + 20
-		y = r1.Int31() % 641 + 20
-		lakeRectCount = r1.Int31() % 10 + 2
-		lavaLake = false
-		if i < lavaLakesCount {
-			lavaLake = true
-		}
-		walls = append(walls, GenerateLake(_map, lakeRectCount, 175, 75, 50, 30, x, y, lavaLake)...)
-	}
-
 	for i = 0; i<bigWallsCount; i++ {
 		bigWallSurface = (r1.Int31() % 10) + (bigWallsSurface / bigWallsCount)
-		x = r1.Int31() % 401 + 200
-		y = r1.Int31() % 401 + 200
+		x = r1.Int31() % 761 + 200
+		y = r1.Int31() % 761 + 200
 		bigWallCornerCount = r1.Int31() % 2 + 1
 		walls = append(walls, GenerateBigWall(_map, bigWallSurface, x, y, bigWallCornerCount)...)
 		bigWallsSurface -= bigWallSurface
@@ -289,12 +284,46 @@ func GenerateWalls(_map *Map) []Wall {
 		if pylonSurface > 5000 {
 			pylonSurface = 5000
 		}
-		x = r1.Int31() % 741 + 20
-		y = r1.Int31() % 741 + 20
+		x = r1.Int31() % 761 + 20
+		y = r1.Int31() % 761 + 20
 		pylonCornerCount = r1.Int31() % 4 + 1
 		walls = append(walls, GeneratePylon(_map, pylonSurface, x, y, pylonCornerCount)...)
 		tmpSurface -= pylonSurface
 	}
 
+	var lakeRectCount int32
+	var lavaLake bool
+	for i = 0; i<waterLakesCount+lavaLakesCount; i++ {
+		x = r1.Int31() % 761 + 20
+		y = r1.Int31() % 761 + 20
+		lakeRectCount = r1.Int31() % 10 + 2
+		lavaLake = false
+		if i >= lavaLakesCount {
+			lavaLake = true
+		}
+		walls = append(walls, GenerateLake(_map, lakeRectCount, 175, 75, 50, 30, x, y, lavaLake)...)
+	}
+
+	return walls
+}
+
+func GeneratePossibleWalls(_map *Map) []Wall {
+	var walls []Wall
+	pathFound := false
+	for !pathFound {
+		walls = GenerateWalls(_map)
+		pathFound = _map.aStar(walls)
+		fmt.Println(pathFound)
+	}
+	var wallHitbox rl.Rectangle
+	for index := 0; index < len(walls); index++ {
+		wallHitbox = walls[index].GetHitbox()
+		for _, hitbox := range _map.GetOpeningHitboxes() {
+			if rl.CheckCollisionRecs(wallHitbox, hitbox) {
+				walls = RemoveWall(&index, walls)
+				break
+			}
+		}
+	}
 	return walls
 }
