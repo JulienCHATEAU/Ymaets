@@ -25,6 +25,7 @@ III) Then to download this project and its dependancies execute these following 
 - `apt-get install libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev`
 - `apt-get install libwayland-dev libxkbcommon-dev `
 - `go get -v -u github.com/gen2brain/raylib-go/raylib`
+- `go get github.com/nickdavies/go-astar/astar`
 
 IV) Finally, to compile the project use :
 
@@ -32,7 +33,8 @@ IV) Finally, to compile the project use :
 
 ## Advice
 
-Note that your GOPATH variable is unset when you quit your terminal. Add `export GOPATH=<your_go_workspace_path>` to your .bashrc file in order to make it persistent
+Note that in II), your GOPATH variable will be unset when you quit your terminal.  
+Add `export GOPATH=<your_go_workspace_path>` to your .bashrc file in order to make it persistent.
 
 ## Run 
 
