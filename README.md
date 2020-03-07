@@ -8,18 +8,18 @@ Ymaets is a 2D game where you drive a small ship and defend yourself against wil
 
 ## Installation
 
-I) Start by update your Linux packages
+I) Start by updating your Linux packages
 
 - `sudo apt update`
 - `sudo apt updgrade`
 
-II) If you already have a Go workspace go to II), otherwise let's create one.   
+II) If you already have a Go workspace go to III), otherwise let's create one.   
 Move to a directory where you want to create your Go workspace and execute the following commands :
 
 - `mkdir -p go/src go/bin`
 - `export GOPATH=$(pwd)/go`
 
-III) Then to download this project and its dependancies execute :
+III) Then to download this project and its dependancies execute these following commands :
 
 - `git clone https://github.com/JulienCHATEAU/Ymaets.git $GOPATH/src/Ymaets`
 - `apt-get install libgl1-mesa-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev`
@@ -29,6 +29,10 @@ III) Then to download this project and its dependancies execute :
 IV) Finally, to compile the project use :
 
 - `go install Ymaets`
+
+## Advice
+
+Note that your GOPATH variable is unset when you quit your terminal. Add `export GOPATH=<your_go_workspace_path>` to your .bashrc file in order to make it persistent
 
 ## Run 
 
