@@ -12,7 +12,7 @@ import (
 var s1 = rand.NewSource(time.Now().UnixNano())
 var r1 = rand.New(s1)
 
-var stageMapCount int32 = 30
+var stageMapCount int32 = 15
 var MAP_SIZE int32 = 800
 var MENU_SIZE int32 = 300
 var MENU_BORDER_SIZE int32 = 10
