@@ -30,7 +30,9 @@ type Wall struct {
 }
 
 func RemoveWall(index *int, walls []Wall) []Wall {
-	walls[*index] = walls[len(walls)-1]
+	for i := *index; i<len(walls)-1; i++ {
+		walls[i] = walls[i+1]
+	}
 	*(index)--
 	return walls[:len(walls)-1]
 }

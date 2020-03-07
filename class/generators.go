@@ -12,7 +12,7 @@ var s1 = rand.NewSource(time.Now().UnixNano())
 var r1 = rand.New(s1)
 var oris []Orientation = []Orientation {NORTH, SOUTH, EAST, WEST}
 
-func GenerateOris(remainingMapCount *int32, oppositeOri Orientation, oriss []Orientation, _maps map[Coord]*Map, currentCoord Coord) []Orientation {
+func GenerateOris(remainingMapCount *int32, oppositeOri Orientation, oriss []Orientation, _maps map[Coord]*Map, currentCoord Coord, addNewOri bool) []Orientation {
 	var opening []Orientation
 	var possibleAmount int32 = *remainingMapCount
 	var toCreate int32
@@ -39,31 +39,33 @@ func GenerateOris(remainingMapCount *int32, oppositeOri Orientation, oriss []Ori
 			}
 		}
 	}
-	var start int32 = int32(len(opening))
-	var ori Orientation = oppositeOri
-	var trouve bool
-	var i, j int32
-	var count int32 = 0
-	for i = start-1; i<toCreate; i++ {
-		if count > 10 {
-			break
-		}
-		ori = ChooseInOris(oriss)
-		trouve = true
-		for j = 0; j<=i; j++ {
-			if ori == opening[j] {
-				trouve = false
+	if addNewOri {
+		var start int32 = int32(len(opening))
+		var ori Orientation = oppositeOri
+		var trouve bool
+		var i, j int32
+		var count int32 = 0
+		for i = start-1; i<toCreate; i++ {
+			if count > 10 {
 				break
 			}
+			ori = ChooseInOris(oriss)
+			trouve = true
+			for j = 0; j<=i; j++ {
+				if ori == opening[j] {
+					trouve = false
+					break
+				}
+			}
+			if trouve {
+				*remainingMapCount--
+				opening = append(opening, ori)
+			} else {
+				count++
+				i--
+			}
 		}
-		if trouve {
-			*remainingMapCount--
-			opening = append(opening, ori)
-		} else {
-			count++
-			i--
-		}
-	}
+	}	
 	return opening
 }
 
@@ -77,35 +79,35 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 	case NORTH:
 		currY = y - highEdge
 		if currY < _map.BorderSize {
-			fmt.Printf("NORTH : out of map %d, %d, %d, %d, %d, %d, %d\n", x, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+			// fmt.Printf("NORTH : out of map %d, %d, %d, %d, %d, %d, %d\n", x, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			highEdge -= (currY - _map.BorderSize)
 			currY = _map.BorderSize
 		}
-		fmt.Printf("NORTH : %d, %d, %d, %d, %d, %d, %d\n", x, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+		// fmt.Printf("NORTH : %d, %d, %d, %d, %d, %d, %d\n", x, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		nextX = currX 
 		nextY = currY
 		break
 
 	case EAST:
 		if currX + highEdge > _map.Width - _map.BorderSize {
-			fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+			// fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			highEdge = _map.Width - _map.BorderSize - currX
 		}
 		if currY + lowEdge > _map.Height - _map.BorderSize {
-			fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+			// fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			lowEdge = _map.Height - _map.BorderSize - currY
 		}
 		if currX < _map.BorderSize {
-			fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+			// fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			highEdge += (currX - _map.BorderSize)
 			currX = _map.BorderSize
 		}
 		if currY < _map.BorderSize {
-			fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+			// fmt.Printf("EAST : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			lowEdge += (currY - _map.BorderSize)
 			currY = _map.BorderSize
 		}
-		fmt.Printf("EAST : %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+		// fmt.Printf("EAST : %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		nextX = currX + highEdge - nextLowEdge
 		nextY = currY
 		tmp = highEdge
@@ -115,10 +117,10 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 
 	case SOUTH:
 		if currY + highEdge > _map.Height - _map.BorderSize {
-			fmt.Printf("SOUTH : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+			// fmt.Printf("SOUTH : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			highEdge = _map.Height - _map.BorderSize - currY
 		}
-		fmt.Printf("SOUTH : %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+		// fmt.Printf("SOUTH : %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		nextX = currX
 		nextY = currY + highEdge - nextLowEdge
 		break
@@ -126,11 +128,11 @@ func GenerateWallWithOri(_map *Map, ori Orientation, x, y, lowEdge, highEdge, ne
 	case WEST:
 		currX = currX - highEdge
 		if currX < _map.BorderSize {
-			fmt.Printf("WEST : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+			// fmt.Printf("WEST : out of map %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 			highEdge -= (currX - _map.BorderSize)
 			currX = _map.BorderSize
 		}
-		fmt.Printf("WEST : %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
+		// fmt.Printf("WEST : %d, %d, %d, %d, %d, %d, %d\n", currX, currY, lowEdge, highEdge, _map.Width, _map.Height, _map.BorderSize)
 		nextX = currX
 		nextY = currY
 		tmp = highEdge

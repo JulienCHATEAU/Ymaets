@@ -12,14 +12,25 @@ import (
 var s1 = rand.NewSource(time.Now().UnixNano())
 var r1 = rand.New(s1)
 
-var stageMapCount int32 = 10
-var WINDOW_SIZE int32 = 800
+var stageMapCount int32 = 30
+var MAP_SIZE int32 = 800
 var MENU_SIZE int32 = 300
+var MENU_BORDER_SIZE int32 = 10
+var MENU_START_X = MAP_SIZE + MENU_BORDER_SIZE
 var MINI_MAP_SIZE int32 = 30
 var MINI_MAP_PATH_LOW_EDGE int32 = 2
 var MINI_MAP_PATH_HIGH_EDGE int32 = 6
-var MINI_STAGE_START_X int32 = WINDOW_SIZE + MENU_SIZE / 2
-var MINI_STAGE_START_Y int32 = WINDOW_SIZE / 2
+var MINI_STAGE_BORDER_SIZE int32 = 5
+var MINI_STAGE_MARGIN int32 = 20
+var MINI_STAGE_WIDTH int32 = MENU_SIZE - MENU_BORDER_SIZE * 2 - MINI_STAGE_MARGIN * 2
+var MINI_STAGE_HEIGHT int32 = MINI_STAGE_WIDTH
+var MINI_STAGE_MIN_X int32 = MENU_START_X + MINI_STAGE_MARGIN + MINI_STAGE_BORDER_SIZE
+var MINI_STAGE_MAX_X int32 = MINI_STAGE_MIN_X + MINI_STAGE_WIDTH - MINI_STAGE_BORDER_SIZE * 2
+var MINI_STAGE_MIN_Y int32 = MAP_SIZE / 2 - MINI_STAGE_HEIGHT / 2 + MINI_STAGE_BORDER_SIZE
+var MINI_STAGE_MAX_Y int32 = MINI_STAGE_MIN_Y + MINI_STAGE_HEIGHT - MINI_STAGE_BORDER_SIZE * 2
+var MINI_STAGE_START_X int32 = MINI_STAGE_MIN_X + MINI_STAGE_WIDTH / 2 - MINI_STAGE_BORDER_SIZE
+var MINI_STAGE_START_Y int32 = MINI_STAGE_MIN_Y + MINI_STAGE_HEIGHT / 2 - MINI_STAGE_BORDER_SIZE
+// var MINI_STAGE_START_X int32 = MAP_SIZE + MINI_MAP_SIZE + 10
 var WINDOW_BCK rl.Color = rl.NewColor(245, 239, 220, 255) // Light Beige
 var BORDER_COLOR rl.Color = rl.Gold
 
@@ -41,19 +52,17 @@ func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, 
 	fmt.Printf("remainingMapCount : %d\n", *remainingMapCount)
 	var oppositeOri ym.Orientation = ym.GetOpositeOri(ori)
 	var openings []ym.Orientation
-	if *remainingMapCount > 0 && r1.Int31() % 100 < deeperProba {
+	if *remainingMapCount > 0 {
 		var oris []ym.Orientation = []ym.Orientation {ym.NORTH, ym.SOUTH, ym.EAST, ym.WEST}
 		oris = removeImpossibleOris(_maps, currentMapCoord, oris)
-		openings = ym.GenerateOris(remainingMapCount, oppositeOri, oris, _maps, currentMapCoord)
+		openings = ym.GenerateOris(remainingMapCount, oppositeOri, oris, _maps, currentMapCoord, r1.Int31() % 100 < deeperProba)
 		openings = ym.ShuffleOris(openings)
-	} else {
-		openings = []ym.Orientation {oppositeOri}
 	}
 	fmt.Println(openings)
 	deeperProba -= (100 / stageMapCount)
 	var _map *ym.Map = &ym.Map{}
 	_map.CurrPlayer = player
-	_map.Init(currentMapCoord, WINDOW_SIZE, openings)
+	_map.Init(currentMapCoord, MAP_SIZE, openings)
 	_map.InitBorders()
 	_maps[currentMapCoord] = _map
 	var nextCoord ym.Coord
@@ -91,39 +100,152 @@ func getNextMiniMapCoord(x, y int32, ori ym.Orientation) (int32, int32) {
 
 func drawMiniMap(centerX, centerY int32, current bool, oppositeOri ym.Orientation) {
 	var x, y int32 = centerX - MINI_MAP_SIZE/2, centerY - MINI_MAP_SIZE/2
-	rl.DrawRectangle(x, y, MINI_MAP_SIZE, MINI_MAP_SIZE, rl.NewColor(179, 164, 151, 255))
+	var width int32 = MINI_MAP_SIZE
+	var height int32 = MINI_MAP_SIZE
+	var thick int32 = 2
 	var color rl.Color = rl.NewColor(108, 89, 72, 255)
 	if current {
 		color = rl.Red
 	}
-	rl.DrawRectangleLinesEx(util.ToRectangle(x, y, MINI_MAP_SIZE, MINI_MAP_SIZE), 2, color)
+	var outOfMiniMapBounds bool = true
+	if x < MINI_STAGE_MIN_X && y < MINI_STAGE_MIN_Y {
+		width -= (MINI_STAGE_MIN_X - x)
+		x = MINI_STAGE_MIN_X
+		height -= (MINI_STAGE_MIN_Y - y)
+		y = MINI_STAGE_MIN_Y
+		if height < 0 && width < 0 {
+			height = 0
+		}
+		rl.DrawRectangle(x, y, width, height, color)
+		rl.DrawRectangle(x, y, width - thick, height - thick, rl.NewColor(179, 164, 151, 255))
+	} else if x < MINI_STAGE_MIN_X && y + height > MINI_STAGE_MAX_Y {
+		width -= (MINI_STAGE_MIN_X - x)
+		x = MINI_STAGE_MIN_X
+		height = MINI_STAGE_MAX_Y - y
+		if height < 0 && width < 0 {
+			height = 0
+		}
+		rl.DrawRectangle(x, y, width, height, color)
+		rl.DrawRectangle(x, y + thick, width - thick, height - thick, rl.NewColor(179, 164, 151, 255))
+	} else if y + height > MINI_STAGE_MAX_Y && x + width > MINI_STAGE_MAX_X {
+		height = MINI_STAGE_MAX_Y - y
+		width = MINI_STAGE_MAX_X - x
+		if height < 0 && width < 0 {
+			height = 0
+		}
+		rl.DrawRectangle(x, y, width, height, color)
+		rl.DrawRectangle(x + thick, y + thick, width - thick, height - thick, rl.NewColor(179, 164, 151, 255))
+	} else if x + width > MINI_STAGE_MAX_X && y < MINI_STAGE_MIN_Y {
+		height -= (MINI_STAGE_MIN_Y - y)
+		y = MINI_STAGE_MIN_Y
+		width = MINI_STAGE_MAX_X - x
+		if height < 0 && width < 0 {
+			height = 0
+		}
+		rl.DrawRectangle(x, y, width, height, color)
+		rl.DrawRectangle(x + thick, y, width - thick, height - thick, rl.NewColor(179, 164, 151, 255))
+	} else if x < MINI_STAGE_MIN_X {
+		width -= (MINI_STAGE_MIN_X - x)
+		x = MINI_STAGE_MIN_X
+		rl.DrawRectangle(x, y, width, height, color)
+		rl.DrawRectangle(x, y + thick, width - thick, height - thick*2, rl.NewColor(179, 164, 151, 255))
+	} else if x + width > MINI_STAGE_MAX_X {
+		width = MINI_STAGE_MAX_X - x
+		rl.DrawRectangle(x, y, width, height, color)
+		rl.DrawRectangle(x + thick, y + thick, width - thick, height - thick*2, rl.NewColor(179, 164, 151, 255))
+	} else if y < MINI_STAGE_MIN_Y {
+		height -= (MINI_STAGE_MIN_Y - y)
+		y = MINI_STAGE_MIN_Y
+		rl.DrawRectangle(x, y, width, height, color)
+		rl.DrawRectangle(x + thick, y, width - thick*2, height - thick, rl.NewColor(179, 164, 151, 255))
+	} else if y + height > MINI_STAGE_MAX_Y {
+		height = MINI_STAGE_MAX_Y - y
+		rl.DrawRectangle(x, y, width, height, color)
+		rl.DrawRectangle(x + thick, y + thick, width - thick*2, height - thick, rl.NewColor(179, 164, 151, 255))
+	} else {
+		outOfMiniMapBounds = false
+	}
+	if !outOfMiniMapBounds {
+		rl.DrawRectangle(x, y, width, height, rl.NewColor(179, 164, 151, 255))
+		rl.DrawRectangleLinesEx(util.ToRectangle(x, y, width, height), thick, color)
+	}
 }
 
 func drawPath(currentMapX, currentMapY int32, ori ym.Orientation) {
 	var color rl.Color = rl.NewColor(108, 89, 72, 255)
+	var x, y, width, height int32
 	switch ori {
 	case ym.NORTH:
-		rl.DrawRectangle(currentMapX - MINI_MAP_PATH_LOW_EDGE/2, currentMapY - MINI_MAP_SIZE/2 - MINI_MAP_PATH_HIGH_EDGE, MINI_MAP_PATH_LOW_EDGE, MINI_MAP_PATH_HIGH_EDGE, color)
+		x = currentMapX - MINI_MAP_PATH_LOW_EDGE/2
+		y = currentMapY - MINI_MAP_SIZE/2 - MINI_MAP_PATH_HIGH_EDGE
+		width = MINI_MAP_PATH_LOW_EDGE
+		height = MINI_MAP_PATH_HIGH_EDGE
+		if y < MINI_STAGE_MIN_Y {
+			height -= (MINI_STAGE_MIN_Y - y)
+			y = MINI_STAGE_MIN_Y
+		}
 		break
 
 	case ym.SOUTH:
-		rl.DrawRectangle(currentMapX - MINI_MAP_PATH_LOW_EDGE/2, currentMapY + MINI_MAP_SIZE/2, MINI_MAP_PATH_LOW_EDGE, MINI_MAP_PATH_HIGH_EDGE, color)
+		x = currentMapX - MINI_MAP_PATH_LOW_EDGE/2
+		y = currentMapY + MINI_MAP_SIZE/2
+		width = MINI_MAP_PATH_LOW_EDGE
+		height = MINI_MAP_PATH_HIGH_EDGE
+		if y + MINI_MAP_PATH_HIGH_EDGE > MINI_STAGE_MAX_Y {
+			height = MINI_STAGE_MAX_Y - y
+		}
 		break
 
 	case ym.EAST:
-		rl.DrawRectangle(currentMapX + MINI_MAP_SIZE/2, currentMapY - MINI_MAP_PATH_LOW_EDGE/2, MINI_MAP_PATH_HIGH_EDGE, MINI_MAP_PATH_LOW_EDGE, color)
+		x = currentMapX + MINI_MAP_SIZE/2
+		y = currentMapY - MINI_MAP_PATH_LOW_EDGE/2
+		width = MINI_MAP_PATH_HIGH_EDGE
+		height = MINI_MAP_PATH_LOW_EDGE
+		if x + MINI_MAP_PATH_HIGH_EDGE > MINI_STAGE_MAX_X {
+			width = MINI_STAGE_MAX_X - x
+		}
 		break
 
 	case ym.WEST:
-		rl.DrawRectangle(currentMapX - MINI_MAP_SIZE/2 - MINI_MAP_PATH_HIGH_EDGE, currentMapY - MINI_MAP_PATH_LOW_EDGE/2, MINI_MAP_PATH_HIGH_EDGE, MINI_MAP_PATH_LOW_EDGE, color)
+		x = currentMapX - MINI_MAP_SIZE/2 - MINI_MAP_PATH_HIGH_EDGE
+		y = currentMapY - MINI_MAP_PATH_LOW_EDGE/2
+		width = MINI_MAP_PATH_HIGH_EDGE
+		height = MINI_MAP_PATH_LOW_EDGE
+		if x < MINI_STAGE_MIN_X {
+			width -= (MINI_STAGE_MIN_X - x)
+			x = MINI_STAGE_MIN_X
+		}
 		break
-	}	
+	}
+	if x < MINI_STAGE_MIN_X || x > MINI_STAGE_MAX_X || y < MINI_STAGE_MIN_Y || y > MINI_STAGE_MAX_Y {
+		return
+	}
+	rl.DrawRectangle(x, y, width, height,  color)
 }
 
-func drawMiniStage2(_maps map[ym.Coord]*ym.Map, drawn_maps map[ym.Coord]bool, playerMapCoord ym.Coord, currentMapCoord ym.Coord, current bool, centerX, centerY int32, oppositeOri ym.Orientation) {
+func drawMiniStage2(_maps map[ym.Coord]*ym.Map, drawn_maps map[ym.Coord]bool, playerMapCoord ym.Coord, currentMapCoord ym.Coord, centerX, centerY int32, oppositeOri ym.Orientation) bool {
+	var current bool = playerMapCoord.X == currentMapCoord.X && playerMapCoord.Y == currentMapCoord.Y
+	if current {
+		if centerX - MINI_MAP_SIZE/2 < MINI_STAGE_MIN_X {
+			return false
+		}
+		if centerX - MINI_MAP_SIZE/2 + MINI_MAP_SIZE > MINI_STAGE_MAX_X {
+			return false
+		}
+		if centerY - MINI_MAP_SIZE/2 < MINI_STAGE_MIN_Y {
+			return false
+		}
+		if centerY - MINI_MAP_SIZE/2 + MINI_MAP_SIZE > MINI_STAGE_MAX_Y {
+			return false
+		}
+	}
 	if _maps[currentMapCoord].Visited && !drawn_maps[currentMapCoord] {
 		drawn_maps[currentMapCoord] = true
-		drawMiniMap(centerX, centerY, playerMapCoord.X == currentMapCoord.X && playerMapCoord.Y == currentMapCoord.Y, oppositeOri)
+		if rl.IsMouseButtonPressed(rl.MouseRightButton) {
+			fmt.Print(currentMapCoord)
+			fmt.Print(" : ")
+		}
+		drawMiniMap(centerX, centerY, current, oppositeOri)
 		remainingMaps, _ := ym.RemoveOri(_maps[currentMapCoord].Opening, oppositeOri)
 		var nextX, nextY int32
 		var nextCoord ym.Coord
@@ -132,14 +254,30 @@ func drawMiniStage2(_maps map[ym.Coord]*ym.Map, drawn_maps map[ym.Coord]bool, pl
 			oppositeOri = ym.GetOpositeOri(opening)
 			nextX, nextY = getNextMiniMapCoord(centerX, centerY, opening)
 			drawPath(centerX, centerY, opening)
-			drawMiniStage2(_maps, drawn_maps, playerMapCoord, nextCoord, false, nextX, nextY, oppositeOri)
+			var ok bool = drawMiniStage2(_maps, drawn_maps, playerMapCoord, nextCoord, nextX, nextY, oppositeOri)
+			if !ok {
+				return false
+			}
 		}
 	}
+	return true
 }
 
 func drawMiniStage(_maps map[ym.Coord]*ym.Map, playerMapCoord ym.Coord) {
 	var drawn_maps map[ym.Coord]bool = make(map[ym.Coord]bool)
-	drawMiniStage2(_maps, drawn_maps, playerMapCoord, ym.Coord{0, 0}, true, MINI_STAGE_START_X, MINI_STAGE_START_Y, ym.NONE);
+	borders := util.ToRectangle(MINI_STAGE_MIN_X - MINI_STAGE_BORDER_SIZE, MINI_STAGE_MIN_Y - MINI_STAGE_BORDER_SIZE, MINI_STAGE_WIDTH, MINI_STAGE_HEIGHT)
+	rl.DrawRectangleLinesEx(borders, MINI_STAGE_BORDER_SIZE, rl.NewColor(47, 70, 91, 255))
+	rl.DrawRectangle(MINI_STAGE_MIN_X, MINI_STAGE_MIN_Y, MINI_STAGE_WIDTH - MINI_STAGE_BORDER_SIZE*2, MINI_STAGE_HEIGHT - MINI_STAGE_BORDER_SIZE*2, rl.NewColor(215, 215, 215, 255))
+	if !drawMiniStage2(_maps, drawn_maps, playerMapCoord, ym.Coord{0, 0}, MINI_STAGE_START_X, MINI_STAGE_START_Y, ym.NONE) {
+		if rl.IsMouseButtonPressed(rl.MouseRightButton) {
+			fmt.Print("   -   ")
+		}
+		_maps[playerMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE)
+		drawn_maps = make(map[ym.Coord]bool)
+		rl.DrawRectangleLinesEx(borders, MINI_STAGE_BORDER_SIZE, rl.NewColor(47, 70, 91, 255))
+		rl.DrawRectangle(MINI_STAGE_MIN_X, MINI_STAGE_MIN_Y, MINI_STAGE_WIDTH - MINI_STAGE_BORDER_SIZE*2, MINI_STAGE_HEIGHT - MINI_STAGE_BORDER_SIZE*2, rl.NewColor(215, 215, 215, 255))
+		drawMiniStage2(_maps, drawn_maps, playerMapCoord, playerMapCoord, MINI_STAGE_START_X, MINI_STAGE_START_Y, ym.NONE);
+	}
 }
 
 func main() {
@@ -148,8 +286,9 @@ func main() {
 	var currentMapCoord ym.Coord = ym.Coord{0, 0}
 	var _maps map[ym.Coord]*ym.Map
 	var player ym.Player
-	player.Init(WINDOW_SIZE - 50, WINDOW_SIZE - 50, ym.NORTH)
+	player.Init(MAP_SIZE - 50, MAP_SIZE - 50, ym.NORTH)
 	for int32(len(_maps)) < stageMapCount - 1 {
+		fmt.Println("START NEW STAGE GENERATION")
 		remainingMapCount = stageMapCount
 		_maps = initStage(make(map[ym.Coord]*ym.Map), player, 100, ym.NONE, currentMapCoord, &remainingMapCount)
 	}
@@ -209,13 +348,13 @@ func main() {
 			} else {
 				newMapIndex = ym.GetNextCoord(changeMapOri, currentMapCoord)
 				_maps[newMapIndex].CurrPlayer = _maps[currentMapCoord].CurrPlayer
-				_maps[newMapIndex].Update(changeMapOri, WINDOW_SIZE)
+				_maps[newMapIndex].Update(changeMapOri, MAP_SIZE)
 				_maps[newMapIndex].Visited = true
 				currentMapCoord = newMapIndex
 			}
 			_maps[currentMapCoord].CursorMove(mouseX, mouseY)
 			_maps[currentMapCoord].CursorDraw()
-			_maps[currentMapCoord].DrawMenu(MENU_SIZE)
+			_maps[currentMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE)
 			drawMiniStage(_maps, currentMapCoord)
 		rl.EndDrawing()
 	}
