@@ -19,6 +19,7 @@ var source = rand.NewSource(time.Now().UnixNano())
 var random = rand.New(source)
 
 type Map struct {
+	Visited				bool
 	Coords				Coord
 	Width 				int32
 	Height 				int32
@@ -97,6 +98,7 @@ func (_map *Map) InitBorders() {
 }
 
 func (_map *Map) Init(coord Coord, windowSize int32, opening []Orientation) {
+	_map.Visited = false
 	_map.Coords = coord
 	_map.BorderSize = 20
 	_map.Width = windowSize
@@ -191,7 +193,7 @@ func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
 			monsterCenter, monsterRadius = _map.Monsters[i].GetHitbox()
 			if rl.CheckCollisionCircles(center, radius, monsterCenter, monsterRadius) {
 				_map.Monsters[*index].X = savedX
-				_map.Monsters[*index].X = savedX
+				_map.Monsters[*index].Y = savedY
 				return
 			}
 		}
@@ -202,7 +204,7 @@ func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
 		_map.Monsters[*index].X = savedX
 		_map.Monsters[*index].Y = savedY
 		_map.removeMonster(index)
-		_map.CurrPlayer.TakeDamage(22)
+		_map.CurrPlayer.TakeDamage(5)
 		return
 	}
 }
@@ -337,7 +339,7 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 			_map.CurrPlayer.X = savedX
 			_map.CurrPlayer.Y = savedY
 			_map.removeMonster(&index)
-			_map.CurrPlayer.TakeDamage(22)
+			_map.CurrPlayer.TakeDamage(5)
 			return
 		}
 	}

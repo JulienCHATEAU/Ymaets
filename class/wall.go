@@ -15,7 +15,7 @@ var WTC int32 = 1
 // Lava walk damage
 var LWD int32 = 1
 // Lava damage tick
-var LDT int32 = 30
+var LDT int32 = 40
 
 type Wall struct {
 	X 					int32

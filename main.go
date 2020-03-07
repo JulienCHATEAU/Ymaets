@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"time"
 	ym "Ymaets/class"
+	util "Ymaets/util"
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -14,6 +15,11 @@ var r1 = rand.New(s1)
 var stageMapCount int32 = 10
 var WINDOW_SIZE int32 = 800
 var MENU_SIZE int32 = 300
+var MINI_MAP_SIZE int32 = 30
+var MINI_MAP_PATH_LOW_EDGE int32 = 2
+var MINI_MAP_PATH_HIGH_EDGE int32 = 6
+var MINI_STAGE_START_X int32 = WINDOW_SIZE + MENU_SIZE / 2
+var MINI_STAGE_START_Y int32 = WINDOW_SIZE / 2
 var WINDOW_BCK rl.Color = rl.NewColor(245, 239, 220, 255) // Light Beige
 var BORDER_COLOR rl.Color = rl.Gold
 
@@ -61,6 +67,81 @@ func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, 
 	return _maps
 }
 
+func getNextMiniMapCoord(x, y int32, ori ym.Orientation) (int32, int32) {
+	var nextX, nextY int32 = x, y
+	switch ori {
+	case ym.NORTH:
+		nextY -= MINI_MAP_PATH_HIGH_EDGE + MINI_MAP_SIZE
+		break
+
+	case ym.SOUTH:
+		nextY += MINI_MAP_PATH_HIGH_EDGE + MINI_MAP_SIZE
+		break
+
+	case ym.EAST:
+		nextX += MINI_MAP_PATH_HIGH_EDGE + MINI_MAP_SIZE
+		break
+
+	case ym.WEST:
+		nextX -= MINI_MAP_PATH_HIGH_EDGE + MINI_MAP_SIZE
+		break
+	}
+	return nextX, nextY
+}
+
+func drawMiniMap(centerX, centerY int32, current bool, oppositeOri ym.Orientation) {
+	var x, y int32 = centerX - MINI_MAP_SIZE/2, centerY - MINI_MAP_SIZE/2
+	rl.DrawRectangle(x, y, MINI_MAP_SIZE, MINI_MAP_SIZE, rl.NewColor(179, 164, 151, 255))
+	var color rl.Color = rl.NewColor(108, 89, 72, 255)
+	if current {
+		color = rl.Red
+	}
+	rl.DrawRectangleLinesEx(util.ToRectangle(x, y, MINI_MAP_SIZE, MINI_MAP_SIZE), 2, color)
+}
+
+func drawPath(currentMapX, currentMapY int32, ori ym.Orientation) {
+	var color rl.Color = rl.NewColor(108, 89, 72, 255)
+	switch ori {
+	case ym.NORTH:
+		rl.DrawRectangle(currentMapX - MINI_MAP_PATH_LOW_EDGE/2, currentMapY - MINI_MAP_SIZE/2 - MINI_MAP_PATH_HIGH_EDGE, MINI_MAP_PATH_LOW_EDGE, MINI_MAP_PATH_HIGH_EDGE, color)
+		break
+
+	case ym.SOUTH:
+		rl.DrawRectangle(currentMapX - MINI_MAP_PATH_LOW_EDGE/2, currentMapY + MINI_MAP_SIZE/2, MINI_MAP_PATH_LOW_EDGE, MINI_MAP_PATH_HIGH_EDGE, color)
+		break
+
+	case ym.EAST:
+		rl.DrawRectangle(currentMapX + MINI_MAP_SIZE/2, currentMapY - MINI_MAP_PATH_LOW_EDGE/2, MINI_MAP_PATH_HIGH_EDGE, MINI_MAP_PATH_LOW_EDGE, color)
+		break
+
+	case ym.WEST:
+		rl.DrawRectangle(currentMapX - MINI_MAP_SIZE/2 - MINI_MAP_PATH_HIGH_EDGE, currentMapY - MINI_MAP_PATH_LOW_EDGE/2, MINI_MAP_PATH_HIGH_EDGE, MINI_MAP_PATH_LOW_EDGE, color)
+		break
+	}	
+}
+
+func drawMiniStage2(_maps map[ym.Coord]*ym.Map, drawn_maps map[ym.Coord]bool, playerMapCoord ym.Coord, currentMapCoord ym.Coord, current bool, centerX, centerY int32, oppositeOri ym.Orientation) {
+	if _maps[currentMapCoord].Visited && !drawn_maps[currentMapCoord] {
+		drawn_maps[currentMapCoord] = true
+		drawMiniMap(centerX, centerY, playerMapCoord.X == currentMapCoord.X && playerMapCoord.Y == currentMapCoord.Y, oppositeOri)
+		remainingMaps, _ := ym.RemoveOri(_maps[currentMapCoord].Opening, oppositeOri)
+		var nextX, nextY int32
+		var nextCoord ym.Coord
+		for _, opening := range remainingMaps {
+			nextCoord = ym.GetNextCoord(opening, currentMapCoord)
+			oppositeOri = ym.GetOpositeOri(opening)
+			nextX, nextY = getNextMiniMapCoord(centerX, centerY, opening)
+			drawPath(centerX, centerY, opening)
+			drawMiniStage2(_maps, drawn_maps, playerMapCoord, nextCoord, false, nextX, nextY, oppositeOri)
+		}
+	}
+}
+
+func drawMiniStage(_maps map[ym.Coord]*ym.Map, playerMapCoord ym.Coord) {
+	var drawn_maps map[ym.Coord]bool = make(map[ym.Coord]bool)
+	drawMiniStage2(_maps, drawn_maps, playerMapCoord, ym.Coord{0, 0}, true, MINI_STAGE_START_X, MINI_STAGE_START_Y, ym.NONE);
+}
+
 func main() {
 	var remainingMapCount int32 = stageMapCount
 	remainingMapCount--
@@ -72,6 +153,7 @@ func main() {
 		remainingMapCount = stageMapCount
 		_maps = initStage(make(map[ym.Coord]*ym.Map), player, 100, ym.NONE, currentMapCoord, &remainingMapCount)
 	}
+	_maps[currentMapCoord].Visited = true;
 	fmt.Println(len(_maps))
 	fmt.Println(_maps)
 	
@@ -128,11 +210,13 @@ func main() {
 				newMapIndex = ym.GetNextCoord(changeMapOri, currentMapCoord)
 				_maps[newMapIndex].CurrPlayer = _maps[currentMapCoord].CurrPlayer
 				_maps[newMapIndex].Update(changeMapOri, WINDOW_SIZE)
+				_maps[newMapIndex].Visited = true
 				currentMapCoord = newMapIndex
 			}
 			_maps[currentMapCoord].CursorMove(mouseX, mouseY)
 			_maps[currentMapCoord].CursorDraw()
 			_maps[currentMapCoord].DrawMenu(MENU_SIZE)
+			drawMiniStage(_maps, currentMapCoord)
 		rl.EndDrawing()
 	}
 	fmt.Println(len(_maps))
