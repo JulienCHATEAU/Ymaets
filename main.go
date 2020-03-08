@@ -44,6 +44,8 @@ func removeImpossibleOris(_maps map[ym.Coord]*ym.Map, currentMapCoord ym.Coord, 
 	return oris
 }
 
+var foundStairsMap bool = false
+
 func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, ori ym.Orientation, currentMapCoord ym.Coord, remainingMapCount *int32) map[ym.Coord]*ym.Map {
 	fmt.Println()
 	fmt.Println(_maps)
@@ -58,11 +60,16 @@ func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, 
 		openings = ym.ShuffleOris(openings)
 	}
 	fmt.Println(openings)
+	var stairsProba int32 = 100 - deeperProba
 	deeperProba -= (100 / stageMapCount)
 	var _map *ym.Map = &ym.Map{}
 	_map.CurrPlayer = player
 	_map.Init(currentMapCoord, MAP_SIZE, openings)
 	_map.InitBorders()
+	if !foundStairsMap && r1.Int31() % 100 < stairsProba {
+		foundStairsMap = true
+		_map.AddStairs()
+	} 
 	_maps[currentMapCoord] = _map
 	var nextCoord ym.Coord
 	remainingMapsToCreate, _ := ym.RemoveOri(openings, oppositeOri)
@@ -284,6 +291,9 @@ func main() {
 		remainingMapCount = stageMapCount
 		_maps = initStage(make(map[ym.Coord]*ym.Map), player, 100, ym.NONE, currentMapCoord, &remainingMapCount)
 	}
+	if !foundStairsMap {
+		_maps[currentMapCoord].AddStairs()
+	}
 	_maps[currentMapCoord].Visited = true;
 	fmt.Println(len(_maps))
 	fmt.Println(_maps)
@@ -297,9 +307,6 @@ func main() {
 	var index int32 
 	var changeMapOri ym.Orientation
 	var newMapIndex ym.Coord
-
-	var stairs ym.Stairs
-	stairs.Init(200, 200)
 
 	for !rl.WindowShouldClose() {
 
@@ -318,7 +325,9 @@ func main() {
 			_maps[currentMapCoord].CoinsDraw()
 			_maps[currentMapCoord].WallsDraw()
 
-			stairs.Draw()
+			if _maps[currentMapCoord].NextStage.X != -1 {
+				_maps[currentMapCoord].NextStage.Draw()
+			}
 
 			for index = 0; index < _maps[currentMapCoord].ShotsCount; index++ {
 				_maps[currentMapCoord].Shots[index].Draw()

@@ -30,6 +30,7 @@ type Map struct {
 	Opening 			[]Orientation
 	Shots 				[]Shot
 	Walls 				[]Wall
+	NextStage			Stairs
 	CoinsCount		int32
 	Coins 				[]Coin
 	MonstersCount	int32
@@ -93,9 +94,6 @@ func (_map *Map) InitBorders() {
 		}
 	}
 	//Obstacles
-	// _map.Walls[borderCount].InitWall(150, 150, 40, 30, rl.Gray)
-	// _map.Walls[borderCount+1].InitWater(500, 170, 20, 50)
-	// _map.Walls[borderCount+2].InitLava(600, 540, 25, 45)
 	_map.Walls = append(_map.Walls, GeneratePossibleWalls(_map)...)
 }
 
@@ -115,6 +113,7 @@ func (_map *Map) Init(coord Coord, windowSize int32, opening []Orientation) {
 	_map.Monsters[1].Init(150, 350) 
 	_map.Monsters[2].Init(250, 50) 
 	_map.Monsters[3].Init(100, 450)
+	_map.NextStage.Init(-1, -1)
 	_map.ShotsCount = 0
 	_map.Shots = make([]Shot, 50)
 }
@@ -501,4 +500,18 @@ func (_map *Map) aStar(walls []Wall) bool {
 		}
 	}
 	return true
+}
+
+func (_map *Map) AddStairs() {
+	var found = false
+	hitbox := _map.NextStage.GetHitbox()
+  for !found {
+		_map.NextStage.Init(r1.Int31() % 600 + 50, r1.Int31() % 600 + 50)
+		for _, wall := range _map.Walls {
+			if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
+				break
+			}
+		}
+		found = true
+	}
 }
