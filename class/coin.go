@@ -19,11 +19,18 @@ func (coin *Coin) Init(x, y int32) {
 	coin.Value = r1.Int31() % 20 + 50
 }
 
+func (coin *Coin) InitWithRadius(x, y int32, radius float32) {
+	coin.X = x
+	coin.Y = y
+	coin.Radius = radius
+	coin.Value = r1.Int31() % 20 + 50
+}
+
 func (coin *Coin) Draw() {
 	// Coin
 	rl.DrawCircle(coin.X+1, coin.Y, coin.Radius, rl.NewColor(218, 161, 54, 255))
 	rl.DrawCircle(coin.X, coin.Y, coin.Radius, rl.Gold)
-	rl.DrawCircle(coin.X, coin.Y, coin.Radius - 3, rl.NewColor(218, 161, 54, 255))
+	rl.DrawCircle(coin.X, coin.Y, coin.Radius / 2 - 1, rl.NewColor(218, 161, 54, 255))
 	// rl.DrawText("$", coin.X - 1, coin.Y - 1, 1, rl.DarkGray)
 }
 

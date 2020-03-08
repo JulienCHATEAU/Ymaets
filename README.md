@@ -1,6 +1,6 @@
 ## Ymaets
 
-Ymaets is a 2D game where you drive a small ship and defend yourself against wild enemies !
+Ymaets is a 2D Rogue-like game where you drive a small ship and defend yourself against wild enemies !
 
 ## Requirements
 

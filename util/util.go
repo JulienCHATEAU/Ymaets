@@ -15,7 +15,7 @@ func PointsDistance(x1, y1, x2, y2 int32) (float64) {
 	return math.Sqrt(float64(dx*dx + dy*dy))
 }
 
-func DrawHealthBar(hp, maxHp, x, y, objectSize int32) {
+func DrawHealthBar(hp, maxHp, x, y, objectSize, barHeight int32) {
 	var healthBarColor rl.Color = rl.Gray
 	hpPercentage := float32(hp) / float32(maxHp)
 	if hpPercentage > 0.5 {
@@ -26,6 +26,5 @@ func DrawHealthBar(hp, maxHp, x, y, objectSize int32) {
 		healthBarColor = rl.Red
 	}
 	healthBarMaxWidth := float32(objectSize + 4)
-	var barHeight int32 = 3
 	rl.DrawRectangle(x - 2, y - 5 - barHeight, int32(healthBarMaxWidth * hpPercentage), barHeight, healthBarColor);
 }

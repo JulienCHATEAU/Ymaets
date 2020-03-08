@@ -150,12 +150,18 @@ func (_map *Map) DrawMenu(size int32, borderSize int32) {
 	var textCount int32 = 0
 	rl.DrawRectangle(_map.Width, 0, size, _map.Height, rl.NewColor(65, 87, 106, 255))
 	rl.DrawRectangle(_map.Width + borderSize, borderSize, size - borderSize*2, _map.Height - borderSize*2, rl.RayWhite)
+
 	rl.DrawText("HP : " + strconv.Itoa(int(_map.CurrPlayer.Hp)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxHp)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	textCount++
+	rl.DrawRectangle(_map.Width + 26, textStarting + 50 * textCount - 27, 248, 24, rl.Gray)
+	util.DrawHealthBar(_map.CurrPlayer.Hp, _map.CurrPlayer.MaxHp, _map.Width + 30, textStarting + 50 * textCount, 240, 20)
 	textCount++
 	rl.DrawText("Move speed : " + strconv.Itoa(int(_map.CurrPlayer.Speed)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxSpeed)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
-	rl.DrawText("Money : " + strconv.Itoa(int(_map.CurrPlayer.Money)) + " coin", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
-	textCount++
+	rl.DrawText("Money : " + strconv.Itoa(int(_map.CurrPlayer.Money)) + " gold", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	// var coin Coin
+	// coin.InitWithRadius(_map.Width + 138, textStarting + 50 * textCount + 8, 6)
+	// coin.Draw()
 	textCount++
 	rl.DrawText("Mini map : ", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 }
