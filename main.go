@@ -19,7 +19,7 @@ var MENU_BORDER_SIZE int32 = 10
 var MENU_START_X = MAP_SIZE + MENU_BORDER_SIZE
 var MINI_MAP_SIZE int32 = 30
 var MINI_MAP_PATH_LOW_EDGE int32 = 2
-var MINI_MAP_PATH_HIGH_EDGE int32 = 6
+var MINI_MAP_PATH_HIGH_EDGE int32 = 8
 var MINI_STAGE_BORDER_SIZE int32 = 5
 var MINI_STAGE_MARGIN int32 = 20
 var MINI_STAGE_WIDTH int32 = MENU_SIZE - MENU_BORDER_SIZE * 2 - MINI_STAGE_MARGIN * 2
@@ -32,7 +32,6 @@ var MINI_STAGE_START_X int32 = MINI_STAGE_MIN_X + MINI_STAGE_WIDTH / 2 - MINI_ST
 var MINI_STAGE_START_Y int32 = MINI_STAGE_MIN_Y + MINI_STAGE_HEIGHT / 2 - MINI_STAGE_BORDER_SIZE
 // var MINI_STAGE_START_X int32 = MAP_SIZE + MINI_MAP_SIZE + 10
 var WINDOW_BCK rl.Color = rl.NewColor(245, 239, 220, 255) // Light Beige
-var BORDER_COLOR rl.Color = rl.Gold
 
 func removeImpossibleOris(_maps map[ym.Coord]*ym.Map, currentMapCoord ym.Coord, oris []ym.Orientation) []ym.Orientation {
 	var coord ym.Coord
@@ -172,7 +171,7 @@ func drawMiniMap(centerX, centerY int32, current bool, oppositeOri ym.Orientatio
 }
 
 func drawPath(currentMapX, currentMapY int32, ori ym.Orientation) {
-	var color rl.Color = rl.NewColor(108, 89, 72, 255)
+	var color rl.Color = rl.NewColor(98, 79, 62, 255)
 	var x, y, width, height int32
 	switch ori {
 	case ym.NORTH:
@@ -241,10 +240,6 @@ func drawMiniStage2(_maps map[ym.Coord]*ym.Map, drawn_maps map[ym.Coord]bool, pl
 	}
 	if _maps[currentMapCoord].Visited && !drawn_maps[currentMapCoord] {
 		drawn_maps[currentMapCoord] = true
-		if rl.IsMouseButtonPressed(rl.MouseRightButton) {
-			fmt.Print(currentMapCoord)
-			fmt.Print(" : ")
-		}
 		drawMiniMap(centerX, centerY, current, oppositeOri)
 		remainingMaps, _ := ym.RemoveOri(_maps[currentMapCoord].Opening, oppositeOri)
 		var nextX, nextY int32
@@ -269,9 +264,6 @@ func drawMiniStage(_maps map[ym.Coord]*ym.Map, playerMapCoord ym.Coord) {
 	rl.DrawRectangleLinesEx(borders, MINI_STAGE_BORDER_SIZE, rl.NewColor(47, 70, 91, 255))
 	rl.DrawRectangle(MINI_STAGE_MIN_X, MINI_STAGE_MIN_Y, MINI_STAGE_WIDTH - MINI_STAGE_BORDER_SIZE*2, MINI_STAGE_HEIGHT - MINI_STAGE_BORDER_SIZE*2, rl.NewColor(215, 215, 215, 255))
 	if !drawMiniStage2(_maps, drawn_maps, playerMapCoord, ym.Coord{0, 0}, MINI_STAGE_START_X, MINI_STAGE_START_Y, ym.NONE) {
-		if rl.IsMouseButtonPressed(rl.MouseRightButton) {
-			fmt.Print("   -   ")
-		}
 		_maps[playerMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE)
 		drawn_maps = make(map[ym.Coord]bool)
 		rl.DrawRectangleLinesEx(borders, MINI_STAGE_BORDER_SIZE, rl.NewColor(47, 70, 91, 255))
@@ -316,8 +308,11 @@ func main() {
 			if rl.IsMouseButtonPressed(rl.MouseRightButton) {
 				fmt.Printf("(%d, %d)\n", mouseX, mouseY)
 				fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
+				fmt.Println(_maps[currentMapCoord].Coins)
+				fmt.Println(_maps[currentMapCoord].CoinsCount)
 			}
 
+			_maps[currentMapCoord].CoinsDraw()
 			_maps[currentMapCoord].WallsDraw()
 
 			for index = 0; index < _maps[currentMapCoord].ShotsCount; index++ {
@@ -325,7 +320,6 @@ func main() {
 				_maps[currentMapCoord].ShotMove(&index)
 				_maps[currentMapCoord].ShotCheckMoveCollision(&index)
 			}
-
 			
 			for index = 0; index < _maps[currentMapCoord].MonstersCount; index++ {
 				savedX = _maps[currentMapCoord].Monsters[index].X

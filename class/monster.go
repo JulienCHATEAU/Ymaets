@@ -74,6 +74,13 @@ func (monster *Monster) HandleAnimation(notEnded []int32) {
 	}
 }
 
+func (monster *Monster) SpreadCoins() []Coin {
+	var coins []Coin = make([]Coin, 2)
+	coins[0].Init(monster.X + r1.Int31() % 30 - 15, monster.Y + r1.Int31() % 30 - 15)
+	coins[1].Init(monster.X + r1.Int31() % 30 - 15, monster.Y + r1.Int31() % 30 - 15)
+	return coins
+}
+
 func (monster *Monster) Draw() {
 	// Monster
 	rl.DrawCircle(monster.X, monster.Y, monster.Radius, monster.Color)

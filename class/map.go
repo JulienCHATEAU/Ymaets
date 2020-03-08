@@ -30,6 +30,8 @@ type Map struct {
 	Opening 			[]Orientation
 	Shots 				[]Shot
 	Walls 				[]Wall
+	CoinsCount		int32
+	Coins 				[]Coin
 	MonstersCount	int32
 	Monsters 			[]Monster
 } 
@@ -105,6 +107,8 @@ func (_map *Map) Init(coord Coord, windowSize int32, opening []Orientation) {
 	_map.Height = windowSize
 	_map.Opening = opening
 	_map.Curs.Init()
+	_map.CoinsCount = 0
+	_map.Coins = make([]Coin, 0)
 	_map.MonstersCount = 4
 	_map.Monsters = make([]Monster, 50)
 	_map.Monsters[0].Init(50, 50) 
@@ -151,7 +155,7 @@ func (_map *Map) DrawMenu(size int32, borderSize int32) {
 	textCount++
 	rl.DrawText("Move speed : " + strconv.Itoa(int(_map.CurrPlayer.Speed)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxSpeed)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
-	rl.DrawText("Money : " + strconv.Itoa(int(_map.CurrPlayer.Money)) + " gold", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	rl.DrawText("Money : " + strconv.Itoa(int(_map.CurrPlayer.Money)) + " coin", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
 	textCount++
 	rl.DrawText("Mini map : ", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
@@ -336,6 +340,15 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 	var index int32
 	var center rl.Vector2
 	var radius float32
+
+	for index = 0; index < _map.CoinsCount; index++ {
+		center, radius = _map.Coins[index].GetHitbox()
+		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
+			_map.CurrPlayer.Money += _map.Coins[index].Value
+			_map.removeCoin(&index)
+		}
+	}
+
 	for index = 0; index < _map.MonstersCount; index++ {
 		center, radius = _map.Monsters[index].GetHitbox()
 		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
@@ -355,6 +368,13 @@ func (_map *Map) PlayerDraw() {
 func (_map *Map) WallsDraw() {
 	for index := len(_map.Walls)-1; index >= 0; index-- {
 		_map.Walls[index].Draw()
+	}
+}
+
+func (_map *Map) CoinsDraw() {
+	var index int32
+	for index = 0; index < _map.CoinsCount; index++ {
+		_map.Coins[index].Draw()
 	}
 }
 
@@ -380,6 +400,15 @@ func (_map *Map) ShotMove(index *int32) {
 	case WEST:
 		_map.Shots[*index].X -= _map.Shots[*index].Speed		
 		break;
+	}
+}
+
+func (_map *Map) removeCoin(index *int32) {
+	_map.Coins[*index] = _map.Coins[_map.CoinsCount-1]
+	_map.CoinsCount--
+	_map.Coins = _map.Coins[:_map.CoinsCount]
+	if *(index) > 0 {
+		*(index)--
 	}
 }
 
@@ -412,11 +441,15 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 	var i int32
 	var center rl.Vector2
 	var radius float32
+
 	for i = 0; i < _map.MonstersCount; i++ {
 		center, radius = _map.Monsters[i].GetHitbox()
 		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
 			_map.Monsters[i].TakeDamage(25)
 			if _map.Monsters[i].Hp == 0 {
+				coins := _map.Monsters[i].SpreadCoins()
+				_map.CoinsCount += int32(len(coins))
+				_map.Coins = append(_map.Coins, coins...)
 				_map.removeMonster(&i)
 			}
 			_map.removeShot(index)
