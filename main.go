@@ -298,6 +298,9 @@ func main() {
 	var changeMapOri ym.Orientation
 	var newMapIndex ym.Coord
 
+	var stairs ym.Stairs
+	stairs.Init(200, 200)
+
 	for !rl.WindowShouldClose() {
 
 		rl.BeginDrawing()
@@ -314,6 +317,8 @@ func main() {
 
 			_maps[currentMapCoord].CoinsDraw()
 			_maps[currentMapCoord].WallsDraw()
+
+			stairs.Draw()
 
 			for index = 0; index < _maps[currentMapCoord].ShotsCount; index++ {
 				_maps[currentMapCoord].Shots[index].Draw()
@@ -350,6 +355,7 @@ func main() {
 			_maps[currentMapCoord].CursorDraw()
 			_maps[currentMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE)
 			drawMiniStage(_maps, currentMapCoord)
+
 		rl.EndDrawing()
 	}
 	fmt.Println(len(_maps))
