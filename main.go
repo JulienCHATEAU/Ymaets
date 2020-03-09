@@ -4,15 +4,25 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+	"strconv"
 	ym "Ymaets/class"
 	util "Ymaets/util"
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+type GameState int32 
+const (
+	NONE = iota - 1
+	GAME_SCREEN
+	STAGE_SCREEN
+)
+
+var gameState GameState = STAGE_SCREEN
+
 var s1 = rand.NewSource(time.Now().UnixNano())
 var r1 = rand.New(s1)
 
-var stageMapCount int32 = 7
+var stageMapCount int32 = 15
 var foundStairsMap bool = false
 
 var MAP_SIZE int32 = 800
@@ -279,14 +289,30 @@ func drawMiniStage(_maps map[ym.Coord]*ym.Map, playerMapCoord ym.Coord, currentS
 	}
 }
 
+func newStageAnimation(framesCount *int32, maxFrame, currentStage int32) {
+	var ucolor uint8 = 20 + uint8(*framesCount) / 2
+	if ucolor < 0 {
+		ucolor = 0
+	}
+	if ucolor > 255 {
+		ucolor = 255
+	}
+	rl.DrawRectangle(0, 0, MAP_SIZE, MAP_SIZE, rl.NewColor(ucolor, ucolor, ucolor, 255))
+	rl.DrawText("Stage n° " + strconv.Itoa(int(currentStage)), MAP_SIZE / 2 - 70, MAP_SIZE / 2 - 10, 30, rl.RayWhite)
+	(*framesCount)++
+	if *framesCount == maxFrame {
+		gameState = GAME_SCREEN
+	}
+}
+
 func newStage(currentStage *int32, currentMapCoord *ym.Coord, player ym.Player) map[ym.Coord]*ym.Map {
 	var remainingMapCount int32
 	var _maps map[ym.Coord]*ym.Map
-	foundStairsMap = false
 	(*currentStage)++
 	*currentMapCoord = ym.Coord{0, 0}
 	for int32(len(_maps)) < stageMapCount - 1 {
 		fmt.Println("START NEW STAGE GENERATION")
+		foundStairsMap = false
 		remainingMapCount = stageMapCount
 		_maps = initStage(make(map[ym.Coord]*ym.Map), player, 100, ym.NONE, *currentMapCoord, &remainingMapCount)
 	}
@@ -316,70 +342,77 @@ func main() {
 	var index int32 
 	var changeMapOri ym.Orientation
 	var newMapIndex ym.Coord
+	var framesCount int32 = 0
 
 	for !rl.WindowShouldClose() {
 
+		mouseX := rl.GetMouseX()
+		mouseY := rl.GetMouseY()
+
 		rl.BeginDrawing()
-			rl.ClearBackground(WINDOW_BCK)
-			mouseX := rl.GetMouseX()
-			mouseY := rl.GetMouseY()
-
-			if rl.IsMouseButtonPressed(rl.MouseRightButton) {
-				fmt.Printf("(%d, %d)\n", mouseX, mouseY)
-				fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
-				fmt.Println(_maps[currentMapCoord].Coins)
-				fmt.Println(_maps[currentMapCoord].CoinsCount)
-			}
-
-			_maps[currentMapCoord].CoinsDraw()
-			_maps[currentMapCoord].WallsDraw()
-
-			if _maps[currentMapCoord].NextStage.X != -1 {
-				_maps[currentMapCoord].NextStage.Draw()
-			}
-
-			for index = 0; index < _maps[currentMapCoord].ShotsCount; index++ {
-				_maps[currentMapCoord].Shots[index].Draw()
-				_maps[currentMapCoord].ShotMove(&index)
-				_maps[currentMapCoord].ShotCheckMoveCollision(&index)
-			}
-			
-			for index = 0; index < _maps[currentMapCoord].MonstersCount; index++ {
-				savedX = _maps[currentMapCoord].Monsters[index].X
-				savedY = _maps[currentMapCoord].Monsters[index].Y
-				_maps[currentMapCoord].Monsters[index].Draw()
-				_maps[currentMapCoord].MonsterMove(index)
-				_maps[currentMapCoord].MonsterCheckMoveCollision(&index, savedX, savedY)
-			}
-
-			savedX = _maps[currentMapCoord].CurrPlayer.X
-			savedY = _maps[currentMapCoord].CurrPlayer.Y
-			savedOri := _maps[currentMapCoord].CurrPlayer.Ori
-			_maps[currentMapCoord].PlayerOri(mouseX, mouseY)
-			_maps[currentMapCoord].PlayerCheckOriCollision(savedOri)
-			changeMapOri = _maps[currentMapCoord].PlayerMove()
-			if changeMapOri == ym.NONE {
-				_maps[currentMapCoord].PlayerCheckMoveCollision(savedX, savedY)
-				_maps[currentMapCoord].PlayerFire()
-				_maps[currentMapCoord].PlayerDraw()
-			} else {
-				newMapIndex = ym.GetNextCoord(changeMapOri, currentMapCoord)
-				_maps[newMapIndex].CurrPlayer = _maps[currentMapCoord].CurrPlayer
-				_maps[newMapIndex].Update(changeMapOri, MAP_SIZE)
-				_maps[newMapIndex].Visited = true
-				currentMapCoord = newMapIndex
+			if gameState == STAGE_SCREEN {
+				newStageAnimation(&framesCount, 75, currentStage)
+			} else if gameState == GAME_SCREEN {
+				rl.ClearBackground(WINDOW_BCK)
+				if rl.IsMouseButtonPressed(rl.MouseRightButton) {
+					fmt.Printf("(%d, %d)\n", mouseX, mouseY)
+					fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
+					fmt.Println(_maps[currentMapCoord].Coins)
+					fmt.Println(_maps[currentMapCoord].CoinsCount)
+				}
+	
+				_maps[currentMapCoord].CoinsDraw()
+				_maps[currentMapCoord].WallsDraw()
+	
+				if _maps[currentMapCoord].NextStage.X != -1 {
+					_maps[currentMapCoord].NextStage.Draw()
+				}
+	
+				for index = 0; index < _maps[currentMapCoord].ShotsCount; index++ {
+					_maps[currentMapCoord].Shots[index].Draw()
+					_maps[currentMapCoord].ShotMove(&index)
+					_maps[currentMapCoord].ShotCheckMoveCollision(&index)
+				}
+				
+				for index = 0; index < _maps[currentMapCoord].MonstersCount; index++ {
+					savedX = _maps[currentMapCoord].Monsters[index].X
+					savedY = _maps[currentMapCoord].Monsters[index].Y
+					_maps[currentMapCoord].Monsters[index].Draw()
+					_maps[currentMapCoord].MonsterMove(index)
+					_maps[currentMapCoord].MonsterCheckMoveCollision(&index, savedX, savedY)
+				}
+	
+				savedX = _maps[currentMapCoord].CurrPlayer.X
+				savedY = _maps[currentMapCoord].CurrPlayer.Y
+				savedOri := _maps[currentMapCoord].CurrPlayer.Ori
+				_maps[currentMapCoord].PlayerOri(mouseX, mouseY)
+				_maps[currentMapCoord].PlayerCheckOriCollision(savedOri)
+				changeMapOri = _maps[currentMapCoord].PlayerMove()
+				if changeMapOri == ym.NONE {
+					_maps[currentMapCoord].PlayerCheckMoveCollision(savedX, savedY)
+					_maps[currentMapCoord].PlayerFire()
+					_maps[currentMapCoord].PlayerDraw()
+				} else {
+					newMapIndex = ym.GetNextCoord(changeMapOri, currentMapCoord)
+					_maps[newMapIndex].CurrPlayer = _maps[currentMapCoord].CurrPlayer
+					_maps[newMapIndex].Update(changeMapOri, MAP_SIZE)
+					_maps[newMapIndex].Visited = true
+					currentMapCoord = newMapIndex
+				}
+				
+				if _maps[currentMapCoord].IsPlayerOnStairs() {
+					_maps[currentMapCoord].CurrPlayer.X = MAP_SIZE - 50
+					_maps[currentMapCoord].CurrPlayer.Y = MAP_SIZE - 50
+					_maps[currentMapCoord].CurrPlayer.Ori = ym.NORTH
+					_maps = newStage(&currentStage, &currentMapCoord, _maps[currentMapCoord].CurrPlayer)
+					gameState = STAGE_SCREEN
+					framesCount = 0
+				}
 			}
 			_maps[currentMapCoord].CursorMove(mouseX, mouseY)
 			_maps[currentMapCoord].CursorDraw()
 			_maps[currentMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE, currentStage)
 			drawMiniStage(_maps, currentMapCoord, currentStage)
-
-			if _maps[currentMapCoord].IsPlayerOnStairs() {
-				_maps[currentMapCoord].CurrPlayer.X = MAP_SIZE - 50
-				_maps[currentMapCoord].CurrPlayer.Y = MAP_SIZE - 50
-				_maps[currentMapCoord].CurrPlayer.Ori = ym.NORTH
-				_maps = newStage(&currentStage, &currentMapCoord, _maps[currentMapCoord].CurrPlayer)
-			}
 
 		rl.EndDrawing()
 	}

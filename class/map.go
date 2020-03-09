@@ -151,23 +151,22 @@ func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 	rl.DrawRectangle(_map.Width, 0, size, _map.Height, rl.NewColor(65, 87, 106, 255))
 	rl.DrawRectangle(_map.Width + borderSize, borderSize, size - borderSize*2, _map.Height - borderSize*2, rl.RayWhite)
 
+	// rl.DrawRectangle(_map.Width + 44, textStarting + 50 * textCount - 8, 150, 28, rl.Gray)
+	// rl.DrawRectangle(_map.Width + 46, textStarting + 50 * textCount - 6, 150, 28, rl.LightGray)
 	rl.DrawText("Stage n° " + strconv.Itoa(int(currentStage)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
-	rl.DrawText("HP : " + strconv.Itoa(int(_map.CurrPlayer.Hp)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxHp)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	rl.DrawText("HP : " + strconv.Itoa(int(_map.CurrPlayer.Hp)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxHp)), _map.Width + 30, 27 + textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
-	rl.DrawRectangle(_map.Width + 26, textStarting + 50 * textCount - 27, 248, 24, rl.Gray)
-	util.DrawHealthBar(_map.CurrPlayer.Hp, _map.CurrPlayer.MaxHp, _map.Width + 30, textStarting + 50 * textCount, 240, 20)
+	rl.DrawRectangle(_map.Width + 26, textStarting + 50 * textCount, 248, 24, rl.Gray)
+	util.DrawHealthBar(_map.CurrPlayer.Hp, _map.CurrPlayer.MaxHp, _map.Width + 30, 27 + textStarting + 50 * textCount, 240, 20)
 	textCount++
 	rl.DrawText("Move speed : " + strconv.Itoa(int(_map.CurrPlayer.Speed)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxSpeed)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
 	// var coin Coin
 	// coin.InitWithRadius(_map.Width + 138, textStarting + 50 * textCount + 8, 6)
 	// coin.Draw()
-	textCount++
 	rl.DrawText("Mini map : ", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
-	textCount++
-	textCount++
-	textCount++
+	textCount += 6
 	rl.DrawText("Money : " + strconv.Itoa(int(_map.CurrPlayer.Money)) + " gold", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 }
 
@@ -530,5 +529,4 @@ func (_map *Map) AddStairs() {
 			}
 		}
 	}
-	fmt.Println("STAIRS DONE")
 }
