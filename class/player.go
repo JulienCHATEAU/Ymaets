@@ -302,7 +302,7 @@ func (player *Player) Draw() {
 		break
 	}
 	// Health bar
-	util.DrawHealthBar(player.Hp, player.MaxHp, player.X, player.Y - PCH, PBS, 3)
+	// util.DrawHealthBar(player.Hp, player.MaxHp, player.X, player.Y - PCH, PBS, 3)
 	//Animations
 	notEnded, _ := player.Animations.Decrement()
 	player.HandleAnimation(notEnded)
