@@ -472,16 +472,17 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 }
 
 func (_map *Map) aStar(walls []Wall) bool {
-	rows := int(_map.Width / PBS)
-	cols := int(_map.Height / PBS)
+	var rows, cols int32 = _map.Width / PBS, _map.Height / PBS
+	var rowsint, colsint int = int(rows), int(cols)
+	var i, j int32
 	fmt.Println(len(_map.Opening))
-	aStar := astar.NewAStar(rows, cols)
+	aStar := astar.NewAStar(int(rows), int(cols))
 	p2p := astar.NewPointToPoint()
-	for i := 0; i<rows; i++ {
-		for j := 0; j<cols; j++ {
+	for i = 0; i<rows; i++ {
+		for j = 0; j<cols; j++ {
 			for _, wall := range walls {
-				if !wall.Walkable && rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(i * rows), float32(j*rows), float32(PBS), float32(PBS)}) {
-					aStar.FillTile(astar.Point{i, j}, -1)
+				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(i * rows), float32(j*rows), float32(PBS), float32(PBS)}) {
+					aStar.FillTile(astar.Point{int(i), int(j)}, -1)
 					break
 				}
 			}
@@ -493,21 +494,30 @@ func (_map *Map) aStar(walls []Wall) bool {
 	}
 
 	var source, target []astar.Point
+	// Player to stairs
+	source = []astar.Point {astar.Point{int(_map.CurrPlayer.X * rows / _map.Width), int(_map.CurrPlayer.Y * cols / _map.Height)}}
+	target = []astar.Point {astar.Point{int(_map.NextStage.X * rows / _map.Width), int(_map.NextStage.Y * cols / _map.Height)}}
+	if aStar.FindPath(p2p, source, target) == nil {
+		return false
+	}
+
+	// Players to each (0;0) map opening
 	if _map.Coords.X == 0 && _map.Coords.Y == 0 {
 		for _, ori := range _map.Opening {
-			source = OriToAstarCoord(ori, rows, cols)
-			target = []astar.Point {astar.Point{rows-1, cols-1}}	
+			source = OriToAstarCoord(ori, rowsint, colsint)
+			target = []astar.Point {astar.Point{rowsint-1, colsint-1}}	
 			if aStar.FindPath(p2p, source, target) == nil {
 				return false
 			}
 		}
 	}
 
+	// Each opening to each opening
 	openingLength := len(_map.Opening)
 	for k := 0; k<openingLength; k++ {
 		for l := k+1; l<openingLength; l++ {
-			source = OriToAstarCoord(_map.Opening[k], rows, cols)
-			target = OriToAstarCoord(_map.Opening[l], rows, cols)
+			source = OriToAstarCoord(_map.Opening[k], rowsint, colsint)
+			target = OriToAstarCoord(_map.Opening[l], rowsint, colsint)
 			if aStar.FindPath(p2p, source, target) == nil {
 				return false
 			}
@@ -529,4 +539,5 @@ func (_map *Map) AddStairs() {
 			}
 		}
 	}
+	fmt.Println("\n\nSTAIRS\n\n")
 }

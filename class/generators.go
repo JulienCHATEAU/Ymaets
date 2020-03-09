@@ -172,7 +172,7 @@ func GenerateBigWall(_map *Map, bigWallSurface, x, y, cornerCount int32) []Wall 
 			nextLowEdge = r1.Int31() % 30 + 30
 			highEdge = wallSurface / lowEdge
 			currX, currY, currLowEdge, currHighEdge, newX, newY = GenerateWallWithOri(_map, ori, x, y, lowEdge, highEdge, nextLowEdge)
-			bigWall[i].InitWall(currX, currY, currLowEdge, currHighEdge, rl.Gray)
+			bigWall[i].InitWall(currX, currY, currLowEdge, currHighEdge, rl.NewColor(110, 110, 110, 255))
 			collision = rl.CheckCollisionRecs(_map.CurrPlayer.GetHitbox(), bigWall[i].GetHitbox())
 			if collision {
 				return bigWall[:i]
@@ -203,15 +203,15 @@ func GeneratePylon(_map *Map, wallSurface, centerX, centerY, cornerCount int32) 
 	var x int32 = centerX - centerRectWidth/2
 	var y int32 = centerY - centerRectHeight/2
 	currX, currY, currLowEdge, currHighEdge, _, _ := GenerateWallWithOri(_map, EAST, x, y, centerRectHeight, centerRectWidth, 0)
-	pylon[0].InitWall(currX, currY, currLowEdge, currHighEdge, rl.Gray)
+	pylon[0].InitWall(currX, currY, currLowEdge, currHighEdge, rl.NewColor(100, 100, 100, 255))
 	var i int32
 	var iangles int32
 	for i = 1; i<cornerCount+1; i++ {
 		iangles = i * anglesLowEdge
 		currX, currY, currLowEdge, currHighEdge, _, _ = GenerateWallWithOri(_map, EAST, x + iangles, y - iangles, anglesLowEdge, centerRectWidth - iangles*2, 0)
-		pylon[i].InitWall(currX, currY, currLowEdge, currHighEdge, rl.Gray)
+		pylon[i].InitWall(currX, currY, currLowEdge, currHighEdge, rl.NewColor(100, 100, 100, 255))
 		currX, currY, currLowEdge, currHighEdge, _, _ = GenerateWallWithOri(_map, EAST, x + iangles, y + centerRectHeight + iangles - anglesLowEdge, anglesLowEdge, centerRectWidth - iangles*2, 0)
-		pylon[pylonLength - i].InitWall(currX, currY, currLowEdge, currHighEdge, rl.Gray)
+		pylon[pylonLength - i].InitWall(currX, currY, currLowEdge, currHighEdge, rl.NewColor(100, 100, 100, 255))
 	}
 	return pylon
 }
