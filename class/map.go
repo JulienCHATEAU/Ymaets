@@ -145,12 +145,14 @@ func (_map *Map) GetFreeSurface() int32 {
 	return freeSurface
 }
 
-func (_map *Map) DrawMenu(size int32, borderSize int32) {
+func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 	var textStarting int32 = 50 
 	var textCount int32 = 0
 	rl.DrawRectangle(_map.Width, 0, size, _map.Height, rl.NewColor(65, 87, 106, 255))
 	rl.DrawRectangle(_map.Width + borderSize, borderSize, size - borderSize*2, _map.Height - borderSize*2, rl.RayWhite)
 
+	rl.DrawText("Stage n° " + strconv.Itoa(int(currentStage)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	textCount++
 	rl.DrawText("HP : " + strconv.Itoa(int(_map.CurrPlayer.Hp)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxHp)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
 	rl.DrawRectangle(_map.Width + 26, textStarting + 50 * textCount - 27, 248, 24, rl.Gray)
@@ -158,12 +160,15 @@ func (_map *Map) DrawMenu(size int32, borderSize int32) {
 	textCount++
 	rl.DrawText("Move speed : " + strconv.Itoa(int(_map.CurrPlayer.Speed)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxSpeed)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
-	rl.DrawText("Money : " + strconv.Itoa(int(_map.CurrPlayer.Money)) + " gold", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	// var coin Coin
 	// coin.InitWithRadius(_map.Width + 138, textStarting + 50 * textCount + 8, 6)
 	// coin.Draw()
 	textCount++
 	rl.DrawText("Mini map : ", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	textCount++
+	textCount++
+	textCount++
+	rl.DrawText("Money : " + strconv.Itoa(int(_map.CurrPlayer.Money)) + " gold", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 }
 
 func (_map *Map) MonsterMove(index int32) {
@@ -324,6 +329,10 @@ func (_map *Map) PlayerCheckOriCollision(savedOri Orientation) {
 			return
 		}
 	}
+}
+
+func (_map *Map) IsPlayerOnStairs() bool {
+	return rl.CheckCollisionRecs(_map.CurrPlayer.GetHitbox(), _map.NextStage.GetHitbox())
 }
 
 func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
@@ -510,14 +519,16 @@ func (_map *Map) aStar(walls []Wall) bool {
 
 func (_map *Map) AddStairs() {
 	var found = false
-	hitbox := _map.NextStage.GetHitbox()
   for !found {
+		found = true
 		_map.NextStage.Init(r1.Int31() % 600 + 50, r1.Int31() % 600 + 50)
+		hitbox := _map.NextStage.GetHitbox()
 		for _, wall := range _map.Walls {
 			if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
+				found = false
 				break
 			}
 		}
-		found = true
 	}
+	fmt.Println("STAIRS DONE")
 }

@@ -12,7 +12,9 @@ import (
 var s1 = rand.NewSource(time.Now().UnixNano())
 var r1 = rand.New(s1)
 
-var stageMapCount int32 = 15
+var stageMapCount int32 = 7
+var foundStairsMap bool = false
+
 var MAP_SIZE int32 = 800
 var MENU_SIZE int32 = 300
 var MENU_BORDER_SIZE int32 = 10
@@ -43,8 +45,6 @@ func removeImpossibleOris(_maps map[ym.Coord]*ym.Map, currentMapCoord ym.Coord, 
 	}
 	return oris
 }
-
-var foundStairsMap bool = false
 
 func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, ori ym.Orientation, currentMapCoord ym.Coord, remainingMapCount *int32) map[ym.Coord]*ym.Map {
 	fmt.Println()
@@ -265,13 +265,13 @@ func drawMiniStage2(_maps map[ym.Coord]*ym.Map, drawn_maps map[ym.Coord]bool, pl
 	return true
 }
 
-func drawMiniStage(_maps map[ym.Coord]*ym.Map, playerMapCoord ym.Coord) {
+func drawMiniStage(_maps map[ym.Coord]*ym.Map, playerMapCoord ym.Coord, currentStage int32) {
 	var drawn_maps map[ym.Coord]bool = make(map[ym.Coord]bool)
 	borders := util.ToRectangle(MINI_STAGE_MIN_X - MINI_STAGE_BORDER_SIZE, MINI_STAGE_MIN_Y - MINI_STAGE_BORDER_SIZE, MINI_STAGE_WIDTH, MINI_STAGE_HEIGHT)
 	rl.DrawRectangleLinesEx(borders, MINI_STAGE_BORDER_SIZE, rl.NewColor(47, 70, 91, 255))
 	rl.DrawRectangle(MINI_STAGE_MIN_X, MINI_STAGE_MIN_Y, MINI_STAGE_WIDTH - MINI_STAGE_BORDER_SIZE*2, MINI_STAGE_HEIGHT - MINI_STAGE_BORDER_SIZE*2, rl.NewColor(215, 215, 215, 255))
 	if !drawMiniStage2(_maps, drawn_maps, playerMapCoord, ym.Coord{0, 0}, MINI_STAGE_START_X, MINI_STAGE_START_Y, ym.NONE) {
-		_maps[playerMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE)
+		_maps[playerMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE, currentStage)
 		drawn_maps = make(map[ym.Coord]bool)
 		rl.DrawRectangleLinesEx(borders, MINI_STAGE_BORDER_SIZE, rl.NewColor(47, 70, 91, 255))
 		rl.DrawRectangle(MINI_STAGE_MIN_X, MINI_STAGE_MIN_Y, MINI_STAGE_WIDTH - MINI_STAGE_BORDER_SIZE*2, MINI_STAGE_HEIGHT - MINI_STAGE_BORDER_SIZE*2, rl.NewColor(215, 215, 215, 255))
@@ -279,22 +279,31 @@ func drawMiniStage(_maps map[ym.Coord]*ym.Map, playerMapCoord ym.Coord) {
 	}
 }
 
-func main() {
-	var remainingMapCount int32 = stageMapCount
-	remainingMapCount--
-	var currentMapCoord ym.Coord = ym.Coord{0, 0}
+func newStage(currentStage *int32, currentMapCoord *ym.Coord, player ym.Player) map[ym.Coord]*ym.Map {
+	var remainingMapCount int32
 	var _maps map[ym.Coord]*ym.Map
-	var player ym.Player
-	player.Init(MAP_SIZE - 50, MAP_SIZE - 50, ym.NORTH)
+	foundStairsMap = false
+	(*currentStage)++
+	*currentMapCoord = ym.Coord{0, 0}
 	for int32(len(_maps)) < stageMapCount - 1 {
 		fmt.Println("START NEW STAGE GENERATION")
 		remainingMapCount = stageMapCount
-		_maps = initStage(make(map[ym.Coord]*ym.Map), player, 100, ym.NONE, currentMapCoord, &remainingMapCount)
+		_maps = initStage(make(map[ym.Coord]*ym.Map), player, 100, ym.NONE, *currentMapCoord, &remainingMapCount)
 	}
 	if !foundStairsMap {
-		_maps[currentMapCoord].AddStairs()
+		_maps[*currentMapCoord].AddStairs()
 	}
-	_maps[currentMapCoord].Visited = true;
+	_maps[*currentMapCoord].Visited = true;
+	return _maps
+}
+
+func main() {
+	var currentStage int32 = 0
+	var currentMapCoord ym.Coord
+	var _maps map[ym.Coord]*ym.Map
+	var player ym.Player
+	player.Init(MAP_SIZE - 50, MAP_SIZE - 50, ym.NORTH)
+	_maps = newStage(&currentStage, &currentMapCoord, player)
 	fmt.Println(len(_maps))
 	fmt.Println(_maps)
 	
@@ -362,8 +371,15 @@ func main() {
 			}
 			_maps[currentMapCoord].CursorMove(mouseX, mouseY)
 			_maps[currentMapCoord].CursorDraw()
-			_maps[currentMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE)
-			drawMiniStage(_maps, currentMapCoord)
+			_maps[currentMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE, currentStage)
+			drawMiniStage(_maps, currentMapCoord, currentStage)
+
+			if _maps[currentMapCoord].IsPlayerOnStairs() {
+				_maps[currentMapCoord].CurrPlayer.X = MAP_SIZE - 50
+				_maps[currentMapCoord].CurrPlayer.Y = MAP_SIZE - 50
+				_maps[currentMapCoord].CurrPlayer.Ori = ym.NORTH
+				_maps = newStage(&currentStage, &currentMapCoord, _maps[currentMapCoord].CurrPlayer)
+			}
 
 		rl.EndDrawing()
 	}
