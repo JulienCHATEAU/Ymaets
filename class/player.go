@@ -233,7 +233,7 @@ func (player *Player) SetOriFromMouse(mouseX, mouseY int32) {
 	// shot := Shot {50, 50, 4, 10, 3, NORTH, rl.Brown}
 func (player *Player) GetShot() Shot {
 	var shot Shot
-	shot.Init(player.Ori, PSC, PSS, PSH, PSW, PSR)
+	shot.Init(player.Ori, PSC, PSS, PSH, PSW, PSR, PLAYER)
 	switch player.Ori {
 	case NORTH:
 		shot.X = player.X + PBS/2-PCW/2

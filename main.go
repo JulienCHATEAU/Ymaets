@@ -370,7 +370,7 @@ func main() {
 				}
 	
 				// Stairs
-				if _maps[currentMapCoord].NextStage.X != -1 {
+				if _maps[currentMapCoord].NextStage.X > 100 {
 					_maps[currentMapCoord].NextStage.Draw()
 				}
 

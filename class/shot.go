@@ -4,25 +4,33 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+type EntityType int32
+const (
+	PLAYER = iota
+	MONSTER
+)
+
 type Shot struct {
 	X 					int32
 	Y 					int32
 	Width 			int32
 	Height			int32
 	Speed				int32
+	Owner				EntityType
 	Ori 				Orientation
 	Range 			int32
 	TravelDist 	int32
 	Color 			rl.Color
 }
 
-func (shot *Shot) Init(ori Orientation, color rl.Color, speed, width, height, rangee int32) {
+func (shot *Shot) Init(ori Orientation, color rl.Color, speed, width, height, rangee int32, owner EntityType) {
 	shot.Ori = ori
 	shot.Color = color
 	shot.Width = width
 	shot.Speed = speed
 	shot.Height = height
 	shot.Range = rangee
+	shot.Owner = owner
 	shot.TravelDist = 0
 }
 

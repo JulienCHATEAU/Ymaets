@@ -172,7 +172,7 @@ func GenerateBigWall(_map *Map, bigWallSurface, x, y, cornerCount int32) []Wall 
 			nextLowEdge = r1.Int31() % 30 + 30
 			highEdge = wallSurface / lowEdge
 			currX, currY, currLowEdge, currHighEdge, newX, newY = GenerateWallWithOri(_map, ori, x, y, lowEdge, highEdge, nextLowEdge)
-			bigWall[i].InitWall(currX, currY, currLowEdge, currHighEdge, rl.NewColor(110, 110, 110, 255))
+			bigWall[i].InitWall(currX, currY, currLowEdge, currHighEdge, rl.NewColor(100, 100, 100, 255))
 			collision = rl.CheckCollisionRecs(_map.CurrPlayer.GetHitbox(), bigWall[i].GetHitbox())
 			if collision {
 				return bigWall[:i]

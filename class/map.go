@@ -109,11 +109,11 @@ func (_map *Map) Init(coord Coord, windowSize int32, opening []Orientation) {
 	_map.Coins = make([]Coin, 0)
 	_map.MonstersCount = 4
 	_map.Monsters = make([]Monster, 50)
-	_map.Monsters[0].Init(50, 50) 
-	_map.Monsters[1].Init(150, 350) 
-	_map.Monsters[2].Init(250, 50) 
-	_map.Monsters[3].Init(100, 450)
-	_map.NextStage.Init(-1, -1)
+	_map.Monsters[0].Init(50, 50, KAMIKAZE) 
+	_map.Monsters[1].Init(150, 350, ONE_CANON_KAMIKAZE) 
+	_map.Monsters[2].Init(250, 50, ONE_CANON_KAMIKAZE) 
+	_map.Monsters[3].Init(100, 450, KAMIKAZE)
+	_map.NextStage.Init(-100, -100)
 	_map.ShotsCount = 0
 	_map.Shots = make([]Shot, 50)
 }
@@ -184,8 +184,28 @@ func (_map *Map) MonsterMove(index int32) {
 		} else {
 			dy = -_map.Monsters[index].MoveSpeed
 		}
+		if _map.CurrPlayer.X - _map.CurrPlayer.Y > _map.Monsters[index].X - _map.Monsters[index].Y && _map.CurrPlayer.X + _map.CurrPlayer.Y < _map.Monsters[index].X + _map.Monsters[index].Y {
+			_map.Monsters[index].Ori = NORTH
+		} else if _map.CurrPlayer.X - _map.CurrPlayer.Y < _map.Monsters[index].X - _map.Monsters[index].Y && _map.CurrPlayer.X + _map.CurrPlayer.Y > _map.Monsters[index].X + _map.Monsters[index].Y {
+			_map.Monsters[index].Ori = SOUTH
+		} else if _map.CurrPlayer.X - _map.CurrPlayer.Y > _map.Monsters[index].X - _map.Monsters[index].Y && _map.CurrPlayer.X + _map.CurrPlayer.Y > _map.Monsters[index].X + _map.Monsters[index].Y {
+			_map.Monsters[index].Ori = EAST
+		} else if _map.CurrPlayer.X - _map.CurrPlayer.Y < _map.Monsters[index].X - _map.Monsters[index].Y && _map.CurrPlayer.X + _map.CurrPlayer.Y < _map.Monsters[index].X + _map.Monsters[index].Y {
+			_map.Monsters[index].Ori = WEST
+		}
 		_map.Monsters[index].X += dx
 		_map.Monsters[index].Y += dy
+		
+		if _map.Monsters[index].Animations.Values[FIRE_COOLDOWN] == 0 && _map.Monsters[index].HasCanon {
+			shot := _map.Monsters[index].GetShot()
+			_map.Monsters[index].Animations.Values[FIRE_COOLDOWN] = MFC
+			if int32(len(_map.Shots)) > _map.ShotsCount {
+				_map.Shots[_map.ShotsCount] = shot
+			} else {
+				_map.Shots = append(_map.Shots, shot)
+			}
+			_map.ShotsCount++
+		}
 	}	
 }
 
@@ -455,18 +475,27 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 	var center rl.Vector2
 	var radius float32
 
-	for i = 0; i < _map.MonstersCount; i++ {
-		center, radius = _map.Monsters[i].GetHitbox()
-		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
-			_map.Monsters[i].TakeDamage(25)
-			if _map.Monsters[i].Hp == 0 {
-				coins := _map.Monsters[i].SpreadCoins()
-				_map.CoinsCount += int32(len(coins))
-				_map.Coins = append(_map.Coins, coins...)
-				_map.removeMonster(&i)
+	if rl.CheckCollisionRecs(hitbox, _map.CurrPlayer.GetHitbox()) {
+		if _map.Shots[*index].Owner != PLAYER {
+			_map.CurrPlayer.TakeDamage(5)
+		}
+		_map.removeShot(index)
+	} else {
+		for i = 0; i < _map.MonstersCount; i++ {
+			center, radius = _map.Monsters[i].GetHitbox()
+			if rl.CheckCollisionCircleRec(center, radius, hitbox) {
+				if _map.Shots[*index].Owner != MONSTER {
+					_map.Monsters[i].TakeDamage(10)
+					if _map.Monsters[i].Hp == 0 {
+						coins := _map.Monsters[i].SpreadCoins()
+						_map.CoinsCount += int32(len(coins))
+						_map.Coins = append(_map.Coins, coins...)
+						_map.removeMonster(&i)
+					}
+				}
+				_map.removeShot(index)
+				return
 			}
-			_map.removeShot(index)
-			return
 		}
 	}
 }
@@ -481,7 +510,7 @@ func (_map *Map) aStar(walls []Wall) bool {
 	for i = 0; i<rows; i++ {
 		for j = 0; j<cols; j++ {
 			for _, wall := range walls {
-				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(i * rows), float32(j*rows), float32(PBS), float32(PBS)}) {
+				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(20 + i * PBS), float32(20 + j * PBS), float32(PBS), float32(PBS)}) {
 					aStar.FillTile(astar.Point{int(i), int(j)}, -1)
 					break
 				}
@@ -504,8 +533,8 @@ func (_map *Map) aStar(walls []Wall) bool {
 	// Players to each (0;0) map opening
 	if _map.Coords.X == 0 && _map.Coords.Y == 0 {
 		for _, ori := range _map.Opening {
-			source = OriToAstarCoord(ori, rowsint, colsint)
-			target = []astar.Point {astar.Point{rowsint-1, colsint-1}}	
+			source = []astar.Point {astar.Point{rowsint-1, colsint-1}}
+			target = OriToAstarCoord(ori, rowsint, colsint)
 			if aStar.FindPath(p2p, source, target) == nil {
 				return false
 			}
