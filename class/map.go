@@ -35,6 +35,8 @@ type Map struct {
 	Coins 				[]Coin
 	MonstersCount	int32
 	Monsters 			[]Monster
+	ItemsCount 	int32
+	Items 				[]Item
 } 
 
 func (_map *Map) GetOpeningHitboxes() []rl.Rectangle {
@@ -116,6 +118,8 @@ func (_map *Map) Init(coord Coord, windowSize int32, opening []Orientation) {
 	_map.NextStage.Init(-100, -100)
 	_map.ShotsCount = 0
 	_map.Shots = make([]Shot, 50)
+	_map.ItemsCount = 0
+	_map.Items = make([]Item, 50)
 }
 
 func (_map *Map) Update(ori Orientation, windowSize int32) {
@@ -172,40 +176,11 @@ func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 
 func (_map *Map) MonsterMove(index int32) {
 	if util.PointsDistance(_map.Monsters[index].X, _map.Monsters[index].Y, _map.CurrPlayer.X, _map.CurrPlayer.Y) <= _map.Monsters[index].AggroDist {
-		var dx int32 = 0
-		var dy int32 = 0
-		if _map.Monsters[index].X < _map.CurrPlayer.X {
-			dx = _map.Monsters[index].MoveSpeed
-		} else {
-			dx = -_map.Monsters[index].MoveSpeed
-		}
-		if _map.Monsters[index].Y < _map.CurrPlayer.Y {
-			dy = _map.Monsters[index].MoveSpeed
-		} else {
-			dy = -_map.Monsters[index].MoveSpeed
-		}
-		if _map.CurrPlayer.X - _map.CurrPlayer.Y > _map.Monsters[index].X - _map.Monsters[index].Y && _map.CurrPlayer.X + _map.CurrPlayer.Y < _map.Monsters[index].X + _map.Monsters[index].Y {
-			_map.Monsters[index].Ori = NORTH
-		} else if _map.CurrPlayer.X - _map.CurrPlayer.Y < _map.Monsters[index].X - _map.Monsters[index].Y && _map.CurrPlayer.X + _map.CurrPlayer.Y > _map.Monsters[index].X + _map.Monsters[index].Y {
-			_map.Monsters[index].Ori = SOUTH
-		} else if _map.CurrPlayer.X - _map.CurrPlayer.Y > _map.Monsters[index].X - _map.Monsters[index].Y && _map.CurrPlayer.X + _map.CurrPlayer.Y > _map.Monsters[index].X + _map.Monsters[index].Y {
-			_map.Monsters[index].Ori = EAST
-		} else if _map.CurrPlayer.X - _map.CurrPlayer.Y < _map.Monsters[index].X - _map.Monsters[index].Y && _map.CurrPlayer.X + _map.CurrPlayer.Y < _map.Monsters[index].X + _map.Monsters[index].Y {
-			_map.Monsters[index].Ori = WEST
-		}
-		_map.Monsters[index].X += dx
-		_map.Monsters[index].Y += dy
-		
-		if _map.Monsters[index].Animations.Values[FIRE_COOLDOWN] == 0 && _map.Monsters[index].HasCanon {
-			shot := _map.Monsters[index].GetShot()
-			_map.Monsters[index].Animations.Values[FIRE_COOLDOWN] = MFC
-			if int32(len(_map.Shots)) > _map.ShotsCount {
-				_map.Shots[_map.ShotsCount] = shot
-			} else {
-				_map.Shots = append(_map.Shots, shot)
-			}
-			_map.ShotsCount++
-		}
+		_map.Monsters[index].Move(_map)
+		_map.Monsters[index].Orient(_map)
+		if _map.Monsters[index].HasCanon && _map.Monsters[index].Animations.Values[FIRE_COOLDOWN] == 0 {
+			_map.Monsters[index].Fire(_map)
+		}	
 	}	
 }
 
@@ -329,7 +304,7 @@ func (_map *Map) PlayerFire() {
 func (_map *Map) PlayerCheckOriCollision(savedOri Orientation) {
 	hitbox := _map.CurrPlayer.GetHitbox()
 	for _, wall := range _map.Walls {
-		if !wall.Walkable {
+		if !wall.Walkable && !_map.CurrPlayer.Settings[CAN_WALK_ON_WATER] {
 			if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
 				_map.CurrPlayer.Ori = savedOri
 				return
@@ -359,11 +334,14 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 	for index, _ := range _map.Walls {
 		if rl.CheckCollisionRecs(hitbox, _map.Walls[index].GetHitbox()) {
 			if !_map.Walls[index].Walkable {
+				if _map.Walls[index].Type == Water && _map.CurrPlayer.Settings[CAN_WALK_ON_WATER] {
+					break
+				}
 				_map.CurrPlayer.X = savedX
 				_map.CurrPlayer.Y = savedY
 				return
 			} else {
-				if _map.Walls[index].Animations.Values[DAMAGE_DEALT] == 0 {
+				if _map.Walls[index].Type == Lava && _map.Walls[index].Animations.Values[DAMAGE_DEALT] == 0 {
 					_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage)
 					_map.Walls[index].Animations.Values[DAMAGE_DEALT] = LDT
 				}
@@ -394,6 +372,30 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 	}
 }
 
+func (_map *Map) ShowEnterButton(x, y int32) {
+	rl.DrawRectangle(x-2, y, 15, 12, rl.NewColor(100, 100, 100, 255))
+	rl.DrawRectangle(x + 1, y + 5, 12, 18, rl.NewColor(100, 100, 100, 255))
+	rl.DrawRectangle(x, y, 15, 12, rl.NewColor(155, 155, 155, 255))
+	rl.DrawRectangle(x + 3, y + 5, 12, 18, rl.NewColor(155, 155, 155, 255))
+	rl.DrawText("<-", x+3, y+2, 1, rl.Black)
+}
+
+func (_map *Map) PlayerOnItem() {
+	hitbox := _map.CurrPlayer.GetHitbox()
+	var i int32
+	for i = 0; i<_map.ItemsCount; i++ {
+		if rl.CheckCollisionRecs(_map.Items[i].GetHitbox(), hitbox) {
+			if rl.IsKeyPressed(rl.KeyEnter) {
+				_map.CurrPlayer.AddInBag(_map.Items[i])
+				_map.Items[i].ApplyEffect(_map)
+				_map.removeItem(int32(i))
+			}
+			_map.ShowEnterButton(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
+			break
+		}
+	}
+}
+
 func (_map *Map) PlayerDraw() {
 	_map.CurrPlayer.Draw()
 }
@@ -401,6 +403,12 @@ func (_map *Map) PlayerDraw() {
 func (_map *Map) WallsDraw() {
 	for index := len(_map.Walls)-1; index >= 0; index-- {
 		_map.Walls[index].Draw()
+	}
+}
+
+func (_map *Map) ItemsDraw() {
+	for index := _map.ItemsCount-1; index >= 0; index-- {
+		_map.Items[index].Draw()
 	}
 }
 
@@ -434,6 +442,18 @@ func (_map *Map) ShotMove(index *int32) {
 		_map.Shots[*index].X -= _map.Shots[*index].Speed		
 		break;
 	}
+}
+
+func (_map *Map) AddItem(item Item) {
+	_map.Items[_map.ItemsCount] = item
+	_map.ItemsCount++
+}
+
+func (_map *Map) removeItem(index int32) {
+	for i := index; i<_map.ItemsCount-1; i++ {
+		_map.Items[i] = _map.Items[i+1]
+	}
+	_map.ItemsCount--
 }
 
 func (_map *Map) removeCoin(index *int32) {

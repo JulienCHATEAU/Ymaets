@@ -141,11 +141,18 @@ var PMS int32 = 4
 var PHM int32 = 100
 // Player timers count
 var PTC int32 = 2
+// Player Max bag size
+var PMBS int32 = 5
 
 type PlayerTimers int32
 const (
 	PLAYER_TAKE_DAMAGE = iota
 	FIRE_COOLDOWN
+)
+
+type PlayerSettings string
+const (
+	CAN_WALK_ON_WATER = "canWalkOnWater"
 )
 
 type Player struct {
@@ -161,6 +168,9 @@ type Player struct {
 	Ori_keys 			[4]int32 // east, west, north, south
 	Color 				rl.Color
 	Animations		Timers
+	Settings			map[PlayerSettings]bool
+	BagSize 			int32
+	Bag 					[]Item
 }
 
 func (player *Player) Init(x, y int32, ori Orientation) {
@@ -176,6 +186,27 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
 		player.Color = rl.Blue
 		player.Animations.Init(PTC)
+		player.Settings = make(map[PlayerSettings]bool)
+		player.Settings[CAN_WALK_ON_WATER] = false
+		player.BagSize = 0
+		player.Bag = make([]Item, PMBS)
+}
+
+func (player *Player) AddInBag(item Item) {
+	if player.BagSize < PMBS {
+		player.Bag[player.BagSize] = item
+		player.BagSize++
+	}
+}
+
+func (player *Player) RemoveFromBag(toRemove Item) {
+	for index, item := range player.Bag {
+		if item.Name == toRemove.Name {
+			player.Bag[index] = player.Bag[player.BagSize-1]
+			player.BagSize--
+			break
+		}
+	}
 }
 
 func (player *Player) GetHitbox() rl.Rectangle {

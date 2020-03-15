@@ -10,6 +10,13 @@ const (
 	DAMAGE_DEALT = iota
 )
 
+type WallType int32
+const (
+	Solid = iota
+	Water
+	Lava
+)
+
 // Wall timers count
 var WTC int32 = 1
 // Lava walk damage
@@ -23,6 +30,7 @@ type Wall struct {
 	Width				int32
 	Height			int32
 	Crossable 	bool
+	Type 				WallType
 	Walkable 		bool
 	WalkDamage 	int32
 	Animations	Timers
@@ -51,18 +59,22 @@ func (wall *Wall) init(x, y, width, height int32, crossable, walkable bool, colo
 
 func (wall *Wall) InitLava(x, y, width, height int32) {
 	wall.init(x, y, width, height, true, true, rl.NewColor(245, 90, 0, 200))
+	wall.Type = Lava
 }
 
 func (wall *Wall) InitWater(x, y, width, height int32) {
 	wall.init(x, y, width, height, true, false, rl.NewColor(104, 215, 250, 255))
+	wall.Type = Water
 }
 
 func (wall *Wall) InitWall(x, y, width, height int32, color rl.Color) {
 	wall.init(x, y, width, height, false, false, color)
+	wall.Type = Solid
 }
 
 func (wall *Wall) InitBorder(x, y, width, height int32) {
 	wall.InitWall(x, y, width, height, rl.Brown)
+	wall.Type = Solid
 }
 
 // func (wall *Wall) HandleAnimation(notEnded []int32, justEnded []int32) {

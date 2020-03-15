@@ -25,7 +25,7 @@ var MSH int32 = 4
 // Monster shot speed (px/frame)
 var MSS int32 = 5
 // Monster shot range (px)
-var MSR int32 = 250
+var MSR int32 = 200
 // Monster fire cooldown
 var MFC int32 = 20
 
@@ -49,10 +49,23 @@ type Monster struct {
 	Hp					 	int32
 	MaxHp				 	int32
 	HasCanon			bool
+	Type					MonsterType
 	Ori						Orientation
 	AggroDist			float64
 	Animations		Timers
 	Color 				rl.Color
+}
+
+/* Init */
+
+func (monster *Monster) initKamikaze() {
+	monster.HasCanon = false
+	monster.Color = rl.NewColor(144, 227, 217, 255)
+}
+
+func (monster *Monster) initOneCanonKamikaze() {
+	monster.HasCanon = true
+		monster.Color = rl.NewColor(255, 112, 0, 255)
 }
 
 func (monster *Monster) Init(x, y int32, monsterType MonsterType) {
@@ -63,20 +76,77 @@ func (monster *Monster) Init(x, y int32, monsterType MonsterType) {
 	monster.Ori = NORTH
 	monster.Hp = MMH
 	monster.MaxHp = MMH
+	monster.AggroDist = MAD
+	monster.Animations.Init(MTC)
 	switch monsterType {
 	case KAMIKAZE:
-		monster.HasCanon = false
-		monster.Color = rl.NewColor(144, 227, 217, 255)
+		monster.initKamikaze()
 		break
 
 	case ONE_CANON_KAMIKAZE:
-		monster.HasCanon = true
-		monster.Color = rl.NewColor(255, 112, 0, 255)
+		monster.initOneCanonKamikaze()
 		break
 	}
-	monster.AggroDist = MAD
-	monster.Animations.Init(MTC)
+	monster.Type = monsterType
 }
+
+/* MOVE */
+
+func (monster *Monster) moveKamikaze(_map *Map) {
+	var dx int32 = 0
+	var dy int32 = 0
+	if monster.X < _map.CurrPlayer.X {
+		dx = monster.MoveSpeed
+	} else {
+		dx = -monster.MoveSpeed
+	}
+	if monster.Y < _map.CurrPlayer.Y {
+		dy = monster.MoveSpeed
+	} else {
+		dy = -monster.MoveSpeed
+	}
+	monster.X += dx
+	monster.Y += dy
+}
+
+func (monster *Monster) Move(_map *Map) {
+	switch monster.Type {
+		case KAMIKAZE:
+			monster.moveKamikaze(_map)
+		case ONE_CANON_KAMIKAZE:
+			monster.moveKamikaze(_map)
+			break;
+	}
+}
+
+/* FIRE */
+
+func (monster *Monster) Fire(_map *Map) {
+		shot := monster.GetShot()
+		monster.Animations.Values[FIRE_COOLDOWN] = MFC
+		if int32(len(_map.Shots)) > _map.ShotsCount {
+			_map.Shots[_map.ShotsCount] = shot
+		} else {
+			_map.Shots = append(_map.Shots, shot)
+		}
+		_map.ShotsCount++
+}
+
+/* Orient */
+
+func (monster *Monster) Orient(_map *Map) {
+	if _map.CurrPlayer.X - _map.CurrPlayer.Y > monster.X - monster.Y && _map.CurrPlayer.X + _map.CurrPlayer.Y < monster.X + monster.Y {
+		monster.Ori = NORTH
+	} else if _map.CurrPlayer.X - _map.CurrPlayer.Y < monster.X - monster.Y && _map.CurrPlayer.X + _map.CurrPlayer.Y > monster.X + monster.Y {
+		monster.Ori = SOUTH
+	} else if _map.CurrPlayer.X - _map.CurrPlayer.Y > monster.X - monster.Y && _map.CurrPlayer.X + _map.CurrPlayer.Y > monster.X + monster.Y {
+		monster.Ori = EAST
+	} else if _map.CurrPlayer.X - _map.CurrPlayer.Y < monster.X - monster.Y && _map.CurrPlayer.X + _map.CurrPlayer.Y < monster.X + monster.Y {
+		monster.Ori = WEST
+	}
+}
+
+/////
 
 func (monster *Monster) GetShot() Shot {
 	var shot Shot

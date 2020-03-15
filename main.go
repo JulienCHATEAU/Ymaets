@@ -323,14 +323,6 @@ func newStage(currentStage *int32, currentMapCoord *ym.Coord, player ym.Player) 
 	return _maps
 }
 
-func showEnterButton(x, y int32) {
-	rl.DrawRectangle(x-2, y, 15, 12, rl.NewColor(100, 100, 100, 255))
-	rl.DrawRectangle(x + 1, y + 5, 12, 18, rl.NewColor(100, 100, 100, 255))
-	rl.DrawRectangle(x, y, 15, 12, rl.NewColor(155, 155, 155, 255))
-	rl.DrawRectangle(x + 3, y + 5, 12, 18, rl.NewColor(155, 155, 155, 255))
-	rl.DrawText("<-", x+3, y+2, 1, rl.Black)
-}
-
 func main() {
 	var currentStage int32 = 0
 	var currentMapCoord ym.Coord
@@ -340,6 +332,11 @@ func main() {
 	_maps = newStage(&currentStage, &currentMapCoord, player)
 	fmt.Println(len(_maps))
 	fmt.Println(_maps)
+	// var item ym.Item
+	// item.Init(250, 250, ym.WATER_BOOTS)
+	// _maps[currentMapCoord].AddItem(item)
+	// item.Init(450, 250, ym.HEART_OF_STEEL)
+	// _maps[currentMapCoord].AddItem(item)
 	
 	fmt.Println("Ymaets")
 	rl.InitWindow(_maps[currentMapCoord].Width + MENU_SIZE, _maps[currentMapCoord].Height, "Ymaets")
@@ -367,6 +364,14 @@ func main() {
 					fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
 					fmt.Println(_maps[currentMapCoord].Coins)
 					fmt.Println(_maps[currentMapCoord].CoinsCount)
+					fmt.Println(_maps[currentMapCoord].CurrPlayer.Bag)
+					fmt.Println(_maps[currentMapCoord].CurrPlayer.Settings[ym.CAN_WALK_ON_WATER])
+					for _, wall := range _maps[currentMapCoord].Walls {
+						if wall.Type == ym.Water {
+							fmt.Print(wall.Walkable)
+							fmt.Print(" | ")
+						}
+					}
 				}
 	
 				// Stairs
@@ -377,6 +382,8 @@ func main() {
 				_maps[currentMapCoord].CoinsDraw()
 				_maps[currentMapCoord].WallsDraw()
 	
+				// Items
+				_maps[currentMapCoord].ItemsDraw()
 	
 				// Shots
 				for index = 0; index < _maps[currentMapCoord].ShotsCount; index++ {
@@ -423,8 +430,11 @@ func main() {
 						gameState = STAGE_SCREEN
 						framesCount = 0
 					}
-					showEnterButton(_maps[currentMapCoord].NextStage.X + ym.SBS + 13, _maps[currentMapCoord].NextStage.Y + 5)
+					_maps[currentMapCoord].ShowEnterButton(_maps[currentMapCoord].NextStage.X + ym.SBS + 13, _maps[currentMapCoord].NextStage.Y + 5)
 				}
+
+				// Player on item
+				_maps[currentMapCoord].PlayerOnItem()
 			
 			}
 			_maps[currentMapCoord].CursorMove(mouseX, mouseY)
