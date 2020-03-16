@@ -17,25 +17,28 @@ var IBS int32 = 30
 type Item struct {
 	X 					int32
 	Y 					int32
+	Size 				int32
 	Level				int32
 	Name				ItemName
 	Description	string
+	Selected 		bool
 }
 
 /* Init */
 
 func (item *Item) initWaterBoots() {
-	item.Description = "The water boots allows you to walk on the water"
+	item.Description = "The water boots allow you to walk on the water."
 }
 
 func (item *Item) initHeartOfSteel() {
-	item.Description = "The heart of steel increases your maximum health points"
+	item.Description = "The heart of steel increases your maximum health points."
 }
 
 func (item *Item) Init(x, y int32, name ItemName) {
 	item.X = x
 	item.Y = y
 	item.Level = 1
+	item.Size = IBS
 	switch name {
 		case WATER_BOOTS:
 			item.initWaterBoots()
@@ -44,6 +47,7 @@ func (item *Item) Init(x, y int32, name ItemName) {
 			break;
 	}
 	item.Name = name
+	item.Selected = false
 }
 
 /* Effect */
@@ -89,16 +93,21 @@ func (item *Item) RemoveEffect(_map *Map) {
 /* Draw */
 
 func (item *Item) drawWaterBoots() {
-	rl.DrawRectangle(item.X+5, item.Y+5, IBS-10, IBS-10, rl.DarkBlue)
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.DarkBlue)
 	
 }
 
 func (item *Item) drawHeartOfSteel() {
-	rl.DrawRectangle(item.X+5, item.Y+5, IBS-10, IBS-10, rl.Pink)
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.Pink)
 }
 
 func (item *Item) Draw() {
-	rl.DrawRectangleLinesEx(util.ToRectangle(item.X, item.Y, IBS, IBS), 2, rl.Black)
+	if item.Selected {
+		var margin int32 = 3
+		rl.DrawRectangleLinesEx(util.ToRectangle(item.X - margin, item.Y - margin, item.Size + margin*2, item.Size + margin*2), 3, rl.Black)
+	} else {
+		rl.DrawRectangleLinesEx(util.ToRectangle(item.X, item.Y, item.Size, item.Size), 2, rl.Black)
+	}
 	switch item.Name {
 		case WATER_BOOTS:
 			item.drawWaterBoots()
@@ -111,5 +120,5 @@ func (item *Item) Draw() {
 //////
 
 func (item *Item) GetHitbox() rl.Rectangle {
-	return rl.Rectangle{float32(item.X), float32(item.Y), float32(IBS), float32(IBS)}
+	return rl.Rectangle{float32(item.X), float32(item.Y), float32(item.Size), float32(item.Size)}
 }

@@ -99,10 +99,10 @@ func (_map *Map) InitBorders() {
 	_map.Walls = append(_map.Walls, GeneratePossibleWalls(_map)...)
 }
 
-func (_map *Map) Init(coord Coord, windowSize int32, opening []Orientation) {
+func (_map *Map) Init(coord Coord, windowSize, borderSize int32, opening []Orientation) {
 	_map.Visited = false
 	_map.Coords = coord
-	_map.BorderSize = 20
+	_map.BorderSize = borderSize
 	_map.Width = windowSize
 	_map.Height = windowSize
 	_map.Opening = opening
@@ -271,9 +271,9 @@ func (_map *Map) PlayerMove() Orientation {
 }
 
 func (_map *Map) PlayerOri(mouseX, mouseY int32) {
-	if mouseX > 0 && mouseX < _map.Width && mouseY > 0 && mouseY < _map.Height {
-		_map.CurrPlayer.SetOriFromMouse(mouseX, mouseY)
-	}
+	// if mouseX > 0 && mouseX < _map.Width && mouseY > 0 && mouseY < _map.Height {
+	// 	_map.CurrPlayer.SetOriFromMouse(mouseX, mouseY)
+	// }
 	if rl.IsKeyDown(_map.CurrPlayer.Ori_keys[0]) {
 		_map.CurrPlayer.Ori = EAST;
 	}

@@ -15,6 +15,7 @@ const (
 	NONE = iota - 1
 	GAME_SCREEN
 	STAGE_SCREEN
+	BAG_SCREEN
 )
 
 var gameState GameState = STAGE_SCREEN
@@ -26,6 +27,7 @@ var stageMapCount int32 = 15
 var foundStairsMap bool = false
 
 var MAP_SIZE int32 = 800
+var MAP_BORDER_SIZE int32 = 20
 var MENU_SIZE int32 = 300
 var MENU_BORDER_SIZE int32 = 10
 var MENU_START_X = MAP_SIZE + MENU_BORDER_SIZE
@@ -74,7 +76,7 @@ func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, 
 	deeperProba -= (100 / stageMapCount)
 	var _map *ym.Map = &ym.Map{}
 	_map.CurrPlayer = player
-	_map.Init(currentMapCoord, MAP_SIZE, openings)
+	_map.Init(currentMapCoord, MAP_SIZE, MAP_BORDER_SIZE, openings)
 	_map.InitBorders()
 	if !foundStairsMap && r1.Int31() % 100 < stairsProba {
 		foundStairsMap = true
@@ -332,11 +334,16 @@ func main() {
 	_maps = newStage(&currentStage, &currentMapCoord, player)
 	fmt.Println(len(_maps))
 	fmt.Println(_maps)
-	// var item ym.Item
-	// item.Init(250, 250, ym.WATER_BOOTS)
-	// _maps[currentMapCoord].AddItem(item)
-	// item.Init(450, 250, ym.HEART_OF_STEEL)
-	// _maps[currentMapCoord].AddItem(item)
+
+	var bagMenu ym.BagMenu
+	var bagMenuMargin int32 = 150
+	var bagMenuWidth int32 = MAP_SIZE - 2 * MAP_BORDER_SIZE - bagMenuMargin*2
+
+	var item ym.Item
+	item.Init(250, 250, ym.WATER_BOOTS)
+	_maps[currentMapCoord].AddItem(item)
+	item.Init(450, 250, ym.HEART_OF_STEEL)
+	_maps[currentMapCoord].AddItem(item)
 	
 	fmt.Println("Ymaets")
 	rl.InitWindow(_maps[currentMapCoord].Width + MENU_SIZE, _maps[currentMapCoord].Height, "Ymaets")
@@ -354,25 +361,26 @@ func main() {
 		mouseX := rl.GetMouseX()
 		mouseY := rl.GetMouseY()
 
+		if rl.IsMouseButtonPressed(rl.MouseRightButton) {
+			fmt.Printf("(%d, %d)\n", mouseX, mouseY)
+			fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
+			fmt.Println(_maps[currentMapCoord].Coins)
+			fmt.Println(_maps[currentMapCoord].CoinsCount)
+			fmt.Println(_maps[currentMapCoord].CurrPlayer.Bag)
+			fmt.Println(_maps[currentMapCoord].CurrPlayer.Settings[ym.CAN_WALK_ON_WATER])
+			for _, wall := range _maps[currentMapCoord].Walls {
+				if wall.Type == ym.Water {
+					fmt.Print(wall.Walkable)
+					fmt.Print(" | ")
+				}
+			}
+		}
+
 		rl.BeginDrawing()
 			if gameState == STAGE_SCREEN {
 				newStageAnimation(&framesCount, 75, currentStage)
-			} else if gameState == GAME_SCREEN {
+			} else if gameState == GAME_SCREEN || gameState == BAG_SCREEN {
 				rl.ClearBackground(WINDOW_BCK)
-				if rl.IsMouseButtonPressed(rl.MouseRightButton) {
-					fmt.Printf("(%d, %d)\n", mouseX, mouseY)
-					fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
-					fmt.Println(_maps[currentMapCoord].Coins)
-					fmt.Println(_maps[currentMapCoord].CoinsCount)
-					fmt.Println(_maps[currentMapCoord].CurrPlayer.Bag)
-					fmt.Println(_maps[currentMapCoord].CurrPlayer.Settings[ym.CAN_WALK_ON_WATER])
-					for _, wall := range _maps[currentMapCoord].Walls {
-						if wall.Type == ym.Water {
-							fmt.Print(wall.Walkable)
-							fmt.Print(" | ")
-						}
-					}
-				}
 	
 				// Stairs
 				if _maps[currentMapCoord].NextStage.X > 100 {
@@ -402,22 +410,26 @@ func main() {
 				}
 	
 				// Player and map change
-				savedX = _maps[currentMapCoord].CurrPlayer.X
-				savedY = _maps[currentMapCoord].CurrPlayer.Y
-				savedOri := _maps[currentMapCoord].CurrPlayer.Ori
-				_maps[currentMapCoord].PlayerOri(mouseX, mouseY)
-				_maps[currentMapCoord].PlayerCheckOriCollision(savedOri)
-				changeMapOri = _maps[currentMapCoord].PlayerMove()
-				if changeMapOri == ym.NONE {
-					_maps[currentMapCoord].PlayerCheckMoveCollision(savedX, savedY)
-					_maps[currentMapCoord].PlayerFire()
+				if gameState == GAME_SCREEN {
+					savedX = _maps[currentMapCoord].CurrPlayer.X
+					savedY = _maps[currentMapCoord].CurrPlayer.Y
+					savedOri := _maps[currentMapCoord].CurrPlayer.Ori
+					_maps[currentMapCoord].PlayerOri(mouseX, mouseY)
+					_maps[currentMapCoord].PlayerCheckOriCollision(savedOri)
+					changeMapOri = _maps[currentMapCoord].PlayerMove()
+					if changeMapOri == ym.NONE {
+						_maps[currentMapCoord].PlayerCheckMoveCollision(savedX, savedY)
+						_maps[currentMapCoord].PlayerFire()
+						_maps[currentMapCoord].PlayerDraw()
+					} else {
+						newMapIndex = ym.GetNextCoord(changeMapOri, currentMapCoord)
+						_maps[newMapIndex].CurrPlayer = _maps[currentMapCoord].CurrPlayer
+						_maps[newMapIndex].Update(changeMapOri, MAP_SIZE)
+						_maps[newMapIndex].Visited = true
+						currentMapCoord = newMapIndex
+					}
+				} else { // Unable player to move when in menu screen
 					_maps[currentMapCoord].PlayerDraw()
-				} else {
-					newMapIndex = ym.GetNextCoord(changeMapOri, currentMapCoord)
-					_maps[newMapIndex].CurrPlayer = _maps[currentMapCoord].CurrPlayer
-					_maps[newMapIndex].Update(changeMapOri, MAP_SIZE)
-					_maps[newMapIndex].Visited = true
-					currentMapCoord = newMapIndex
 				}
 
 				// Player on stairs
@@ -435,13 +447,26 @@ func main() {
 
 				// Player on item
 				_maps[currentMapCoord].PlayerOnItem()
+
+				if rl.IsKeyPressed(rl.KeyE) {
+					gameState = BAG_SCREEN
+					bagMenu.Init(MAP_BORDER_SIZE + bagMenuMargin, MAP_BORDER_SIZE + bagMenuMargin, MENU_BORDER_SIZE, bagMenuWidth, bagMenuWidth + 50, _maps[currentMapCoord])
+				}
+	
+				if gameState == BAG_SCREEN {
+					bagMenu.HandleFocus()
+					bagMenu.Draw()
+					if rl.IsKeyPressed(rl.KeyBackspace) {
+						gameState = GAME_SCREEN
+					}
+				}
 			
 			}
-			_maps[currentMapCoord].CursorMove(mouseX, mouseY)
-			_maps[currentMapCoord].CursorDraw()
 			_maps[currentMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE, currentStage)
 			drawMiniStage(_maps, currentMapCoord, currentStage)
-
+			// _maps[currentMapCoord].CursorMove(mouseX, mouseY)
+			// _maps[currentMapCoord].CursorDraw()
+			
 		rl.EndDrawing()
 	}
 	fmt.Println(len(_maps))
