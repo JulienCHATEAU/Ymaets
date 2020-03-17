@@ -442,7 +442,7 @@ func main() {
 						gameState = STAGE_SCREEN
 						framesCount = 0
 					}
-					_maps[currentMapCoord].ShowEnterButton(_maps[currentMapCoord].NextStage.X + ym.SBS + 13, _maps[currentMapCoord].NextStage.Y + 5)
+					util.ShowEnterKey(_maps[currentMapCoord].NextStage.X + ym.SBS + 13, _maps[currentMapCoord].NextStage.Y + 5)
 				}
 
 				// Player on item

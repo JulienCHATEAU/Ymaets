@@ -1,8 +1,10 @@
 package class
 
 import (
+	// "fmt"
 	"strings"
 	"github.com/gen2brain/raylib-go/raylib"
+	util "Ymaets/util"
 )
 
 var tabs []string = []string {"Description", "Upgrades"}
@@ -39,7 +41,7 @@ func (bagMenu *BagMenu) HandleFocus() {
 		bagMenu.IsListFocused = false
 	}
 	if bagMenu.IsListFocused {
-		if bagMenu.CurrMap.CurrPlayer.BagSize > 1 {
+		if bagMenu.CurrMap.CurrPlayer.BagSize >= 1 {
 			if rl.IsKeyPressed(rl.KeyLeft) {
 				bagMenu.SelectedItem--
 				if bagMenu.SelectedItem < 0 {
@@ -50,6 +52,16 @@ func (bagMenu *BagMenu) HandleFocus() {
 				if bagMenu.SelectedItem > bagMenu.CurrMap.CurrPlayer.BagSize - 1 {
 					bagMenu.SelectedItem = 0
 				}
+			} else if rl.IsKeyPressed(rl.KeyQ) {
+				item := bagMenu.CurrMap.CurrPlayer.Bag[bagMenu.SelectedItem]
+				if bagMenu.SelectedItem == bagMenu.CurrMap.CurrPlayer.BagSize - 1 && bagMenu.SelectedItem > 0 {
+					bagMenu.SelectedItem--
+				}
+				bagMenu.CurrMap.CurrPlayer.RemoveFromBag(item)
+				item.RemoveEffect(bagMenu.CurrMap)
+				item.X = bagMenu.CurrMap.CurrPlayer.X
+				item.Y = bagMenu.CurrMap.CurrPlayer.Y
+				bagMenu.CurrMap.AddItem(item)
 			}
 		}
 	} else {
@@ -142,8 +154,8 @@ func (bagMenu *BagMenu) Draw() {
 	if !bagMenu.IsListFocused {
 		infoBorderColor = rl.Gray
 	}
-	rl.DrawRectangle(startX + itemListMargin, startY + currDY, contentWidth - itemListMargin*2, contentHeight - currDY - 20, infoBorderColor)
-	rl.DrawRectangle(startX + itemListMargin + infoBorderSize, startY + currDY + infoBorderSize, contentWidth - itemListMargin*2 - infoBorderSize*2, contentHeight - currDY - 20 - infoBorderSize*2, rl.LightGray)
+	rl.DrawRectangle(startX + itemListMargin, startY + currDY, contentWidth - itemListMargin*2, contentHeight - currDY - 60, infoBorderColor)
+	rl.DrawRectangle(startX + itemListMargin + infoBorderSize, startY + currDY + infoBorderSize, contentWidth - itemListMargin*2 - infoBorderSize*2, contentHeight - currDY - 60 - infoBorderSize*2, rl.LightGray)
 	
 	var currX int32 = startX + itemListMargin + infoBorderSize
 	var currY int32 = startY + currDY + infoBorderSize
@@ -166,6 +178,14 @@ func (bagMenu *BagMenu) Draw() {
 	if bagMenu.CurrMap.CurrPlayer.BagSize > 0 {
 		currItem := bagMenu.CurrMap.CurrPlayer.Bag[bagMenu.SelectedItem]
 		bagMenu.drawTabContent(currItem, currX, currY)
+	}
+
+	currY = startY + contentHeight - 30 - infoBorderSize*2
+	rl.DrawText("Close : ", startX + 20, currY, 19, rl.DarkGray)
+	util.ShowBackspaceKey(startX + 90, currY)
+	if bagMenu.CurrMap.CurrPlayer.BagSize > 0 {
+		rl.DrawText("Drop : ", startX + 140, currY, 19, rl.DarkGray)
+		util.ShowClassicKey(startX + 205, currY, "A")
 	}
 
 }

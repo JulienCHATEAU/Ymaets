@@ -293,8 +293,9 @@ func (player *Player) GetShot() Shot {
 
 func (player *Player) HasItem(toFound Item) bool {
 	var found bool = false
-	for _, item := range player.Bag {
-		if item.Name == toFound.Name {
+	var i int32
+	for i = 0; i<player.BagSize; i++ {
+		if player.Bag[i].Name == toFound.Name {
 			found = true
 			break
 		}

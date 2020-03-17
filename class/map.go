@@ -172,6 +172,9 @@ func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 	rl.DrawText("Mini map : ", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount += 6
 	rl.DrawText("Money : " + strconv.Itoa(int(_map.CurrPlayer.Money)) + " gold", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	textCount++
+	rl.DrawText("Bag : ", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	util.ShowClassicKey(_map.Width + 95, textStarting + 50 * textCount, "E")
 }
 
 func (_map *Map) MonsterMove(index int32) {
@@ -380,21 +383,13 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 	}
 }
 
-func (_map *Map) ShowEnterButton(x, y int32) {
-	rl.DrawRectangle(x-2, y, 15, 12, rl.NewColor(100, 100, 100, 255))
-	rl.DrawRectangle(x + 1, y + 5, 12, 18, rl.NewColor(100, 100, 100, 255))
-	rl.DrawRectangle(x, y, 15, 12, rl.NewColor(155, 155, 155, 255))
-	rl.DrawRectangle(x + 3, y + 5, 12, 18, rl.NewColor(155, 155, 155, 255))
-	rl.DrawText("<-", x+3, y+2, 1, rl.Black)
-}
-
 func (_map *Map) PlayerOnItem() {
 	hitbox := _map.CurrPlayer.GetHitbox()
 	var i int32
 	for i = 0; i<_map.ItemsCount; i++ {
 		if rl.CheckCollisionRecs(_map.Items[i].GetHitbox(), hitbox) {
 			if !_map.CurrPlayer.HasItem(_map.Items[i]) {
-				_map.ShowEnterButton(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
+				util.ShowEnterKey(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
 				if rl.IsKeyPressed(rl.KeyEnter) {
 					_map.CurrPlayer.AddInBag(_map.Items[i])
 					_map.Items[i].ApplyEffect(_map)
