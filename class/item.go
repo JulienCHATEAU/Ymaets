@@ -104,8 +104,10 @@ func (item *Item) drawHeartOfSteel() {
 func (item *Item) Draw() {
 	if item.Selected {
 		var margin int32 = 3
+		rl.DrawRectangle(item.X - margin, item.Y - margin, item.Size + margin*2, item.Size + margin*2, rl.RayWhite)
 		rl.DrawRectangleLinesEx(util.ToRectangle(item.X - margin, item.Y - margin, item.Size + margin*2, item.Size + margin*2), 3, rl.Black)
 	} else {
+		rl.DrawRectangle(item.X, item.Y, item.Size, item.Size, rl.RayWhite)
 		rl.DrawRectangleLinesEx(util.ToRectangle(item.X, item.Y, item.Size, item.Size), 2, rl.Black)
 	}
 	switch item.Name {

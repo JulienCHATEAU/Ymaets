@@ -139,15 +139,17 @@ var PFC int32 = 8
 var PMS int32 = 4
 // Player health max
 var PHM int32 = 100
-// Player timers count
-var PTC int32 = 2
 // Player Max bag size
 var PMBS int32 = 5
+
+// Player timers count
+var PTC int32 = 3
 
 type PlayerTimers int32
 const (
 	PLAYER_TAKE_DAMAGE = iota
 	FIRE_COOLDOWN
+	LAVA_DAMAGE
 )
 
 type PlayerSettings string
@@ -289,6 +291,17 @@ func (player *Player) GetShot() Shot {
 	return shot
 }
 
+func (player *Player) HasItem(toFound Item) bool {
+	var found bool = false
+	for _, item := range player.Bag {
+		if item.Name == toFound.Name {
+			found = true
+			break
+		}
+	}
+	return found
+}
+
 func (player *Player) TakeDamage(damage int32) {
 	if damage > 0 {
 		player.Hp -= damage
@@ -303,7 +316,7 @@ func (player *Player) HandleAnimation(notEnded []int32) {
 	for i := 0; i<len(notEnded); i++ {
 		switch notEnded[i] {
 		case PLAYER_TAKE_DAMAGE:
-			rl.DrawRectangleLinesEx(util.ToRectangle(player.X, player.Y, PBS, PBS), 3, rl.Red)
+			rl.DrawRectangle(player.X, player.Y, PBS, PBS, rl.NewColor(255, 0, 0, 100))
 			break
 
 		//ADD ANIMATION HANDLER HERE

@@ -12,8 +12,6 @@ var MMS int32 = 3
 var MMH int32 = 50
 // Monster aggro dist
 var MAD float64 = 250.0
-// Monster timers count
-var MTC int32 = 2
 // Monster canon width
 var MCW int32 = 6
 // Monster canon height
@@ -29,10 +27,14 @@ var MSR int32 = 200
 // Monster fire cooldown
 var MFC int32 = 20
 
+// Monster timers count
+var MTC int32 = 3
+
 type MonsterTimers int32
 const (
 	MONSTER_TAKE_DAMAGE = iota
 	MONSTER_FIRE_COOLDOWN
+	MONSTER_LAVA_DAMAGE
 )
 
 type MonsterType int32
@@ -154,23 +156,23 @@ func (monster *Monster) GetShot() Shot {
 	radius := int32(monster.Radius)
 	switch monster.Ori {
 	case NORTH:
-		shot.X = monster.X - MCW/2
+		shot.X = monster.X - MCW
 		shot.Y = monster.Y - radius - MCH - shot.Height
 		break
 
 	case SOUTH:
-		shot.X = monster.X - MCW/2
+		shot.X = monster.X - MCW
 		shot.Y = monster.Y + radius
 		break
 
 	case EAST:
 		shot.X = monster.X + radius
-		shot.Y = monster.Y - MCW/2
+		shot.Y = monster.Y - MCW
 		break
 
 	case WEST:
 		shot.X = monster.X  - radius - MCH - shot.Width
-		shot.Y = monster.Y - MCW/2
+		shot.Y = monster.Y - MCW
 		break
 	}
 	return shot
@@ -197,7 +199,8 @@ func (monster *Monster) HandleAnimation(notEnded []int32) {
 		case MONSTER_TAKE_DAMAGE:
 			var i float32
 			for i = 0; i<2; i++ {
-				rl.DrawCircleLines(monster.X, monster.Y, monster.Radius-i, rl.Red)
+				// rl.DrawCircleLines(monster.X, monster.Y, monster.Radius-i, rl.Red)
+				rl.DrawCircle(monster.X, monster.Y, monster.Radius, rl.NewColor(255, 0, 0, 100))
 			}
 			break
 

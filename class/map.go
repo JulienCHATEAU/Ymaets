@@ -187,11 +187,19 @@ func (_map *Map) MonsterMove(index int32) {
 func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
 	center, radius := _map.Monsters[*index].GetHitbox()
 	for _, wall := range _map.Walls {
-		if !wall.Walkable {
-			if rl.CheckCollisionCircleRec(center, radius, wall.GetHitbox()) {
+		if rl.CheckCollisionCircleRec(center, radius, wall.GetHitbox()) {
+			if !wall.Walkable {
 				_map.Monsters[*index].X = savedX
 				_map.Monsters[*index].Y = savedY
-				return
+				continue
+			} else {
+				if wall.Type == Lava && _map.Monsters[*index].Animations.Values[MONSTER_LAVA_DAMAGE] == 0 {
+					_map.Monsters[*index].TakeDamage(wall.WalkDamage)
+					if _map.Monsters[*index].Hp == 0 {
+						_map.removeMonster(index)
+					}
+					_map.Monsters[*index].Animations.Values[MONSTER_LAVA_DAMAGE] = LDT
+				}
 			}
 		}
 	}
@@ -341,9 +349,9 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 				_map.CurrPlayer.Y = savedY
 				return
 			} else {
-				if _map.Walls[index].Type == Lava && _map.Walls[index].Animations.Values[DAMAGE_DEALT] == 0 {
+				if _map.Walls[index].Type == Lava && _map.CurrPlayer.Animations.Values[LAVA_DAMAGE] == 0 {
 					_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage)
-					_map.Walls[index].Animations.Values[DAMAGE_DEALT] = LDT
+					_map.CurrPlayer.Animations.Values[LAVA_DAMAGE] = LDT
 				}
 			}
 		}
@@ -385,12 +393,14 @@ func (_map *Map) PlayerOnItem() {
 	var i int32
 	for i = 0; i<_map.ItemsCount; i++ {
 		if rl.CheckCollisionRecs(_map.Items[i].GetHitbox(), hitbox) {
-			if rl.IsKeyPressed(rl.KeyEnter) {
-				_map.CurrPlayer.AddInBag(_map.Items[i])
-				_map.Items[i].ApplyEffect(_map)
-				_map.removeItem(int32(i))
+			if !_map.CurrPlayer.HasItem(_map.Items[i]) {
+				_map.ShowEnterButton(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
+				if rl.IsKeyPressed(rl.KeyEnter) {
+					_map.CurrPlayer.AddInBag(_map.Items[i])
+					_map.Items[i].ApplyEffect(_map)
+					_map.removeItem(int32(i))
+				}
 			}
-			_map.ShowEnterButton(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
 			break
 		}
 	}
@@ -527,15 +537,20 @@ func (_map *Map) aStar(walls []Wall) bool {
 	fmt.Println(len(_map.Opening))
 	aStar := astar.NewAStar(int(rows), int(cols))
 	p2p := astar.NewPointToPoint()
+	var x string
 	for i = 0; i<rows; i++ {
 		for j = 0; j<cols; j++ {
+			x = "."
 			for _, wall := range walls {
-				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(20 + i * PBS), float32(20 + j * PBS), float32(PBS), float32(PBS)}) {
+				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(j * PBS), float32(i * PBS), float32(PBS), float32(PBS)}) {
 					aStar.FillTile(astar.Point{int(i), int(j)}, -1)
+					x = "@"
 					break
 				}
 			}
+			fmt.Print(x)
 		}
+		fmt.Println()
 	}
 
 	if len(_map.Opening) == 1 {
@@ -543,15 +558,10 @@ func (_map *Map) aStar(walls []Wall) bool {
 	}
 
 	var source, target []astar.Point
-	// Player to stairs
-	source = []astar.Point {astar.Point{int(_map.CurrPlayer.X * rows / _map.Width), int(_map.CurrPlayer.Y * cols / _map.Height)}}
-	target = []astar.Point {astar.Point{int(_map.NextStage.X * rows / _map.Width), int(_map.NextStage.Y * cols / _map.Height)}}
-	if aStar.FindPath(p2p, source, target) == nil {
-		return false
-	}
+	
 
-	// Players to each (0;0) map opening
 	if _map.Coords.X == 0 && _map.Coords.Y == 0 {
+		// Players to each (0;0) map opening
 		for _, ori := range _map.Opening {
 			source = []astar.Point {astar.Point{rowsint-1, colsint-1}}
 			target = OriToAstarCoord(ori, rowsint, colsint)
@@ -559,10 +569,34 @@ func (_map *Map) aStar(walls []Wall) bool {
 				return false
 			}
 		}
+
+		// Player to (0;0) stairs
+		if _map.NextStage.X != -100 {
+			source = []astar.Point {astar.Point{int(_map.CurrPlayer.X * rows / _map.Width), int(_map.CurrPlayer.Y * cols / _map.Height)}}
+			target = []astar.Point {astar.Point{int(_map.NextStage.X * rows / _map.Width), int(_map.NextStage.Y * cols / _map.Height)}}
+			if aStar.FindPath(p2p, source, target) == nil {
+				return false
+			}
+		}
+	}
+
+	openingLength := len(_map.Opening)
+	if _map.NextStage.X != -100 {
+		var found bool = false
+		for t := 0; t<openingLength; t++ {
+			source = OriToAstarCoord(_map.Opening[t], rowsint, colsint)
+			target = []astar.Point {astar.Point{int(_map.NextStage.X * rows / _map.Width), int(_map.NextStage.Y * cols / _map.Height)}}
+			if aStar.FindPath(p2p, source, target) != nil {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 
 	// Each opening to each opening
-	openingLength := len(_map.Opening)
 	for k := 0; k<openingLength; k++ {
 		for l := k+1; l<openingLength; l++ {
 			source = OriToAstarCoord(_map.Opening[k], rowsint, colsint)
