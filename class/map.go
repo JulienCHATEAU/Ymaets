@@ -113,7 +113,7 @@ func (_map *Map) Init(coord Coord, windowSize, borderSize int32, opening []Orien
 	_map.Monsters = make([]Monster, 50)
 	_map.Monsters[0].Init(50, 50, KAMIKAZE) 
 	_map.Monsters[1].Init(150, 350, ONE_CANON_KAMIKAZE) 
-	_map.Monsters[2].Init(250, 50, ONE_CANON_KAMIKAZE) 
+	_map.Monsters[2].Init(250, 50, SNIPER) 
 	_map.Monsters[3].Init(100, 450, KAMIKAZE)
 	_map.NextStage.Init(-100, -100)
 	_map.ShotsCount = 0
@@ -184,7 +184,7 @@ func (_map *Map) MonsterMove(index int32) {
 		if _map.Monsters[index].HasCanon && _map.Monsters[index].Animations.Values[FIRE_COOLDOWN] == 0 {
 			_map.Monsters[index].Fire(_map)
 		}	
-	}	
+	}
 }
 
 func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
@@ -198,7 +198,7 @@ func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
 			} else {
 				if wall.Type == Lava && _map.Monsters[*index].Animations.Values[MONSTER_LAVA_DAMAGE] == 0 {
 					_map.Monsters[*index].TakeDamage(wall.WalkDamage)
-					if _map.Monsters[*index].Hp == 0 {
+					if _map.Monsters[*index].IsDead() {
 						_map.removeMonster(index)
 					}
 					_map.Monsters[*index].Animations.Values[MONSTER_LAVA_DAMAGE] = LDT
@@ -225,8 +225,10 @@ func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
 	if rl.CheckCollisionCircleRec(center, radius, playerHitbox) {
 		_map.Monsters[*index].X = savedX
 		_map.Monsters[*index].Y = savedY
-		_map.removeMonster(index)
-		_map.CurrPlayer.TakeDamage(5)
+		_map.Monsters[*index].PlayerCollision(_map)
+		if _map.Monsters[*index].IsDead() {
+			_map.removeMonster(index)
+		}
 		return
 	}
 }
@@ -511,7 +513,7 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 			if rl.CheckCollisionCircleRec(center, radius, hitbox) {
 				if _map.Shots[*index].Owner != MONSTER {
 					_map.Monsters[i].TakeDamage(10)
-					if _map.Monsters[i].Hp == 0 {
+					if _map.Monsters[i].IsDead() {
 						coins := _map.Monsters[i].SpreadCoins()
 						_map.CoinsCount += int32(len(coins))
 						_map.Coins = append(_map.Coins, coins...)

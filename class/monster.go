@@ -22,10 +22,14 @@ var MSW int32 = 10
 var MSH int32 = 4
 // Monster shot speed (px/frame)
 var MSS int32 = 5
-// Monster shot range (px)
-var MSR int32 = 200
-// Monster fire cooldown
-var MFC int32 = 20
+// Kamikaze shot range (px)
+var KSR int32 = 200
+// Sniper shot range (px)
+var SSR int32 = 350
+// Kamikaze fire cooldown
+var KFC int32 = 20
+// Sniper fire cooldown
+var SFC int32 = 40
 
 // Monster timers count
 var MTC int32 = 3
@@ -41,6 +45,7 @@ type MonsterType int32
 const (
 	KAMIKAZE = iota
 	ONE_CANON_KAMIKAZE
+	SNIPER
 )
 
 type Monster struct {
@@ -50,6 +55,8 @@ type Monster struct {
 	MoveSpeed		 	int32
 	Hp					 	int32
 	MaxHp				 	int32
+	Range			int32
+	FireCooldown  int32
 	HasCanon			bool
 	Type					MonsterType
 	Ori						Orientation
@@ -63,30 +70,47 @@ type Monster struct {
 func (monster *Monster) initKamikaze() {
 	monster.HasCanon = false
 	monster.Color = rl.NewColor(144, 227, 217, 255)
+	monster.FireCooldown = KFC
+	monster.Range = KSR
+	monster.AggroDist = float64(monster.Range + 20)
+	monster.MoveSpeed = MMS + 1
 }
 
 func (monster *Monster) initOneCanonKamikaze() {
 	monster.HasCanon = true
-		monster.Color = rl.NewColor(255, 112, 0, 255)
+	monster.Color = rl.NewColor(255, 112, 0, 255)
+	monster.FireCooldown = KFC
+	monster.Range = KSR
+	monster.AggroDist = float64(monster.Range + 20)
+	monster.MoveSpeed = MMS
+}
+
+func (monster *Monster) initSniper() {
+	monster.HasCanon = true
+	monster.Color = rl.NewColor(16, 57, 120, 255)
+	monster.FireCooldown = SFC
+	monster.Range = SSR
+	monster.AggroDist = float64(monster.Range + 80)
+	monster.MoveSpeed = MMS - 1
 }
 
 func (monster *Monster) Init(x, y int32, monsterType MonsterType) {
 	monster.X = x
 	monster.Y = y
 	monster.Radius = float32(MBS / 2)
-	monster.MoveSpeed = MMS
 	monster.Ori = NORTH
 	monster.Hp = MMH
 	monster.MaxHp = MMH
-	monster.AggroDist = MAD
 	monster.Animations.Init(MTC)
 	switch monsterType {
 	case KAMIKAZE:
 		monster.initKamikaze()
 		break
-
 	case ONE_CANON_KAMIKAZE:
 		monster.initOneCanonKamikaze()
+		break
+	case SNIPER:
+		monster.initSniper()
 		break
 	}
 	monster.Type = monsterType
@@ -99,13 +123,45 @@ func (monster *Monster) moveKamikaze(_map *Map) {
 	var dy int32 = 0
 	if monster.X < _map.CurrPlayer.X {
 		dx = monster.MoveSpeed
-	} else {
+	} else if monster.X > _map.CurrPlayer.X {
 		dx = -monster.MoveSpeed
 	}
 	if monster.Y < _map.CurrPlayer.Y {
 		dy = monster.MoveSpeed
-	} else {
+	} else if monster.Y > _map.CurrPlayer.Y {
 		dy = -monster.MoveSpeed
+	}
+	monster.X += dx
+	monster.Y += dy
+}
+
+func (monster *Monster) moveSniper(_map *Map) {
+	var dx int32 = 0
+	var dy int32 = 0
+	var playerDx int32 = _map.CurrPlayer.X - monster.X
+	var playerDy int32 = _map.CurrPlayer.Y - monster.Y
+	if playerDx < playerDy {
+		if monster.X < _map.CurrPlayer.X {
+			dx = monster.MoveSpeed
+		} else if monster.X > _map.CurrPlayer.X {
+			dx = -monster.MoveSpeed
+		}
+		// if monster.Y < _map.CurrPlayer.Y {
+		// 	dy = -monster.MoveSpeed
+		// } else if monster.Y > _map.CurrPlayer.Y {
+		// 	dy = monster.MoveSpeed
+		// }
+	} else {
+		if monster.Y < _map.CurrPlayer.Y {
+			dy = monster.MoveSpeed
+		} else if monster.Y > _map.CurrPlayer.Y {
+			dy = -monster.MoveSpeed
+		}
+		// if monster.X < _map.CurrPlayer.X {
+		// 	dx = monster.MoveSpeed
+		// } else if monster.X > _map.CurrPlayer.X {
+		// 	dx = -monster.MoveSpeed
+		// }
 	}
 	monster.X += dx
 	monster.Y += dy
@@ -115,17 +171,21 @@ func (monster *Monster) Move(_map *Map) {
 	switch monster.Type {
 		case KAMIKAZE:
 			monster.moveKamikaze(_map)
+			break
 		case ONE_CANON_KAMIKAZE:
 			monster.moveKamikaze(_map)
-			break;
+			break
+		case SNIPER:
+			monster.moveSniper(_map)
+			break
 	}
 }
 
-/* FIRE */
+/* Fire */
 
 func (monster *Monster) Fire(_map *Map) {
 		shot := monster.GetShot()
-		monster.Animations.Values[FIRE_COOLDOWN] = MFC
+		monster.Animations.Values[FIRE_COOLDOWN] = monster.FireCooldown
 		if int32(len(_map.Shots)) > _map.ShotsCount {
 			_map.Shots[_map.ShotsCount] = shot
 		} else {
@@ -148,31 +208,64 @@ func (monster *Monster) Orient(_map *Map) {
 	}
 }
 
+/* Collision */
+
+func (monster *Monster) kamikazePlayerCollision(_map *Map) {
+	monster.Kill()
+	_map.CurrPlayer.TakeDamage(5)
+}
+
+func (monster *Monster) sniperPlayerCollision(_map *Map) {
+	_map.CurrPlayer.Speed = 0
+}
+
+func (monster *Monster) PlayerCollision(_map *Map) {
+	switch monster.Type {
+	case KAMIKAZE:
+		monster.kamikazePlayerCollision(_map)
+		break
+	case ONE_CANON_KAMIKAZE:
+		monster.kamikazePlayerCollision(_map)
+		break
+	case SNIPER:
+		monster.sniperPlayerCollision(_map)
+		break
+	}
+}
+
 /////
+
+func (monster *Monster) Kill() {
+	monster.Hp = 0
+}
+
+func (monster *Monster) IsDead() bool {
+	return monster.Hp == 0
+}
 
 func (monster *Monster) GetShot() Shot {
 	var shot Shot
-	shot.Init(monster.Ori, monster.Color, MSS, MSH, MSW, MSR, MONSTER)
+	shot.Init(monster.Ori, monster.Color, MSS, MSH, MSW, monster.Range, MONSTER)
 	radius := int32(monster.Radius)
 	switch monster.Ori {
 	case NORTH:
-		shot.X = monster.X - MCW
+		shot.X = monster.X
 		shot.Y = monster.Y - radius - MCH - shot.Height
 		break
 
 	case SOUTH:
-		shot.X = monster.X - MCW
-		shot.Y = monster.Y + radius
+		shot.X = monster.X
+		shot.Y = monster.Y + radius + MCH
 		break
 
 	case EAST:
-		shot.X = monster.X + radius
-		shot.Y = monster.Y - MCW
+		shot.X = monster.X + radius + MCH
+		shot.Y = monster.Y
 		break
 
 	case WEST:
 		shot.X = monster.X  - radius - MCH - shot.Width
-		shot.Y = monster.Y - MCW
+		shot.Y = monster.Y
 		break
 	}
 	return shot
