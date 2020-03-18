@@ -23,7 +23,7 @@ var gameState GameState = STAGE_SCREEN
 var s1 = rand.NewSource(time.Now().UnixNano())
 var r1 = rand.New(s1)
 
-var stageMapCount int32 = 15
+var stageMapCount int32 = 10
 var foundStairsMap bool = false
 
 var MAP_SIZE int32 = 800
@@ -343,6 +343,8 @@ func main() {
 	item.Init(250, 250, ym.WATER_BOOTS)
 	_maps[currentMapCoord].AddItem(item)
 	item.Init(450, 250, ym.HEART_OF_STEEL)
+	_maps[currentMapCoord].AddItem(item)
+	item.Init(250, 450, ym.TURBO_REACTOR)
 	_maps[currentMapCoord].AddItem(item)
 	
 	fmt.Println("Ymaets")
