@@ -2,6 +2,7 @@ package class
 
 import (
 	"github.com/gen2brain/raylib-go/raylib"
+	"strconv"
 	util "Ymaets/util"
 )
 
@@ -14,29 +15,47 @@ const (
 
 // Item body size
 var IBS int32 = 30
+// Item Max levl
+var IML int32 = 3
 
 type Item struct {
-	X 					int32
-	Y 					int32
-	Size 				int32
-	Level				int32
-	Name				ItemName
-	Description	string
-	Selected 		bool
+	X 									int32
+	Y 									int32
+	Size 								int32
+	Level								int32
+	Name								ItemName
+	Description					string
+	LevelUpDescription	[]string
+	Selected 						bool
 }
 
 /* Init */
 
 func (item *Item) initWaterBoots() {
 	item.Description = "The water boots allow you to walk on the water."
+	item.LevelUpDescription = []string {
+		"Water is now walkable",
+		"On water, Move speed : +1",
+		"On water, Regen : 0.1 Hp/sec",
+	} 
 }
 
 func (item *Item) initHeartOfSteel() {
 	item.Description = "The heart of steel increases your maximum health points."
+	item.LevelUpDescription = []string {
+		"Max Hp : +25",
+		"Max Hp : +25",
+		"Max Hp : +50",
+	} 
 }
 
 func (item *Item) initTurboReactor() {
-	item.Description = "The turbo reactor increases your maximum speed."
+	item.Description = "The turbo reactor increases your move speed."
+	item.LevelUpDescription = []string {
+		"Move speed : +1",
+		"Move speed : +1",
+		"Move speed : +1",
+	} 
 }
 
 func (item *Item) Init(x, y int32, name ItemName) {
@@ -59,6 +78,10 @@ func (item *Item) Init(x, y int32, name ItemName) {
 	item.Selected = false
 }
 
+func (item *Item) GetLevelUpDescription(i int32) string {
+	return "Lvl " + strconv.Itoa(int(i+1)) + ")   " + item.LevelUpDescription[i]
+}
+
 /* Effect */
 
 func (item *Item) setWaterWalkable(_map *Map, value bool) {
@@ -78,7 +101,7 @@ func (item *Item) addSpeed(_map *Map, value int32) {
 func (item *Item) applyEffectWaterBoots(_map *Map, prod int32) {
 	item.setWaterWalkable(_map, prod == 1)
 	if item.Level > 1 {//lvl2
-		
+
 	} else if item.Level > 2 {//lvl3
 
 	}
@@ -145,9 +168,11 @@ func (item *Item) RemoveEffect(_map *Map) {
 }
 
 func (item *Item) LevelUp(_map *Map) {
-	item.RemoveEffect(_map)
-	item.Level++
-	item.ApplyEffect(_map)
+	if item.Level < IML {
+		item.RemoveEffect(_map)
+		item.Level++
+		item.ApplyEffect(_map)
+	}
 }
 
 /* Draw */

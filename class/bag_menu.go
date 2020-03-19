@@ -80,12 +80,12 @@ func (bagMenu *BagMenu) HandleFocus() {
 }
 
 func (bagMenu *BagMenu) drawTabContent(currItem Item, currX, currY int32) {
+	currX += 20
+	rl.DrawText(string(currItem.Name), currX, currY + 50, 23, rl.NewColor(144, 12, 63, 255))
+	rl.DrawRectangle(currX, currY + 85, 140, 2, rl.DarkGray)
+	currY += 120
 	switch tabs[bagMenu.SelectedTab] {
 	case "Description":
-		currX += 20
-		rl.DrawText(string(currItem.Name), currX, currY + 50, 23, rl.NewColor(144, 12, 63, 255))
-		rl.DrawRectangle(currX, currY + 85, 140, 2, rl.DarkGray)
-		currY += 120
 		var lineCount int32 = 0
 		var maxLineChar int32 = 30
 		var currLine string = ""
@@ -106,6 +106,19 @@ func (bagMenu *BagMenu) drawTabContent(currItem Item, currX, currY int32) {
 			}
 		}
 		rl.DrawText(currLine, currX, currY + lineCount * 30, 20, rl.DarkGray)
+		break
+
+	case "Upgrades":
+		var i int32
+		var color rl.Color = rl.DarkGray
+		for i = 0; i<IML; i++ {
+			if i+1 <= currItem.Level {
+				color = rl.NewColor(200, 32, 16, 255)
+			} else {
+				color = rl.DarkGray
+			}
+			rl.DrawText(currItem.GetLevelUpDescription(i), currX, currY + i * 30, 19, color)
+		}
 		break
 	}
 }
