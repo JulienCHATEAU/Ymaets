@@ -61,27 +61,56 @@ func (item *Item) Init(x, y int32, name ItemName) {
 
 /* Effect */
 
-func (item *Item) applyEffectWaterBoots(_map *Map, value bool) {
+func (item *Item) setWaterWalkable(_map *Map, value bool) {
 	_map.CurrPlayer.Settings[CAN_WALK_ON_WATER] = value
 }
 
-func (item *Item) applyEffectHeartOfSteel(_map *Map, value int32) {
+func (item *Item) addHealthPoints(_map *Map, value int32) {
 	var hpPercentage float32 = float32(_map.CurrPlayer.Hp) / float32(_map.CurrPlayer.MaxHp)
 	_map.CurrPlayer.MaxHp += value
 	_map.CurrPlayer.Hp = int32(float32(_map.CurrPlayer.MaxHp) * hpPercentage)
 }
 
-func (item *Item) applyEffectTurboReactor(_map *Map, value int32) {
+func (item *Item) addSpeed(_map *Map, value int32) {
 	_map.CurrPlayer.MaxSpeed += value
+}
+
+func (item *Item) applyEffectWaterBoots(_map *Map, prod int32) {
+	item.setWaterWalkable(_map, prod == 1)
+	if item.Level > 1 {//lvl2
+		
+	} else if item.Level > 2 {//lvl3
+
+	}
+}
+
+func (item *Item) applyEffectHeartOfSteel(_map *Map, prod int32) {
+	var healthPoints int32 = 25
+	if item.Level > 1 {//lvl2
+		healthPoints += 25
+	} else if item.Level > 2 {//lvl3
+		healthPoints += 50
+	}
+	item.addHealthPoints(_map, prod * healthPoints)
+}
+
+func (item *Item) applyEffectTurboReactor(_map *Map, prod int32) {
+	var speed int32 = 1
+	if item.Level > 1 {//lvl2
+		speed++
+	} else if item.Level > 2 {//lvl3
+		speed++
+	}
+	item.addSpeed(_map, prod * speed)
 }
 
 func (item *Item) ApplyEffect(_map *Map) {
 	switch item.Name {
 		case WATER_BOOTS:
-			item.applyEffectWaterBoots(_map, true)
+			item.applyEffectWaterBoots(_map, 1)
 			break
 		case HEART_OF_STEEL:
-			item.applyEffectHeartOfSteel(_map, 50)
+			item.applyEffectHeartOfSteel(_map, 1)
 			break
 		case TURBO_REACTOR:
 			item.applyEffectTurboReactor(_map, 1)
@@ -89,30 +118,36 @@ func (item *Item) ApplyEffect(_map *Map) {
 	}
 }
 
-func (item *Item) removeEffectWaterBoots(_map *Map) {
-	item.applyEffectWaterBoots(_map, false)
+func (item *Item) removeEffectWaterBoots(_map *Map, prod int32) {
+	item.applyEffectWaterBoots(_map, prod)
 }
 
-func (item *Item) removeEffectHeartOfSteel(_map *Map) {
-	item.applyEffectHeartOfSteel(_map, -50)
+func (item *Item) removeEffectHeartOfSteel(_map *Map, prod int32) {
+	item.applyEffectHeartOfSteel(_map, prod)
 }
 
-func (item *Item) removeEffectTurboReactor(_map *Map) {
-	item.applyEffectTurboReactor(_map, -1)
+func (item *Item) removeEffectTurboReactor(_map *Map, prod int32) {
+	item.applyEffectTurboReactor(_map, prod)
 }
 
 func (item *Item) RemoveEffect(_map *Map) {
 	switch item.Name {
 		case WATER_BOOTS:
-			item.removeEffectWaterBoots(_map)
+			item.removeEffectWaterBoots(_map, -1)
 			break
 		case HEART_OF_STEEL:
-			item.removeEffectHeartOfSteel(_map)
+			item.removeEffectHeartOfSteel(_map, -1)
 			break;
 		case TURBO_REACTOR:
-			item.removeEffectTurboReactor(_map)
+			item.removeEffectTurboReactor(_map, -1)
 			break
 	}
+}
+
+func (item *Item) LevelUp(_map *Map) {
+	item.RemoveEffect(_map)
+	item.Level++
+	item.ApplyEffect(_map)
 }
 
 /* Draw */

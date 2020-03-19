@@ -341,15 +341,19 @@ func main() {
 
 	var item ym.Item
 	item.Init(250, 250, ym.WATER_BOOTS)
+	item.Level = 2
 	_maps[currentMapCoord].AddItem(item)
 	item.Init(450, 250, ym.HEART_OF_STEEL)
+	item.Level = 2
 	_maps[currentMapCoord].AddItem(item)
 	item.Init(250, 450, ym.TURBO_REACTOR)
+	item.Level = 2
 	_maps[currentMapCoord].AddItem(item)
 	
 	fmt.Println("Ymaets")
 	rl.InitWindow(_maps[currentMapCoord].Width + MENU_SIZE, _maps[currentMapCoord].Height, "Ymaets")
 	rl.HideCursor()
+	rl.SetExitKey(rl.KeyKpEqual)
 	rl.SetTargetFPS(60)
 	var savedX int32
 	var savedY int32
@@ -470,6 +474,7 @@ func main() {
 			// _maps[currentMapCoord].CursorDraw()
 			
 		rl.EndDrawing()
+
 	}
 	fmt.Println(len(_maps))
 	rl.CloseWindow()
