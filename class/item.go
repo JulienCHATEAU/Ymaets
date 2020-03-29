@@ -79,7 +79,11 @@ func (item *Item) Init(x, y int32, name ItemName) {
 }
 
 func (item *Item) GetLevelUpDescription(i int32) string {
-	return "Lvl " + strconv.Itoa(int(i+1)) + ")   " + item.LevelUpDescription[i]
+	space := ""
+	if i == 0 {
+		space += " "
+	}
+	return "Lvl " + space + strconv.Itoa(int(i+1)) + ")   " + item.LevelUpDescription[i]
 }
 
 /* Effect */
@@ -89,20 +93,21 @@ func (item *Item) setWaterWalkable(_map *Map, value bool) {
 }
 
 func (item *Item) addHealthPoints(_map *Map, value int32) {
-	var hpPercentage float32 = float32(_map.CurrPlayer.Hp) / float32(_map.CurrPlayer.MaxHp)
-	_map.CurrPlayer.MaxHp += value
-	_map.CurrPlayer.Hp = int32(float32(_map.CurrPlayer.MaxHp) * hpPercentage)
+	var hpPercentage float32 = float32(_map.CurrPlayer.Stats.Hp) / float32(_map.CurrPlayer.Stats.MaxHp)
+	_map.CurrPlayer.Stats.MaxHp += value
+	_map.CurrPlayer.Stats.Hp = int32(float32(_map.CurrPlayer.Stats.MaxHp) * hpPercentage)
 }
 
 func (item *Item) addSpeed(_map *Map, value int32) {
-	_map.CurrPlayer.MaxSpeed += value
+	_map.CurrPlayer.Stats.MaxSpeed += value
 }
 
 func (item *Item) applyEffectWaterBoots(_map *Map, prod int32) {
 	item.setWaterWalkable(_map, prod == 1)
 	if item.Level > 1 {//lvl2
 
-	} else if item.Level > 2 {//lvl3
+	}
+	if item.Level > 2 {//lvl3
 
 	}
 }
@@ -111,7 +116,8 @@ func (item *Item) applyEffectHeartOfSteel(_map *Map, prod int32) {
 	var healthPoints int32 = 25
 	if item.Level > 1 {//lvl2
 		healthPoints += 25
-	} else if item.Level > 2 {//lvl3
+	}
+	if item.Level > 2 {//lvl3
 		healthPoints += 50
 	}
 	item.addHealthPoints(_map, prod * healthPoints)
@@ -121,7 +127,8 @@ func (item *Item) applyEffectTurboReactor(_map *Map, prod int32) {
 	var speed int32 = 1
 	if item.Level > 1 {//lvl2
 		speed++
-	} else if item.Level > 2 {//lvl3
+	}
+	if item.Level > 2 {//lvl3
 		speed++
 	}
 	item.addSpeed(_map, prod * speed)
@@ -167,12 +174,21 @@ func (item *Item) RemoveEffect(_map *Map) {
 	}
 }
 
-func (item *Item) LevelUp(_map *Map) {
-	if item.Level < IML {
+func (item *Item) LevelUp(_map *Map) bool {
+	possible := item.CanLevelUp()
+	if possible {
 		item.RemoveEffect(_map)
 		item.Level++
 		item.ApplyEffect(_map)
 	}
+	return possible
+}
+
+func (item *Item) CanLevelUp() bool {
+	if item.Level < IML {
+		return true
+	}
+	return false
 }
 
 /* Draw */

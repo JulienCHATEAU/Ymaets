@@ -159,12 +159,19 @@ func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 	// rl.DrawRectangle(_map.Width + 46, textStarting + 50 * textCount - 6, 150, 28, rl.LightGray)
 	rl.DrawText("Stage n° " + strconv.Itoa(int(currentStage)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
-	rl.DrawText("HP : " + strconv.Itoa(int(_map.CurrPlayer.Hp)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxHp)), _map.Width + 30, 27 + textStarting + 50 * textCount, 20, rl.DarkGray)
+	rl.DrawText("Lvl " + strconv.Itoa(int(_map.CurrPlayer.Level)) + "     Hp : " + strconv.Itoa(int(_map.CurrPlayer.Stats.Hp)) + " / " + strconv.Itoa(int(_map.CurrPlayer.Stats.MaxHp)), _map.Width + 30, 24 + textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
 	rl.DrawRectangle(_map.Width + 26, textStarting + 50 * textCount, 248, 24, rl.Gray)
-	util.DrawHealthBar(_map.CurrPlayer.Hp, _map.CurrPlayer.MaxHp, _map.Width + 30, 27 + textStarting + 50 * textCount, 240, 20)
+	util.DrawHealthBar(_map.CurrPlayer.Stats.Hp, _map.CurrPlayer.Stats.MaxHp, _map.Width + 30, 27 + textStarting + 50 * textCount, 240, 20)
+	expStage := _map.CurrPlayer.GetCurrentExperienceStage()
+	_map.CurrPlayer.Level--
+	lowExpStage := _map.CurrPlayer.GetCurrentExperienceStage()
+	_map.CurrPlayer.Level++
+	diff := expStage - lowExpStage
+	currDiff := _map.CurrPlayer.Experience - lowExpStage
+	rl.DrawRectangle(_map.Width + 28, 35 + textStarting + 50 * textCount, 244, 5, rl.LightGray)
+	util.DrawExperienceBar(currDiff, diff, _map.Width + 30, 35 + textStarting + 50 * textCount, 240, 5)
 	textCount++
-	rl.DrawText("Move speed : " + strconv.Itoa(int(_map.CurrPlayer.Speed)) + " / " + strconv.Itoa(int(_map.CurrPlayer.MaxSpeed)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
 	// var coin Coin
 	// coin.InitWithRadius(_map.Width + 138, textStarting + 50 * textCount + 8, 6)
@@ -267,17 +274,17 @@ func (_map *Map) PlayerMove() Orientation {
 	for index, key := range _map.CurrPlayer.Move_keys {
 		if rl.IsKeyDown(key) {
 			lastKeyPressedIndex = index
-			if !oneKeyPressed && _map.CurrPlayer.Speed < _map.CurrPlayer.MaxSpeed {
-				_map.CurrPlayer.Speed += 1
+			if !oneKeyPressed && _map.CurrPlayer.Stats.Speed < _map.CurrPlayer.Stats.MaxSpeed {
+				_map.CurrPlayer.Stats.Speed += 1
 			}
 			oneKeyPressed = true
-			*(dests[index]) += ops[index] * _map.CurrPlayer.Speed;
+			*(dests[index]) += ops[index] * _map.CurrPlayer.Stats.Speed;
 		}
 	}
 	if !oneKeyPressed {
-		if _map.CurrPlayer.Speed > 0 {
-			*(dests[lastKeyPressedIndex]) += ops[lastKeyPressedIndex] * _map.CurrPlayer.Speed;
-			_map.CurrPlayer.Speed -= 1
+		if _map.CurrPlayer.Stats.Speed > 0 {
+			*(dests[lastKeyPressedIndex]) += ops[lastKeyPressedIndex] * _map.CurrPlayer.Stats.Speed;
+			_map.CurrPlayer.Stats.Speed -= 1
 		}
 	}
 	return _map.getChangeMapOri()
@@ -517,6 +524,7 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 						coins := _map.Monsters[i].SpreadCoins()
 						_map.CoinsCount += int32(len(coins))
 						_map.Coins = append(_map.Coins, coins...)
+						_map.CurrPlayer.AddExperience(_map.Monsters[i].GetExperience())
 						_map.removeMonster(&i)
 					}
 				}

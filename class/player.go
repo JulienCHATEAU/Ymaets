@@ -157,15 +157,27 @@ const (
 	CAN_WALK_ON_WATER = "canWalkOnWater"
 )
 
-type Player struct {
-	X 						int32
-	Y 						int32
-	Ori 					Orientation
+type Stat struct {
 	Speed				 	int32
 	MaxSpeed		 	int32
 	Hp						int32
 	MaxHp					int32
+	Att						int32
+	MaxAtt				int32
+	Def						int32
+	MaxDef				int32
+}
+
+type Player struct {
+	X 						int32
+	Y 						int32
+	Ori 					Orientation
 	Money					int32
+	Level					int32
+	Experience		int32
+	UpgradePoint	int32
+	StatsPoint		int32
+	Stats					Stat
 	Move_keys 		[4]int32 // right, left, up, down
 	Ori_keys 			[4]int32 // east, west, north, south
 	Color 				rl.Color
@@ -179,10 +191,14 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.X = x
 		player.Y = y
 		player.Ori = ori
-		player.Speed = 0
-		player.MaxSpeed = PMS
-		player.Hp = PHM
-		player.MaxHp = PHM
+		player.Stats.Speed = 0
+		player.Stats.MaxSpeed = PMS
+		player.Stats.Hp = PHM
+		player.Stats.MaxHp = PHM
+		player.Level = 1
+		player.Experience = 0
+		player.UpgradePoint = 0
+		player.StatsPoint = 0
 		player.Money = 0
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
@@ -192,6 +208,31 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Settings[CAN_WALK_ON_WATER] = false
 		player.BagSize = 0
 		player.Bag = make([]Item, PMBS)
+}
+
+func (player *Player) GetCurrentExperienceStage() int32 {
+	nextLevel := player.Level + 1;
+  return nextLevel * nextLevel * nextLevel;
+}
+
+func (player *Player) levelUp() {
+	player.Level++
+	player.StatsPoint++
+	if player.Level % 5 == 0 {
+		player.UpgradePoint++
+	}
+}
+
+func (player *Player) AddExperience(amount int32) int32 {
+	player.Experience += amount
+	var levelUps int32 = 0
+	expStage := player.GetCurrentExperienceStage()
+	for player.Experience >= expStage {
+		player.levelUp()
+		levelUps++
+		expStage = player.GetCurrentExperienceStage()
+	}
+	return levelUps
 }
 
 func (player *Player) AddInBag(item Item) {
@@ -305,9 +346,9 @@ func (player *Player) HasItem(toFound Item) bool {
 
 func (player *Player) TakeDamage(damage int32) {
 	if damage > 0 {
-		player.Hp -= damage
-		if player.Hp - damage < 0 {
-			player.Hp = 0
+		player.Stats.Hp -= damage
+		if player.Stats.Hp - damage < 0 {
+			player.Stats.Hp = 0
 		}
 		player.Animations.Values[PLAYER_TAKE_DAMAGE] = 5
 	}
@@ -347,7 +388,7 @@ func (player *Player) Draw() {
 		break
 	}
 	// Health bar
-	// util.DrawHealthBar(player.Hp, player.MaxHp, player.X, player.Y - PCH, PBS, 3)
+	// util.DrawHealthBar(player.Stats.Hp, player.Stats.MaxHp, player.X, player.Y - PCH, PBS, 3)
 	//Animations
 	notEnded, _ := player.Animations.Decrement()
 	player.HandleAnimation(notEnded)

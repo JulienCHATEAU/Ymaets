@@ -321,7 +321,7 @@ func GeneratePossibleWalls(_map *Map) []Wall {
 	for index := 0; index < len(walls); index++ {
 		wallHitbox = walls[index].GetHitbox()
 		for _, hitbox := range _map.GetOpeningHitboxes() {
-			if walls[index].X > _map.Width || walls[index].X < 0 || walls[index].Y > _map.Height || walls[index].Y < 0 || rl.CheckCollisionRecs(wallHitbox, hitbox) {
+			if walls[index].X > _map.Width || walls[index].X < 0 || walls[index].Y > _map.Height || walls[index].Y < 0 || rl.CheckCollisionRecs(wallHitbox, hitbox) || rl.CheckCollisionRecs(wallHitbox, _map.CurrPlayer.GetHitbox()) {
 				walls = RemoveWall(&index, walls)
 				break
 			}

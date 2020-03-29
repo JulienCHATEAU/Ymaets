@@ -29,6 +29,13 @@ func DrawHealthBar(hp, maxHp, x, y, objectSize, barHeight int32) {
 	rl.DrawRectangle(x - 2, y - 5 - barHeight, int32(healthBarMaxWidth * hpPercentage), barHeight, healthBarColor);
 }
 
+func DrawExperienceBar(currDiff, diff, x, y, objectSize, barHeight int32) {
+	var expBarColor rl.Color = rl.Blue
+	expPercentage := float32(currDiff) / float32(diff)
+	expBarMaxWidth := float32(objectSize + 4)
+	rl.DrawRectangle(x - 2, y, int32(expBarMaxWidth * expPercentage), barHeight, expBarColor);
+}
+
 func ShowEnterKey(x, y int32) {
 	rl.DrawRectangle(x-2, y, 15, 13, rl.NewColor(100, 100, 100, 255))
 	rl.DrawRectangle(x + 1, y + 5, 14, 19, rl.NewColor(100, 100, 100, 255))

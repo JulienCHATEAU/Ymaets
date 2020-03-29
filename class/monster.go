@@ -216,7 +216,7 @@ func (monster *Monster) kamikazePlayerCollision(_map *Map) {
 }
 
 func (monster *Monster) sniperPlayerCollision(_map *Map) {
-	_map.CurrPlayer.Speed = 0
+	_map.CurrPlayer.Stats.Speed = 0
 }
 
 func (monster *Monster) PlayerCollision(_map *Map) {
@@ -234,6 +234,10 @@ func (monster *Monster) PlayerCollision(_map *Map) {
 }
 
 /////
+
+func (monster *Monster) GetExperience() int32 {
+	return 6
+}
 
 func (monster *Monster) Kill() {
 	monster.Hp = 0

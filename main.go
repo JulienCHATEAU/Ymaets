@@ -341,13 +341,10 @@ func main() {
 
 	var item ym.Item
 	item.Init(250, 250, ym.WATER_BOOTS)
-	item.Level = 2
 	_maps[currentMapCoord].AddItem(item)
 	item.Init(450, 250, ym.HEART_OF_STEEL)
-	item.Level = 2
 	_maps[currentMapCoord].AddItem(item)
 	item.Init(250, 450, ym.TURBO_REACTOR)
-	item.Level = 2
 	_maps[currentMapCoord].AddItem(item)
 	
 	fmt.Println("Ymaets")
@@ -444,6 +441,7 @@ func main() {
 						_maps[currentMapCoord].CurrPlayer.X = MAP_SIZE - 50
 						_maps[currentMapCoord].CurrPlayer.Y = MAP_SIZE - 50
 						_maps[currentMapCoord].CurrPlayer.Ori = ym.NORTH
+						_maps[currentMapCoord].CurrPlayer.Stats.Speed = 0
 						_maps = newStage(&currentStage, &currentMapCoord, _maps[currentMapCoord].CurrPlayer)
 						gameState = STAGE_SCREEN
 						framesCount = 0
@@ -454,7 +452,7 @@ func main() {
 				// Player on item
 				_maps[currentMapCoord].PlayerOnItem()
 
-				if rl.IsKeyPressed(rl.KeyE) {
+				if rl.IsKeyPressed(rl.KeyE) && gameState != BAG_SCREEN {
 					gameState = BAG_SCREEN
 					bagMenu.Init(MAP_BORDER_SIZE + bagMenuMargin, MAP_BORDER_SIZE + bagMenuMargin, MENU_BORDER_SIZE, bagMenuWidth, bagMenuWidth + 50, _maps[currentMapCoord])
 				}
