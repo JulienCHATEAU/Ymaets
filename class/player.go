@@ -158,6 +158,10 @@ const (
 type PlayerSettings string
 const (
 	CAN_WALK_ON_WATER = "canWalkOnWater"
+	IS_ON_WATER = "isOnWater"
+	SPEED_ON_WATER = "speedOnWater"
+	SPEED_ON_WATER_APPLIED = "speedOnWaterApplied"
+	REGEN_ON_WATER = "regenOnWater"
 )
 
 type Stat struct {
@@ -197,10 +201,11 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Stats.Speed = 0
 		player.Stats.MaxSpeed = PMS
 		player.Stats.Hp = PHM
+		// player.Stats.Hp = 50
 		player.Stats.MaxHp = PHM
 		player.Level = 1
 		player.Experience = 0
-		player.UpgradePoint = 0
+		player.UpgradePoint = 3
 		player.StatsPoint = 0
 		player.Money = 0
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
@@ -209,7 +214,6 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Animations.Init(PTC)
 		player.Animations.Decrements[LEVEL_UP] = 3
 		player.Settings = make(map[PlayerSettings]bool)
-		player.Settings[CAN_WALK_ON_WATER] = false
 		player.BagSize = 0
 		player.Bag = make([]Item, PMBS)
 }
@@ -363,6 +367,13 @@ func (player *Player) TakeDamage(damage int32) {
 	}
 }
 
+func (player *Player) Heal(amount int32) {
+	player.Stats.Hp += amount
+	if player.Stats.Hp > player.Stats.MaxHp {
+		player.Stats.Hp = player.Stats.MaxHp
+	}
+}
+
 func (player *Player) HandleAnimation(notEnded []int32) {
 	for i := 0; i<len(notEnded); i++ {
 		switch notEnded[i] {
@@ -409,4 +420,39 @@ func (player *Player) Draw() {
 	//Animations
 	notEnded, _ := player.Animations.Decrement()
 	player.HandleAnimation(notEnded)
+}
+
+func (player *Player) EverySecAction() {
+
+}
+
+func (player *Player) Every2SecAction() {
+	player.HandleWaterBootsRegen()
+}
+
+// ITEM FUNCTIONS
+
+func (player *Player) HandleWaterBootsSpeed() {
+	if player.Settings[SPEED_ON_WATER] {
+		if player.Settings[IS_ON_WATER] {
+			if !player.Settings[SPEED_ON_WATER_APPLIED] {
+				player.Settings[SPEED_ON_WATER_APPLIED] = true
+				player.Stats.MaxSpeed += 1
+			}
+		} else {
+			if player.Settings[SPEED_ON_WATER_APPLIED] {
+				player.Settings[SPEED_ON_WATER_APPLIED] = false
+				player.Stats.MaxSpeed -= 1
+				player.Stats.Speed -= 1
+			}
+		}
+	}
+}
+
+func (player *Player) HandleWaterBootsRegen() {
+	if player.Settings[REGEN_ON_WATER] {
+		if player.Settings[IS_ON_WATER] {
+			player.Heal(1)
+		}
+	}
 }

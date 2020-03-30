@@ -15,7 +15,6 @@ type BagMenu struct {
 	Y 						int32
 	Width					int32
 	Heigth				int32
-	Color 				rl.Color
 	CurrMap				*Map
 	SelectedItem	int32
 	SelectedTab	int32
@@ -41,8 +40,8 @@ func (bagMenu *BagMenu) HandleFocus() {
 		bagMenu.IsListFocused = false
 	}
 	if bagMenu.CurrMap.CurrPlayer.BagSize >= 1 {
+		item := bagMenu.CurrMap.CurrPlayer.Bag[bagMenu.SelectedItem]
 		if rl.IsKeyPressed(rl.KeyQ) {
-			item := bagMenu.CurrMap.CurrPlayer.Bag[bagMenu.SelectedItem]
 			if bagMenu.SelectedItem == bagMenu.CurrMap.CurrPlayer.BagSize - 1 && bagMenu.SelectedItem > 0 {
 				bagMenu.SelectedItem--
 			}
@@ -52,10 +51,10 @@ func (bagMenu *BagMenu) HandleFocus() {
 			item.Y = bagMenu.CurrMap.CurrPlayer.Y
 			bagMenu.CurrMap.AddItem(item)
 		} else if rl.IsKeyPressed(rl.KeyU) {
-			if bagMenu.CurrMap.CurrPlayer.UpgradePoint > 0 {
+			if bagMenu.CurrMap.CurrPlayer.UpgradePoint >= item.Level {
 				canLevelUp := bagMenu.CurrMap.CurrPlayer.Bag[bagMenu.SelectedItem].LevelUp(bagMenu.CurrMap)
 				if canLevelUp {
-					bagMenu.CurrMap.CurrPlayer.UpgradePoint--
+					bagMenu.CurrMap.CurrPlayer.UpgradePoint -= item.Level
 				}
 			}
 		}
@@ -210,7 +209,7 @@ func (bagMenu *BagMenu) Draw() {
 	if bagMenu.CurrMap.CurrPlayer.BagSize > 0 {
 		rl.DrawText("Drop : ", startX + 140, currY, 19, rl.DarkGray)
 		util.ShowClassicKey(startX + 205, currY, "A")
-		if bagMenu.CurrMap.CurrPlayer.UpgradePoint > 0 && currItem.CanLevelUp() {
+		if bagMenu.CurrMap.CurrPlayer.UpgradePoint >= currItem.Level && currItem.CanLevelUp() {
 			rl.DrawText("Upgrade : ", startX + 250, currY, 19, rl.DarkGray)
 			util.ShowClassicKey(startX + 350, currY, "U")		
 		}

@@ -329,6 +329,7 @@ func debugPrint(_maps map[ym.Coord]*ym.Map, currentMapCoord ym.Coord, mouseX, mo
 	if rl.IsMouseButtonPressed(rl.MouseRightButton) {
 		fmt.Printf("(%d, %d)\n", mouseX, mouseY)
 		fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
+		fmt.Printf("Player upgrade points : %d\n", _maps[currentMapCoord].CurrPlayer.UpgradePoint)
 		fmt.Println(_maps[currentMapCoord].Coins)
 		fmt.Println(_maps[currentMapCoord].CoinsCount)
 		fmt.Println(_maps[currentMapCoord].CurrPlayer.Bag)
@@ -375,9 +376,11 @@ func main() {
 	var changeMapOri ym.Orientation
 	var newMapIndex ym.Coord
 	var framesCount int32 = 0
+	var framesCounter int32 = 0;
 
 	for !rl.WindowShouldClose() {
 
+		framesCounter++
 		mouseX := rl.GetMouseX()
 		mouseY := rl.GetMouseY()
 
@@ -388,6 +391,11 @@ func main() {
 				newStageAnimation(&framesCount, 75, currentStage)
 			} else if gameState == GAME_SCREEN || gameState == BAG_SCREEN {
 				rl.ClearBackground(WINDOW_BCK)
+
+				if (((framesCounter/60)%2) == 1) {
+					ym.IncrementSeconds(_maps[currentMapCoord])
+          framesCounter = 0
+        }
 	
 				// Stairs
 				if _maps[currentMapCoord].NextStage.X > 100 {

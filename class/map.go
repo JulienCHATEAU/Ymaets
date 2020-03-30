@@ -180,6 +180,8 @@ func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 	textCount += 6
 	rl.DrawText("Money : " + strconv.Itoa(int(_map.CurrPlayer.Money)) + " gold", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	textCount++
+	rl.DrawText("Speed : " + strconv.Itoa(int(_map.CurrPlayer.Stats.Speed)) + " / " + strconv.Itoa(int(_map.CurrPlayer.Stats.MaxSpeed)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
+	textCount++
 	rl.DrawText("Bag : ", _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
 	util.ShowClassicKey(_map.Width + 95, textStarting + 50 * textCount, "E")
 }
@@ -351,26 +353,30 @@ func (_map *Map) IsPlayerOnStairs() bool {
 
 func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 	hitbox := _map.CurrPlayer.GetHitbox()
+	var index int32
+	var center rl.Vector2
+	var radius float32
+	_map.CurrPlayer.Settings[IS_ON_WATER] = false
 	for index, _ := range _map.Walls {
 		if rl.CheckCollisionRecs(hitbox, _map.Walls[index].GetHitbox()) {
 			if !_map.Walls[index].Walkable {
 				if _map.Walls[index].Type == Water && _map.CurrPlayer.Settings[CAN_WALK_ON_WATER] {
+					_map.CurrPlayer.Settings[IS_ON_WATER] = true
 					break
 				}
 				_map.CurrPlayer.X = savedX
 				_map.CurrPlayer.Y = savedY
 				return
 			} else {
-				if _map.Walls[index].Type == Lava && _map.CurrPlayer.Animations.Values[LAVA_DAMAGE] == 0 {
+				if _map.Walls[index].Type == Lava && _map.CurrPlayer.Animations.Values[LAVA_DAMAGE] == 0 { // Lava ticks damages
 					_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage)
 					_map.CurrPlayer.Animations.Values[LAVA_DAMAGE] = LDT
 				}
 			}
 		}
 	}
-	var index int32
-	var center rl.Vector2
-	var radius float32
+
+	_map.CurrPlayer.HandleWaterBootsSpeed()
 
 	for index = 0; index < _map.CoinsCount; index++ {
 		center, radius = _map.Coins[index].GetHitbox()

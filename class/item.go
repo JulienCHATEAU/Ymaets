@@ -36,7 +36,7 @@ func (item *Item) initWaterBoots() {
 	item.LevelUpDescription = []string {
 		"Water is now walkable",
 		"On water, Move speed : +1",
-		"On water, Regen : 0.1 Hp/sec",
+		"On water, Regen : 0.5 Hp/sec",
 	} 
 }
 
@@ -88,6 +88,14 @@ func (item *Item) GetLevelUpDescription(i int32) string {
 
 /* Effect */
 
+func (item *Item) setRegenOnWater(_map *Map, value bool) {
+	_map.CurrPlayer.Settings[REGEN_ON_WATER] = value
+}
+
+func (item *Item) setSpeedOnWater(_map *Map, value bool) {
+	_map.CurrPlayer.Settings[SPEED_ON_WATER] = value
+}
+
 func (item *Item) setWaterWalkable(_map *Map, value bool) {
 	_map.CurrPlayer.Settings[CAN_WALK_ON_WATER] = value
 }
@@ -103,12 +111,13 @@ func (item *Item) addSpeed(_map *Map, value int32) {
 }
 
 func (item *Item) applyEffectWaterBoots(_map *Map, prod int32) {
-	item.setWaterWalkable(_map, prod == 1)
+	add := prod == 1
+	item.setWaterWalkable(_map, add)
 	if item.Level > 1 {//lvl2
-
+		item.setSpeedOnWater(_map, add)
 	}
 	if item.Level > 2 {//lvl3
-
+		item.setRegenOnWater(_map, add)
 	}
 }
 
