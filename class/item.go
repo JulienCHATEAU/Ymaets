@@ -33,7 +33,7 @@ type Item struct {
 /* Init */
 
 func (item *Item) initWaterBoots() {
-	item.Description = "The water boots gives you buffs on water."
+	item.Description = "The water boots allow you to walk on water."
 	item.LevelUpDescription = []string {
 		"Water is now walkable",
 		"On water, Move speed : +1",
