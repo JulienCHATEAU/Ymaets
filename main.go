@@ -325,6 +325,23 @@ func newStage(currentStage *int32, currentMapCoord *ym.Coord, player ym.Player) 
 	return _maps
 }
 
+func debugPrint(_maps map[ym.Coord]*ym.Map, currentMapCoord ym.Coord, mouseX, mouseY int32) {
+	if rl.IsMouseButtonPressed(rl.MouseRightButton) {
+		fmt.Printf("(%d, %d)\n", mouseX, mouseY)
+		fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
+		fmt.Println(_maps[currentMapCoord].Coins)
+		fmt.Println(_maps[currentMapCoord].CoinsCount)
+		fmt.Println(_maps[currentMapCoord].CurrPlayer.Bag)
+		fmt.Println(_maps[currentMapCoord].CurrPlayer.Settings[ym.CAN_WALK_ON_WATER])
+		for _, wall := range _maps[currentMapCoord].Walls {
+			if wall.Type == ym.Water {
+				fmt.Print(wall.Walkable)
+				fmt.Print(" | ")
+			}
+		}
+	}
+}
+
 func main() {
 	var currentStage int32 = 0
 	var currentMapCoord ym.Coord
@@ -364,20 +381,7 @@ func main() {
 		mouseX := rl.GetMouseX()
 		mouseY := rl.GetMouseY()
 
-		if rl.IsMouseButtonPressed(rl.MouseRightButton) {
-			fmt.Printf("(%d, %d)\n", mouseX, mouseY)
-			fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
-			fmt.Println(_maps[currentMapCoord].Coins)
-			fmt.Println(_maps[currentMapCoord].CoinsCount)
-			fmt.Println(_maps[currentMapCoord].CurrPlayer.Bag)
-			fmt.Println(_maps[currentMapCoord].CurrPlayer.Settings[ym.CAN_WALK_ON_WATER])
-			for _, wall := range _maps[currentMapCoord].Walls {
-				if wall.Type == ym.Water {
-					fmt.Print(wall.Walkable)
-					fmt.Print(" | ")
-				}
-			}
-		}
+		debugPrint(_maps, currentMapCoord, mouseX, mouseY)
 
 		rl.BeginDrawing()
 			if gameState == STAGE_SCREEN {

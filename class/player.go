@@ -141,15 +141,18 @@ var PMS int32 = 4
 var PHM int32 = 100
 // Player Max bag size
 var PMBS int32 = 5
+// Player level up timer
+var PLUT int32 = 350
 
 // Player timers count
-var PTC int32 = 3
+var PTC int32 = 4
 
 type PlayerTimers int32
 const (
 	PLAYER_TAKE_DAMAGE = iota
 	FIRE_COOLDOWN
 	LAVA_DAMAGE
+	LEVEL_UP
 )
 
 type PlayerSettings string
@@ -204,6 +207,8 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
 		player.Color = rl.Blue
 		player.Animations.Init(PTC)
+		player.Animations.Values[LEVEL_UP] = PLUT
+		player.Animations.Decrements[LEVEL_UP] = 3
 		player.Settings = make(map[PlayerSettings]bool)
 		player.Settings[CAN_WALK_ON_WATER] = false
 		player.BagSize = 0
@@ -221,6 +226,7 @@ func (player *Player) levelUp() {
 	if player.Level % 5 == 0 {
 		player.UpgradePoint++
 	}
+	player.Animations.Values[LEVEL_UP] = PLUT
 }
 
 func (player *Player) AddExperience(amount int32) int32 {
@@ -359,6 +365,14 @@ func (player *Player) HandleAnimation(notEnded []int32) {
 		switch notEnded[i] {
 		case PLAYER_TAKE_DAMAGE:
 			rl.DrawRectangle(player.X, player.Y, PBS, PBS, rl.NewColor(255, 0, 0, 100))
+			break
+
+		case LEVEL_UP:
+			opacity := player.Animations.Values[LEVEL_UP]
+			if opacity > 255 {
+				opacity = 255
+			}
+			rl.DrawText("Level UP !", player.X - 18, player.Y - 27, 13, rl.NewColor(246, 50, 27, uint8(opacity)))
 			break
 
 		//ADD ANIMATION HANDLER HERE
