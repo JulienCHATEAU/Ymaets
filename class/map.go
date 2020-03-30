@@ -400,9 +400,11 @@ func (_map *Map) PlayerOnItem() {
 			if !_map.CurrPlayer.HasItem(_map.Items[i]) {
 				util.ShowEnterKey(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
 				if rl.IsKeyPressed(rl.KeyEnter) {
-					_map.CurrPlayer.AddInBag(_map.Items[i])
-					_map.Items[i].ApplyEffect(_map)
-					_map.removeItem(int32(i))
+					if !_map.CurrPlayer.IsBagFull() {
+						_map.CurrPlayer.AddInBag(_map.Items[i])
+						_map.Items[i].ApplyEffect(_map)
+						_map.removeItem(int32(i))
+					}
 				}
 			}
 			break

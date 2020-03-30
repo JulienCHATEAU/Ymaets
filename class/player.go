@@ -140,7 +140,7 @@ var PMS int32 = 4
 // Player health max
 var PHM int32 = 100
 // Player Max bag size
-var PMBS int32 = 5
+var PMBS int32 = 2
 // Player level up timer
 var PLUT int32 = 350
 
@@ -207,7 +207,6 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
 		player.Color = rl.Blue
 		player.Animations.Init(PTC)
-		player.Animations.Values[LEVEL_UP] = PLUT
 		player.Animations.Decrements[LEVEL_UP] = 3
 		player.Settings = make(map[PlayerSettings]bool)
 		player.Settings[CAN_WALK_ON_WATER] = false
@@ -239,6 +238,10 @@ func (player *Player) AddExperience(amount int32) int32 {
 		expStage = player.GetCurrentExperienceStage()
 	}
 	return levelUps
+}
+
+func (player *Player) IsBagFull() bool {
+	return player.BagSize == PMBS
 }
 
 func (player *Player) AddInBag(item Item) {
