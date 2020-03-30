@@ -20,9 +20,9 @@ const (
 // // Wall timers count
 // var WTC int32 = 1
 // Lava walk damage
-var LWD int32 = 1
+var LWD int32 = 2
 // Lava damage tick
-var LDT int32 = 40
+var LDT int32 = 80
 
 type Wall struct {
 	X 					int32

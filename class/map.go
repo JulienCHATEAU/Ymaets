@@ -368,8 +368,12 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 				_map.CurrPlayer.Y = savedY
 				return
 			} else {
-				if _map.Walls[index].Type == Lava && _map.CurrPlayer.Animations.Values[LAVA_DAMAGE] == 0 { // Lava ticks damages
-					_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage)
+				if _map.Walls[index].Type == Lava && _map.CurrPlayer.Animations.Values[LAVA_DAMAGE] == 0 && !_map.CurrPlayer.Settings[LAVA_DEALS_NOTHING] { // Lava ticks damages
+					if _map.CurrPlayer.Settings[LAVA_DEALS_HALF] {
+						_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage / 2)
+					} else {
+						_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage)
+					}
 					_map.CurrPlayer.Animations.Values[LAVA_DAMAGE] = LDT
 				}
 			}

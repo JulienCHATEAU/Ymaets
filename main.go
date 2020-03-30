@@ -364,6 +364,8 @@ func main() {
 	_maps[currentMapCoord].AddItem(item)
 	item.Init(250, 450, ym.TURBO_REACTOR)
 	_maps[currentMapCoord].AddItem(item)
+	item.Init(450, 450, ym.FIRE_HELMET)
+	_maps[currentMapCoord].AddItem(item)
 	
 	fmt.Println("Ymaets")
 	rl.InitWindow(_maps[currentMapCoord].Width + MENU_SIZE, _maps[currentMapCoord].Height, "Ymaets")

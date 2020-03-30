@@ -162,6 +162,8 @@ const (
 	SPEED_ON_WATER = "speedOnWater"
 	SPEED_ON_WATER_APPLIED = "speedOnWaterApplied"
 	REGEN_ON_WATER = "regenOnWater"
+	LAVA_DEALS_HALF = "lavaDealsHalf"
+	LAVA_DEALS_NOTHING = "lavaDealsNothing"
 )
 
 type Stat struct {
@@ -173,6 +175,7 @@ type Stat struct {
 	MaxAtt				int32
 	Def						int32
 	MaxDef				int32
+	Range					int32
 }
 
 type Player struct {
@@ -194,18 +197,26 @@ type Player struct {
 	Bag 					[]Item
 }
 
+func (stats *Stat) Init() {
+	stats.Speed = 0
+	stats.MaxSpeed = PMS
+	stats.Hp = PHM
+	stats.MaxHp = PHM
+	stats.Att = 50
+	stats.MaxAtt = 50
+	stats.Def = 50
+	stats.MaxDef = 50
+	stats.Range = PSR
+}
+
 func (player *Player) Init(x, y int32, ori Orientation) {
 		player.X = x
 		player.Y = y
 		player.Ori = ori
-		player.Stats.Speed = 0
-		player.Stats.MaxSpeed = PMS
-		player.Stats.Hp = PHM
-		// player.Stats.Hp = 50
-		player.Stats.MaxHp = PHM
+		player.Stats.Init()
 		player.Level = 1
 		player.Experience = 0
-		player.UpgradePoint = 3
+		player.UpgradePoint = 15
 		player.StatsPoint = 0
 		player.Money = 0
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
@@ -224,6 +235,7 @@ func (player *Player) GetCurrentExperienceStage() int32 {
 }
 
 func (player *Player) levelUp() {
+	player.Heal(10)
 	player.Level++
 	player.StatsPoint++
 	if player.Level % 5 == 0 {
@@ -320,7 +332,7 @@ func (player *Player) SetOriFromMouse(mouseX, mouseY int32) {
 	// shot := Shot {50, 50, 4, 10, 3, NORTH, rl.Brown}
 func (player *Player) GetShot() Shot {
 	var shot Shot
-	shot.Init(player.Ori, PSC, PSS, PSH, PSW, PSR, PLAYER)
+	shot.Init(player.Ori, PSC, PSS, PSH, PSW, player.Stats.Range, PLAYER)
 	switch player.Ori {
 	case NORTH:
 		shot.X = player.X + PBS/2-PCW/2
@@ -367,7 +379,8 @@ func (player *Player) TakeDamage(damage int32) {
 	}
 }
 
-func (player *Player) Heal(amount int32) {
+func (player *Player) Heal(percentage int32) {
+	amount := player.Stats.MaxHp * percentage / 100
 	player.Stats.Hp += amount
 	if player.Stats.Hp > player.Stats.MaxHp {
 		player.Stats.Hp = player.Stats.MaxHp
@@ -386,7 +399,7 @@ func (player *Player) HandleAnimation(notEnded []int32) {
 			if opacity > 255 {
 				opacity = 255
 			}
-			rl.DrawText("Level UP !", player.X - 18, player.Y - 27, 13, rl.NewColor(246, 50, 27, uint8(opacity)))
+			rl.DrawText("Level UP !", player.X - 16, player.Y - 27, 13, rl.NewColor(246, 50, 27, uint8(opacity)))
 			break
 
 		//ADD ANIMATION HANDLER HERE

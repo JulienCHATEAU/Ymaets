@@ -1,7 +1,7 @@
 package class
 
 import (
-	"fmt"
+	// "fmt"
 )
 
 var secondCounter int32 = 0
@@ -10,7 +10,6 @@ func IncrementSeconds(_map *Map) {
 	secondCounter++
 	_map.CurrPlayer.EverySecAction()
 	if secondCounter % 2 == 0 {
-		fmt.Println(secondCounter)
 		secondCounter = 0
 		_map.CurrPlayer.Every2SecAction()
 	}

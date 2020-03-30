@@ -11,6 +11,7 @@ const (
 	WATER_BOOTS = "Water boots"
 	HEART_OF_STEEL = "Heart of steel"
 	TURBO_REACTOR = "Turbo reactor"
+	FIRE_HELMET = "Fire Helmet"
 )
 
 // Item body size
@@ -32,7 +33,7 @@ type Item struct {
 /* Init */
 
 func (item *Item) initWaterBoots() {
-	item.Description = "The water boots allow you to walk on the water."
+	item.Description = "The water boots gives you buffs on water."
 	item.LevelUpDescription = []string {
 		"Water is now walkable",
 		"On water, Move speed : +1",
@@ -58,6 +59,15 @@ func (item *Item) initTurboReactor() {
 	} 
 }
 
+func (item *Item) initFireHelmet() {
+	item.Description = "The fire helmet reduces the damages taken walking on lava."
+	item.LevelUpDescription = []string {
+		"Lava deals half damages",
+		"Lava no longer deals damages",
+		"On lava, Range : +50",
+	} 
+}
+
 func (item *Item) Init(x, y int32, name ItemName) {
 	item.X = x
 	item.Y = y
@@ -72,6 +82,9 @@ func (item *Item) Init(x, y int32, name ItemName) {
 			break
 		case TURBO_REACTOR:
 			item.initTurboReactor()
+			break
+		case FIRE_HELMET:
+			item.initFireHelmet()
 			break
 	}
 	item.Name = name
@@ -88,18 +101,6 @@ func (item *Item) GetLevelUpDescription(i int32) string {
 
 /* Effect */
 
-func (item *Item) setRegenOnWater(_map *Map, value bool) {
-	_map.CurrPlayer.Settings[REGEN_ON_WATER] = value
-}
-
-func (item *Item) setSpeedOnWater(_map *Map, value bool) {
-	_map.CurrPlayer.Settings[SPEED_ON_WATER] = value
-}
-
-func (item *Item) setWaterWalkable(_map *Map, value bool) {
-	_map.CurrPlayer.Settings[CAN_WALK_ON_WATER] = value
-}
-
 func (item *Item) addHealthPoints(_map *Map, value int32) {
 	var hpPercentage float32 = float32(_map.CurrPlayer.Stats.Hp) / float32(_map.CurrPlayer.Stats.MaxHp)
 	_map.CurrPlayer.Stats.MaxHp += value
@@ -110,14 +111,18 @@ func (item *Item) addSpeed(_map *Map, value int32) {
 	_map.CurrPlayer.Stats.MaxSpeed += value
 }
 
+func (item *Item) addRange(_map *Map, value int32) {
+	_map.CurrPlayer.Stats.Range += value
+}
+
 func (item *Item) applyEffectWaterBoots(_map *Map, prod int32) {
 	add := prod == 1
-	item.setWaterWalkable(_map, add)
+	_map.CurrPlayer.Settings[CAN_WALK_ON_WATER] = add
 	if item.Level > 1 {//lvl2
-		item.setSpeedOnWater(_map, add)
+		_map.CurrPlayer.Settings[SPEED_ON_WATER] = add
 	}
 	if item.Level > 2 {//lvl3
-		item.setRegenOnWater(_map, add)
+		_map.CurrPlayer.Settings[REGEN_ON_WATER] = add
 	}
 }
 
@@ -143,44 +148,40 @@ func (item *Item) applyEffectTurboReactor(_map *Map, prod int32) {
 	item.addSpeed(_map, prod * speed)
 }
 
-func (item *Item) ApplyEffect(_map *Map) {
+func (item *Item) applyEffectFireHelmet(_map *Map, prod int32) {
+	add := prod == 1
+	_map.CurrPlayer.Settings[LAVA_DEALS_HALF] = add
+	if item.Level > 1 {//lvl2
+		_map.CurrPlayer.Settings[LAVA_DEALS_NOTHING] = add
+	}
+	if item.Level > 2 {//lvl3
+		item.addRange(_map, prod * 50)
+	}
+}
+
+func (item *Item) apply(_map *Map, value int32) {
 	switch item.Name {
 		case WATER_BOOTS:
-			item.applyEffectWaterBoots(_map, 1)
+			item.applyEffectWaterBoots(_map, value)
 			break
 		case HEART_OF_STEEL:
-			item.applyEffectHeartOfSteel(_map, 1)
+			item.applyEffectHeartOfSteel(_map, value)
 			break
 		case TURBO_REACTOR:
-			item.applyEffectTurboReactor(_map, 1)
+			item.applyEffectTurboReactor(_map, value)
+			break
+		case FIRE_HELMET:
+			item.applyEffectFireHelmet(_map, value)
 			break
 	}
 }
 
-func (item *Item) removeEffectWaterBoots(_map *Map, prod int32) {
-	item.applyEffectWaterBoots(_map, prod)
-}
-
-func (item *Item) removeEffectHeartOfSteel(_map *Map, prod int32) {
-	item.applyEffectHeartOfSteel(_map, prod)
-}
-
-func (item *Item) removeEffectTurboReactor(_map *Map, prod int32) {
-	item.applyEffectTurboReactor(_map, prod)
+func (item *Item) ApplyEffect(_map *Map) {
+	item.apply(_map, 1)
 }
 
 func (item *Item) RemoveEffect(_map *Map) {
-	switch item.Name {
-		case WATER_BOOTS:
-			item.removeEffectWaterBoots(_map, -1)
-			break
-		case HEART_OF_STEEL:
-			item.removeEffectHeartOfSteel(_map, -1)
-			break;
-		case TURBO_REACTOR:
-			item.removeEffectTurboReactor(_map, -1)
-			break
-	}
+	item.apply(_map, -1)
 }
 
 func (item *Item) LevelUp(_map *Map) bool {
@@ -204,7 +205,6 @@ func (item *Item) CanLevelUp() bool {
 
 func (item *Item) drawWaterBoots() {
 	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.DarkBlue)
-	
 }
 
 func (item *Item) drawHeartOfSteel() {
@@ -215,6 +215,9 @@ func (item *Item) drawTurboReactor() {
 	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.Green)
 }
 
+func (item *Item) drawFireHelmet() {
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.Orange)
+}
 
 func (item *Item) Draw() {
 	if item.Selected {
@@ -234,6 +237,9 @@ func (item *Item) Draw() {
 			break;
 		case TURBO_REACTOR:
 			item.drawTurboReactor()
+			break
+		case FIRE_HELMET:
+			item.drawFireHelmet()
 			break
 	}
 }
