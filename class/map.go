@@ -193,28 +193,38 @@ func (_map *Map) MonsterMove(index int32) {
 		if _map.Monsters[index].HasCanon && _map.Monsters[index].Animations.Values[FIRE_COOLDOWN] == 0 {
 			_map.Monsters[index].Fire(_map)
 		}	
+	} else {
+		_map.Monsters[index].FindSeat(_map)
 	}
 }
 
 func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
 	center, radius := _map.Monsters[*index].GetHitbox()
+	_map.Monsters[*index].Settings[IS_ON_LAVA] = false
+	_map.Monsters[*index].Settings[COLLISION_ON_LAST_MOVE] = false
 	for _, wall := range _map.Walls {
 		if rl.CheckCollisionCircleRec(center, radius, wall.GetHitbox()) {
 			if !wall.Walkable {
 				_map.Monsters[*index].X = savedX
 				_map.Monsters[*index].Y = savedY
+				_map.Monsters[*index].Settings[COLLISION_ON_LAST_MOVE] = true
 				continue
 			} else {
-				if wall.Type == Lava && _map.Monsters[*index].Animations.Values[MONSTER_LAVA_DAMAGE] == 0 {
-					_map.Monsters[*index].TakeDamage(wall.WalkDamage)
-					if _map.Monsters[*index].IsDead() {
-						_map.removeMonster(index)
+				if wall.Type == Lava {
+					_map.Monsters[*index].Settings[IS_ON_LAVA] = true
+					if _map.Monsters[*index].Animations.Values[MONSTER_LAVA_DAMAGE] == 0 {
+						_map.Monsters[*index].TakeDamage(wall.WalkDamage)
+						if _map.Monsters[*index].IsDead() {
+							_map.removeMonster(index)
+						}
+						_map.Monsters[*index].Animations.Values[MONSTER_LAVA_DAMAGE] = LDT
 					}
-					_map.Monsters[*index].Animations.Values[MONSTER_LAVA_DAMAGE] = LDT
 				}
 			}
 		}
 	}
+
+	_map.Monsters[*index].HandleLavaExit()
 
 	var monsterCenter rl.Vector2
 	var monsterRadius float32

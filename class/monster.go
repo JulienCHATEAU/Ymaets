@@ -61,6 +61,7 @@ type Monster struct {
 	Type					MonsterType
 	Ori						Orientation
 	Settings			map[Setting]bool
+	LavaExit			Orientation
 	AggroDist			float64
 	Animations		Timers
 	Color 				rl.Color
@@ -102,6 +103,8 @@ func (monster *Monster) Init(x, y int32, monsterType MonsterType) {
 	monster.Ori = NORTH
 	monster.Hp = MMH
 	monster.MaxHp = MMH
+	monster.Settings = make(map[Setting]bool)
+	monster.LavaExit = NONE
 	monster.Animations.Init(MTC)
 	switch monsterType {
 	case KAMIKAZE:
@@ -179,6 +182,42 @@ func (monster *Monster) Move(_map *Map) {
 		case SNIPER:
 			monster.moveSniper(_map)
 			break
+	}
+}
+
+func (monster *Monster) HandleLavaExit() {
+	if monster.Settings[IS_ON_LAVA] {
+		if !monster.Settings[LAVA_EXIT_APPLIED] || monster.Settings[COLLISION_ON_LAST_MOVE] {
+			monster.Settings[LAVA_EXIT_APPLIED] = true
+			monster.LavaExit = ChooseInOris(oris)
+		}
+	} else {
+		if monster.Settings[LAVA_EXIT_APPLIED] {
+			monster.Settings[LAVA_EXIT_APPLIED] = false
+			monster.LavaExit = NONE
+		}
+	}
+}
+
+func (monster *Monster) FindSeat(_map *Map) {
+	if monster.Settings[IS_ON_LAVA] {
+		switch monster.LavaExit {
+		case NORTH:
+			monster.Y -= monster.MoveSpeed
+			break
+	
+		case SOUTH:
+			monster.Y += monster.MoveSpeed
+			break
+	
+		case EAST:
+			monster.X += monster.MoveSpeed
+			break
+	
+		case WEST:
+			monster.X -= monster.MoveSpeed
+			break
+		}
 	}
 }
 

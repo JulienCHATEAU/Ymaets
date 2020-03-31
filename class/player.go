@@ -1,6 +1,7 @@
 package class
 
 import (
+	// "fmt"
 	"github.com/gen2brain/raylib-go/raylib"
 	"github.com/nickdavies/go-astar/astar"
 	util "Ymaets/util"
@@ -87,7 +88,8 @@ func ContainsOri(oris []Orientation, ori Orientation) bool {
 }
 
 func ChooseInOris(oris []Orientation) Orientation {
-	return oris[r1.Int() % len(oris)]
+	rand := r1.Int() % len(oris)
+	return oris[rand]
 }
 
 func ShuffleOris(oris []Orientation) []Orientation {
@@ -167,6 +169,8 @@ const (
 	LAVA_DEALS_NOTHING = "lavaDealsNothing"
 	RANGE_ON_LAVA = "rangeOnLava"
 	RANGE_ON_LAVA_APPLIED = "rangeOnLavaApplied"
+	LAVA_EXIT_APPLIED = "lavaExitApplied"
+	COLLISION_ON_LAST_MOVE = "collisionOnLastMove"
 )
 
 type Stat struct {
