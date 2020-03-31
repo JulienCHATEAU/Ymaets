@@ -357,6 +357,7 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 	var center rl.Vector2
 	var radius float32
 	_map.CurrPlayer.Settings[IS_ON_WATER] = false
+	_map.CurrPlayer.Settings[IS_ON_LAVA] = false
 	for index, _ := range _map.Walls {
 		if rl.CheckCollisionRecs(hitbox, _map.Walls[index].GetHitbox()) {
 			if !_map.Walls[index].Walkable {
@@ -368,19 +369,23 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 				_map.CurrPlayer.Y = savedY
 				return
 			} else {
-				if _map.Walls[index].Type == Lava && _map.CurrPlayer.Animations.Values[LAVA_DAMAGE] == 0 && !_map.CurrPlayer.Settings[LAVA_DEALS_NOTHING] { // Lava ticks damages
-					if _map.CurrPlayer.Settings[LAVA_DEALS_HALF] {
-						_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage / 2)
-					} else {
-						_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage)
+				if _map.Walls[index].Type == Lava {
+					_map.CurrPlayer.Settings[IS_ON_LAVA] = true
+					if _map.CurrPlayer.Animations.Values[LAVA_DAMAGE] == 0 && !_map.CurrPlayer.Settings[LAVA_DEALS_NOTHING] { // Lava ticks damages
+						if _map.CurrPlayer.Settings[LAVA_DEALS_HALF] {
+							_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage / 2)
+						} else {
+							_map.CurrPlayer.TakeDamage(_map.Walls[index].WalkDamage)
+						}
+						_map.CurrPlayer.Animations.Values[LAVA_DAMAGE] = LDT
 					}
-					_map.CurrPlayer.Animations.Values[LAVA_DAMAGE] = LDT
 				}
 			}
 		}
 	}
 
 	_map.CurrPlayer.HandleWaterBootsSpeed()
+	_map.CurrPlayer.HandleFireHelmetRange()
 
 	for index = 0; index < _map.CoinsCount; index++ {
 		center, radius = _map.Coins[index].GetHitbox()

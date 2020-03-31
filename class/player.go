@@ -155,15 +155,18 @@ const (
 	LEVEL_UP
 )
 
-type PlayerSettings string
+type Setting string
 const (
 	CAN_WALK_ON_WATER = "canWalkOnWater"
 	IS_ON_WATER = "isOnWater"
+	IS_ON_LAVA = "isOnLava"
 	SPEED_ON_WATER = "speedOnWater"
 	SPEED_ON_WATER_APPLIED = "speedOnWaterApplied"
 	REGEN_ON_WATER = "regenOnWater"
 	LAVA_DEALS_HALF = "lavaDealsHalf"
 	LAVA_DEALS_NOTHING = "lavaDealsNothing"
+	RANGE_ON_LAVA = "rangeOnLava"
+	RANGE_ON_LAVA_APPLIED = "rangeOnLavaApplied"
 )
 
 type Stat struct {
@@ -192,7 +195,7 @@ type Player struct {
 	Ori_keys 			[4]int32 // east, west, north, south
 	Color 				rl.Color
 	Animations		Timers
-	Settings			map[PlayerSettings]bool
+	Settings			map[Setting]bool
 	BagSize 			int32
 	Bag 					[]Item
 }
@@ -224,7 +227,7 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Color = rl.Blue
 		player.Animations.Init(PTC)
 		player.Animations.Decrements[LEVEL_UP] = 3
-		player.Settings = make(map[PlayerSettings]bool)
+		player.Settings = make(map[Setting]bool)
 		player.BagSize = 0
 		player.Bag = make([]Item, PMBS)
 }
@@ -457,6 +460,22 @@ func (player *Player) HandleWaterBootsSpeed() {
 				player.Settings[SPEED_ON_WATER_APPLIED] = false
 				player.Stats.MaxSpeed -= 1
 				player.Stats.Speed -= 1
+			}
+		}
+	}
+}
+
+func (player *Player) HandleFireHelmetRange() {
+	if player.Settings[RANGE_ON_LAVA] {
+		if player.Settings[IS_ON_LAVA] {
+			if !player.Settings[RANGE_ON_LAVA_APPLIED] {
+				player.Settings[RANGE_ON_LAVA_APPLIED] = true
+				player.Stats.Range += 50
+			}
+		} else {
+			if player.Settings[RANGE_ON_LAVA_APPLIED] {
+				player.Settings[RANGE_ON_LAVA_APPLIED] = false
+				player.Stats.Range -= 50
 			}
 		}
 	}

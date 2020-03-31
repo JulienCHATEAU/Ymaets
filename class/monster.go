@@ -60,6 +60,7 @@ type Monster struct {
 	HasCanon			bool
 	Type					MonsterType
 	Ori						Orientation
+	Settings			map[Setting]bool
 	AggroDist			float64
 	Animations		Timers
 	Color 				rl.Color

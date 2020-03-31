@@ -35,7 +35,7 @@ type Item struct {
 func (item *Item) initWaterBoots() {
 	item.Description = "The water boots allow you to walk on water."
 	item.LevelUpDescription = []string {
-		"Water is now walkable",
+		"Water is walkable",
 		"On water, Move speed : +1",
 		"On water, Regen : 0.5 Hp/sec",
 	} 
@@ -155,7 +155,7 @@ func (item *Item) applyEffectFireHelmet(_map *Map, prod int32) {
 		_map.CurrPlayer.Settings[LAVA_DEALS_NOTHING] = add
 	}
 	if item.Level > 2 {//lvl3
-		item.addRange(_map, prod * 50)
+		_map.CurrPlayer.Settings[RANGE_ON_LAVA] = add
 	}
 }
 
