@@ -557,7 +557,13 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 			center, radius = _map.Monsters[i].GetHitbox()
 			if rl.CheckCollisionCircleRec(center, radius, hitbox) {
 				if _map.Shots[*index].Owner != MONSTER {
-					_map.Monsters[i].TakeDamage(10)
+					var damage int32 = 10
+					if r1.Int31() % 100 < _map.CurrPlayer.Stats.CritRate {
+						damage += damage * 50 / 100
+						_map.Monsters[i].Animations.Values[CRIT_DAMAGE] = 350
+						fmt.Println("critical ! ", damage)
+					} 
+					_map.Monsters[i].TakeDamage(damage)
 					if _map.Monsters[i].IsDead() {
 						coins := _map.Monsters[i].SpreadCoins()
 						_map.CoinsCount += int32(len(coins))
@@ -585,7 +591,7 @@ func (_map *Map) aStar(walls []Wall) bool {
 		for j = 0; j<cols; j++ {
 			x = "."
 			for _, wall := range walls {
-				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(j * PBS), float32(i * PBS), float32(PBS), float32(PBS)}) {
+				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(j * PBS + 1), float32(i * PBS + 1), float32(PBS), float32(PBS)}) {
 					aStar.FillTile(astar.Point{int(i), int(j)}, -1)
 					x = "@"
 					break

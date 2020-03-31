@@ -151,7 +151,7 @@ func (bagMenu *BagMenu) Draw() {
 	rl.DrawRectangle(startX + itemListMargin + infoBorderSize, startY + currDY + infoBorderSize, contentWidth - itemListMargin*2 - infoBorderSize*2, itemListHeigth - infoBorderSize*2, rl.LightGray)
 
 	var itemMarginLeft, itemMarginTop int32 = 15, 5
-	var currItemX, currItemY int32 = startX + itemListMargin + itemMarginLeft + 10, startY + currDY + itemMarginTop
+	var currItemX, currItemY int32 = startX + itemListMargin + itemMarginLeft + 8, startY + currDY + itemMarginTop
 	if bagMenu.CurrMap.CurrPlayer.BagSize > 0 {
 		var itemSize = bagMenu.CurrMap.CurrPlayer.Bag[0].Size + 5
 		var currItemY = startY + currDY + itemListHeigth - (itemListHeigth-itemSize)/2 - itemSize

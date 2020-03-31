@@ -147,6 +147,9 @@ var PMBS int32 = 10
 var PLUT int32 = 350
 // Player default furtivity
 var PDF int32 = 0
+// Player default furtivity
+var PCR int32 = 10
+
 
 // Player timers count
 var PTC int32 = 4
@@ -194,6 +197,7 @@ type Stat struct {
 	MaxDef				int32
 	Range					int32
 	Furtivity			int32
+	CritRate			int32
 }
 
 type Player struct {
@@ -226,6 +230,7 @@ func (stats *Stat) Init() {
 	stats.MaxDef = 50
 	stats.Range = PSR
 	stats.Furtivity = PDF
+	stats.CritRate = PCR
 }
 
 func (player *Player) Init(x, y int32, ori Orientation) {

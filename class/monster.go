@@ -32,13 +32,14 @@ var KFC int32 = 20
 var SFC int32 = 40
 
 // Monster timers count
-var MTC int32 = 3
+var MTC int32 = 4
 
 type MonsterTimers int32
 const (
 	MONSTER_TAKE_DAMAGE = iota
 	MONSTER_FIRE_COOLDOWN
 	MONSTER_LAVA_DAMAGE
+	CRIT_DAMAGE
 )
 
 type MonsterType int32
@@ -106,6 +107,7 @@ func (monster *Monster) Init(x, y int32, monsterType MonsterType) {
 	monster.Settings = make(map[Setting]bool)
 	monster.LavaExit = NONE
 	monster.Animations.Init(MTC)
+	monster.Animations.Decrements[CRIT_DAMAGE] = 15
 	switch monsterType {
 	case KAMIKAZE:
 		monster.initKamikaze()
@@ -339,6 +341,14 @@ func (monster *Monster) HandleAnimation(notEnded []int32) {
 				// rl.DrawCircleLines(monster.X, monster.Y, monster.Radius-i, rl.Red)
 				rl.DrawCircle(monster.X, monster.Y, monster.Radius, rl.NewColor(255, 0, 0, 100))
 			}
+			break
+
+		case CRIT_DAMAGE:
+			opacity := monster.Animations.Values[CRIT_DAMAGE]
+			if opacity > 255 {
+				opacity = 255
+			}
+			rl.DrawText("Crit !", monster.X - 16, monster.Y - int32(monster.Radius) - 27, 15, rl.NewColor(246, 50, 27, uint8(opacity)))
 			break
 
 		//ADD ANIMATION HANDLER HERE
