@@ -13,6 +13,7 @@ const (
 	TURBO_REACTOR = "Turbo reactor"
 	FIRE_HELMET = "Fire helmet"
 	INVISIBLE_CAPE = "Invisible cape"
+	ABUNDANT_PURSE = "Abundant purse"
 	// ADD ITEMNAME ABOVE
 )
 
@@ -79,6 +80,15 @@ func (item *Item) initInvisibleCape() {
 	} 
 }
 
+func (item *Item) initAbundantPurse() {
+	item.Description = "The abundant purse increases the amount of gold monsters drop."
+	item.LevelUpDescription = []string {
+		"On monsters, Money : +30%",
+		"Prices in shop : -20%",
+		"Regen : 1 Hp/100 golds",
+	} 
+}
+
 //ADD INIT FUNCTIONS ABOVE
 
 func (item *Item) Init(x, y int32, name ItemName) {
@@ -102,6 +112,9 @@ func (item *Item) Init(x, y int32, name ItemName) {
 		case INVISIBLE_CAPE:
 			item.initInvisibleCape()
 			break
+		case ABUNDANT_PURSE:
+			item.initAbundantPurse()
+			break
 	}
 	item.Name = name
 	item.Selected = false
@@ -109,15 +122,19 @@ func (item *Item) Init(x, y int32, name ItemName) {
 
 /* Effect */
 
-func (item *Item) applyEffectWaterBoots(_map *Map, prod int32) {
+func (item *Item) oneSettingPerLevel(sett1, sett2, sett3 Setting, _map *Map, prod int32) {
 	add := prod == 1
-	_map.CurrPlayer.Settings[CAN_WALK_ON_WATER] = add
+	_map.CurrPlayer.Settings[sett1] = add
 	if item.Level > 1 {//lvl2
-		_map.CurrPlayer.Settings[SPEED_ON_WATER] = add
+		_map.CurrPlayer.Settings[sett2] = add
 	}
 	if item.Level > 2 {//lvl3
-		_map.CurrPlayer.Settings[REGEN_ON_WATER] = add
+		_map.CurrPlayer.Settings[sett3] = add
 	}
+}
+
+func (item *Item) applyEffectWaterBoots(_map *Map, prod int32) {
+	item.oneSettingPerLevel(CAN_WALK_ON_WATER, SPEED_ON_WATER, REGEN_ON_WATER, _map, prod)
 }
 
 func (item *Item) applyEffectHeartOfSteel(_map *Map, prod int32) {
@@ -143,14 +160,7 @@ func (item *Item) applyEffectTurboReactor(_map *Map, prod int32) {
 }
 
 func (item *Item) applyEffectFireHelmet(_map *Map, prod int32) {
-	add := prod == 1
-	_map.CurrPlayer.Settings[LAVA_DEALS_HALF] = add
-	if item.Level > 1 {//lvl2
-		_map.CurrPlayer.Settings[LAVA_DEALS_NOTHING] = add
-	}
-	if item.Level > 2 {//lvl3
-		_map.CurrPlayer.Settings[RANGE_ON_LAVA] = add
-	}
+	item.oneSettingPerLevel(LAVA_DEALS_HALF, LAVA_DEALS_NOTHING, RANGE_ON_LAVA, _map, prod)
 }
 
 func (item *Item) applyEffectInvisibleCape(_map *Map, prod int32) {
@@ -162,6 +172,10 @@ func (item *Item) applyEffectInvisibleCape(_map *Map, prod int32) {
 	if item.Level > 2 {//lvl3
 		_map.CurrPlayer.Settings[RANGE_IF_FURTIVE] = add
 	}
+}
+
+func (item *Item) applyEffectAbundantPurse(_map *Map, prod int32) {
+	item.oneSettingPerLevel(MONEY_DROP_BONUS, SHOP_DISCOUNT, REGEN_ON_MONEY, _map, prod)
 }
 
 //ADD APPLY FUNCTIONS ABOVE
@@ -182,6 +196,9 @@ func (item *Item) apply(_map *Map, value int32) {
 			break
 		case INVISIBLE_CAPE:
 			item.applyEffectInvisibleCape(_map, value)
+			break
+		case ABUNDANT_PURSE:
+			item.applyEffectAbundantPurse(_map, value)
 			break
 	}
 }
@@ -216,6 +233,10 @@ func (item *Item) drawInvisibleCape() {
 	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(25, 2, 93, 200))
 }
 
+func (item *Item) drawAbundantPurse() {
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(133, 120, 35, 200))
+}
+
 //ADD DRAW FUNCTIONS ABOVE
 
 func (item *Item) Draw() {
@@ -242,6 +263,9 @@ func (item *Item) Draw() {
 			break
 		case INVISIBLE_CAPE:
 			item.drawInvisibleCape()
+			break
+		case ABUNDANT_PURSE:
+			item.drawAbundantPurse()
 			break
 	}
 }

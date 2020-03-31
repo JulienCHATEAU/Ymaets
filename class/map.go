@@ -404,7 +404,14 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 	for index = 0; index < _map.CoinsCount; index++ {
 		center, radius = _map.Coins[index].GetHitbox()
 		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
+			currMoney := _map.CurrPlayer.Money
 			_map.CurrPlayer.Money += _map.Coins[index].Value
+			if _map.CurrPlayer.Settings[MONEY_DROP_BONUS] {
+				_map.CurrPlayer.Money += _map.Coins[index].Value * 30 / 100
+			}
+			if _map.CurrPlayer.Settings[REGEN_ON_MONEY] {
+				_map.CurrPlayer.Heal(_map.CurrPlayer.Money / 100 - currMoney / 100)
+			}
 			_map.removeCoin(&index)
 		}
 	}

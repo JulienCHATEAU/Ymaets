@@ -178,6 +178,9 @@ const (
 	SPEED_IF_FURTIVE_APPLIED = "speedIfFurtiveApplied"
 	RANGE_IF_FURTIVE = "rangeIfFurtive"
 	RANGE_IF_FURTIVE_APPLIED = "rangeIfFurtiveApplied"
+	MONEY_DROP_BONUS = "moneyDropBonus"
+	SHOP_DISCOUNT = "shopDiscount"
+	REGEN_ON_MONEY = "regenOnMoney"
 )
 
 type Stat struct {
