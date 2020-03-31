@@ -14,6 +14,7 @@ const (
 	FIRE_HELMET = "Fire helmet"
 	INVISIBLE_CAPE = "Invisible cape"
 	ABUNDANT_PURSE = "Abundant purse"
+	TRIFORCE_LOCKET = "Triforce locket"
 	// ADD ITEMNAME ABOVE
 )
 
@@ -47,8 +48,8 @@ func (item *Item) initWaterBoots() {
 func (item *Item) initHeartOfSteel() {
 	item.Description = "The heart of steel increases your maximum health points."
 	item.LevelUpDescription = []string {
-		"Max Hp : +25",
-		"Max Hp : +25",
+		"Max Hp : +20",
+		"Max Hp : +30",
 		"Max Hp : +50",
 	} 
 }
@@ -85,7 +86,16 @@ func (item *Item) initAbundantPurse() {
 	item.LevelUpDescription = []string {
 		"On monsters, Money : +30%",
 		"Prices in shop : -20%",
-		"Regen : 1 Hp/100 golds",
+		"Regen : 1 Hp/100 golds picked",
+	} 
+}
+
+func (item *Item) initTriforceLocket() {
+	item.Description = "The triforce locket increases your 3 base stats."
+	item.LevelUpDescription = []string {
+		"Max Hp, Att, Def : +5, +2, +2",
+		"Max Hp, Att, Def : +10, +4, +4",
+		"Max Hp, Att, Def : +15, +6, +6",
 	} 
 }
 
@@ -115,6 +125,9 @@ func (item *Item) Init(x, y int32, name ItemName) {
 		case ABUNDANT_PURSE:
 			item.initAbundantPurse()
 			break
+		case TRIFORCE_LOCKET:
+			item.initTriforceLocket()
+			break
 	}
 	item.Name = name
 	item.Selected = false
@@ -138,9 +151,9 @@ func (item *Item) applyEffectWaterBoots(_map *Map, prod int32) {
 }
 
 func (item *Item) applyEffectHeartOfSteel(_map *Map, prod int32) {
-	var healthPoints int32 = 25
+	var healthPoints int32 = 20
 	if item.Level > 1 {//lvl2
-		healthPoints += 25
+		healthPoints += 30
 	}
 	if item.Level > 2 {//lvl3
 		healthPoints += 50
@@ -178,6 +191,22 @@ func (item *Item) applyEffectAbundantPurse(_map *Map, prod int32) {
 	item.oneSettingPerLevel(MONEY_DROP_BONUS, SHOP_DISCOUNT, REGEN_ON_MONEY, _map, prod)
 }
 
+func (item *Item) applyEffectTriforceLocket(_map *Map, prod int32) {
+	item.addHealthPoints(_map, prod * 5)
+	item.addAttack(_map, prod * 2)
+	item.addDefense(_map, prod * 2)
+	if item.Level > 1 {//lvl2
+		item.addHealthPoints(_map, prod * 10)
+		item.addAttack(_map, prod * 4)
+		item.addDefense(_map, prod * 4)
+	}
+	if item.Level > 2 {//lvl3
+		item.addHealthPoints(_map, prod * 15)
+		item.addAttack(_map, prod * 6)
+		item.addDefense(_map, prod * 6)
+	}
+}
+
 //ADD APPLY FUNCTIONS ABOVE
 
 func (item *Item) apply(_map *Map, value int32) {
@@ -199,6 +228,9 @@ func (item *Item) apply(_map *Map, value int32) {
 			break
 		case ABUNDANT_PURSE:
 			item.applyEffectAbundantPurse(_map, value)
+			break
+		case TRIFORCE_LOCKET:
+			item.applyEffectTriforceLocket(_map, value)
 			break
 	}
 }
@@ -237,6 +269,10 @@ func (item *Item) drawAbundantPurse() {
 	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(133, 120, 35, 200))
 }
 
+func (item *Item) drawTriforceLocket() {
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(247, 225, 84, 200))
+}
+
 //ADD DRAW FUNCTIONS ABOVE
 
 func (item *Item) Draw() {
@@ -266,6 +302,9 @@ func (item *Item) Draw() {
 			break
 		case ABUNDANT_PURSE:
 			item.drawAbundantPurse()
+			break
+		case TRIFORCE_LOCKET:
+			item.drawTriforceLocket()
 			break
 	}
 }
@@ -301,6 +340,18 @@ func (item *Item) addHealthPoints(_map *Map, value int32) {
 	var hpPercentage float32 = float32(_map.CurrPlayer.Stats.Hp) / float32(_map.CurrPlayer.Stats.MaxHp)
 	_map.CurrPlayer.Stats.MaxHp += value
 	_map.CurrPlayer.Stats.Hp = int32(float32(_map.CurrPlayer.Stats.MaxHp) * hpPercentage)
+}
+
+func (item *Item) addAttack(_map *Map, value int32) {
+	var attPercentage float32 = float32(_map.CurrPlayer.Stats.Att) / float32(_map.CurrPlayer.Stats.MaxAtt)
+	_map.CurrPlayer.Stats.MaxAtt += value
+	_map.CurrPlayer.Stats.Att = int32(float32(_map.CurrPlayer.Stats.MaxAtt) * attPercentage)
+}
+
+func (item *Item) addDefense(_map *Map, value int32) {
+	var defPercentage float32 = float32(_map.CurrPlayer.Stats.Def) / float32(_map.CurrPlayer.Stats.MaxDef)
+	_map.CurrPlayer.Stats.MaxDef += value
+	_map.CurrPlayer.Stats.Def = int32(float32(_map.CurrPlayer.Stats.MaxDef) * defPercentage)
 }
 
 func (item *Item) addSpeed(_map *Map, value int32) {

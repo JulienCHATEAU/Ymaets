@@ -330,6 +330,7 @@ func debugPrint(_maps map[ym.Coord]*ym.Map, currentMapCoord ym.Coord, mouseX, mo
 		fmt.Printf("(%d, %d)\n", mouseX, mouseY)
 		fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
 		fmt.Printf("Player upgrade points : %d\n", _maps[currentMapCoord].CurrPlayer.UpgradePoint)
+		fmt.Printf("Att : %d/%d - Def : %d/%d\n", _maps[currentMapCoord].CurrPlayer.Stats.Att, _maps[currentMapCoord].CurrPlayer.Stats.MaxAtt, _maps[currentMapCoord].CurrPlayer.Stats.Def, _maps[currentMapCoord].CurrPlayer.Stats.MaxDef)
 		fmt.Println(_maps[currentMapCoord].Coins)
 		fmt.Println(_maps[currentMapCoord].CoinsCount)
 		fmt.Println(_maps[currentMapCoord].CurrPlayer.Bag)
@@ -369,6 +370,8 @@ func main() {
 	item.Init(250, 650, ym.INVISIBLE_CAPE)
 	_maps[currentMapCoord].AddItem(item)
 	item.Init(450, 650, ym.ABUNDANT_PURSE)
+	_maps[currentMapCoord].AddItem(item)
+	item.Init(650, 250, ym.TRIFORCE_LOCKET)
 	_maps[currentMapCoord].AddItem(item)
 	
 	fmt.Println("Ymaets")

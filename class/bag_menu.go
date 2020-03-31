@@ -126,7 +126,7 @@ func (bagMenu *BagMenu) drawTabContent(currItem Item, currX, currY int32) {
 			} else {
 				color = rl.DarkGray
 			}
-			rl.DrawText(currItem.GetLevelUpDescription(i), currX, currY + i * 30, 19, color)
+			rl.DrawText(currItem.GetLevelUpDescription(i), currX, currY + i * 30, 18, color)
 		}
 		break
 	}
