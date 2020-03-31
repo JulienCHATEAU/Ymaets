@@ -184,6 +184,7 @@ const (
 	MONEY_DROP_BONUS = "moneyDropBonus"
 	SHOP_DISCOUNT = "shopDiscount"
 	REGEN_ON_MONEY = "regenOnMoney"
+	MONEY_CRIT_BONUS = "moneyCritBonus"
 )
 
 type Stat struct {

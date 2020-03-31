@@ -561,7 +561,9 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 					if r1.Int31() % 100 < _map.CurrPlayer.Stats.CritRate {
 						damage += damage * 50 / 100
 						_map.Monsters[i].Animations.Values[CRIT_DAMAGE] = 350
-						fmt.Println("critical ! ", damage)
+						if _map.CurrPlayer.Settings[MONEY_CRIT_BONUS] {
+							_map.CurrPlayer.Money += 5
+						}
 					} 
 					_map.Monsters[i].TakeDamage(damage)
 					if _map.Monsters[i].IsDead() {

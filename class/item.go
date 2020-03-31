@@ -15,6 +15,7 @@ const (
 	INVISIBLE_CAPE = "Invisible cape"
 	ABUNDANT_PURSE = "Abundant purse"
 	TRIFORCE_LOCKET = "Triforce locket"
+	GOLDEN_CLOVER = "Golden clover"
 	// ADD ITEMNAME ABOVE
 )
 
@@ -99,6 +100,15 @@ func (item *Item) initTriforceLocket() {
 	} 
 }
 
+func (item *Item) initGoldenClover() {
+	item.Description = "The golden clover increases your critical rates."
+	item.LevelUpDescription = []string {
+		"Critical rate : +5%",
+		"Critical rate : +10%",
+		"On critical, Money : +5",
+	} 
+}
+
 //ADD INIT FUNCTIONS ABOVE
 
 func (item *Item) Init(x, y int32, name ItemName) {
@@ -125,8 +135,8 @@ func (item *Item) Init(x, y int32, name ItemName) {
 		case ABUNDANT_PURSE:
 			item.initAbundantPurse()
 			break
-		case TRIFORCE_LOCKET:
-			item.initTriforceLocket()
+		case GOLDEN_CLOVER:
+			item.initGoldenClover()
 			break
 	}
 	item.Name = name
@@ -207,6 +217,16 @@ func (item *Item) applyEffectTriforceLocket(_map *Map, prod int32) {
 	}
 }
 
+func (item *Item) applyEffectGoldenClover(_map *Map, prod int32) {
+	item.addCritRate(_map, prod * 5)
+	if item.Level > 1 {//lvl2
+		item.addCritRate(_map, prod * 10)
+	}
+	if item.Level > 2 {//lvl3
+		_map.CurrPlayer.Settings[MONEY_CRIT_BONUS] = prod == 1
+	}
+}
+
 //ADD APPLY FUNCTIONS ABOVE
 
 func (item *Item) apply(_map *Map, value int32) {
@@ -229,8 +249,8 @@ func (item *Item) apply(_map *Map, value int32) {
 		case ABUNDANT_PURSE:
 			item.applyEffectAbundantPurse(_map, value)
 			break
-		case TRIFORCE_LOCKET:
-			item.applyEffectTriforceLocket(_map, value)
+		case GOLDEN_CLOVER:
+			item.applyEffectGoldenClover(_map, value)
 			break
 	}
 }
@@ -266,11 +286,15 @@ func (item *Item) drawInvisibleCape() {
 }
 
 func (item *Item) drawAbundantPurse() {
-	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(133, 120, 35, 200))
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(133, 120, 35, 255))
 }
 
 func (item *Item) drawTriforceLocket() {
-	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(247, 225, 84, 200))
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(247, 225, 84, 255))
+}
+
+func (item *Item) drawGoldenClover() {
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(163, 222, 18, 255))
 }
 
 //ADD DRAW FUNCTIONS ABOVE
@@ -303,8 +327,8 @@ func (item *Item) Draw() {
 		case ABUNDANT_PURSE:
 			item.drawAbundantPurse()
 			break
-		case TRIFORCE_LOCKET:
-			item.drawTriforceLocket()
+		case GOLDEN_CLOVER:
+			item.drawGoldenClover()
 			break
 	}
 }
@@ -352,6 +376,10 @@ func (item *Item) addDefense(_map *Map, value int32) {
 	var defPercentage float32 = float32(_map.CurrPlayer.Stats.Def) / float32(_map.CurrPlayer.Stats.MaxDef)
 	_map.CurrPlayer.Stats.MaxDef += value
 	_map.CurrPlayer.Stats.Def = int32(float32(_map.CurrPlayer.Stats.MaxDef) * defPercentage)
+}
+
+func (item *Item) addCritRate(_map *Map, value int32) {
+	_map.CurrPlayer.Stats.CritRate += value
 }
 
 func (item *Item) addSpeed(_map *Map, value int32) {
