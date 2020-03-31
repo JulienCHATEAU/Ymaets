@@ -11,7 +11,9 @@ const (
 	WATER_BOOTS = "Water boots"
 	HEART_OF_STEEL = "Heart of steel"
 	TURBO_REACTOR = "Turbo reactor"
-	FIRE_HELMET = "Fire Helmet"
+	FIRE_HELMET = "Fire helmet"
+	INVISIBLE_CAPE = "Invisible cape"
+	// ADD ITEMNAME ABOVE
 )
 
 // Item body size
@@ -60,13 +62,24 @@ func (item *Item) initTurboReactor() {
 }
 
 func (item *Item) initFireHelmet() {
-	item.Description = "The fire helmet reduces the damages taken walking on lava."
+	item.Description = "The fire helmet reduces the damage taken walking on lava."
 	item.LevelUpDescription = []string {
-		"Lava deals half damages",
-		"Lava no longer deals damages",
+		"Lava deals half damage",
+		"Lava no longer deals damage",
 		"On lava, Range : +50",
 	} 
 }
+
+func (item *Item) initInvisibleCape() {
+	item.Description = "The invisible cape increases your furtivity."
+	item.LevelUpDescription = []string {
+		"Furtivity : +40",
+		"If furtive, Move speed : +1",
+		"If furtive, Range : +30",
+	} 
+}
+
+//ADD INIT FUNCTIONS ABOVE
 
 func (item *Item) Init(x, y int32, name ItemName) {
 	item.X = x
@@ -86,34 +99,15 @@ func (item *Item) Init(x, y int32, name ItemName) {
 		case FIRE_HELMET:
 			item.initFireHelmet()
 			break
+		case INVISIBLE_CAPE:
+			item.initInvisibleCape()
+			break
 	}
 	item.Name = name
 	item.Selected = false
 }
 
-func (item *Item) GetLevelUpDescription(i int32) string {
-	space := ""
-	if i == 0 {
-		space += " "
-	}
-	return "Lvl " + space + strconv.Itoa(int(i+1)) + ")   " + item.LevelUpDescription[i]
-}
-
 /* Effect */
-
-func (item *Item) addHealthPoints(_map *Map, value int32) {
-	var hpPercentage float32 = float32(_map.CurrPlayer.Stats.Hp) / float32(_map.CurrPlayer.Stats.MaxHp)
-	_map.CurrPlayer.Stats.MaxHp += value
-	_map.CurrPlayer.Stats.Hp = int32(float32(_map.CurrPlayer.Stats.MaxHp) * hpPercentage)
-}
-
-func (item *Item) addSpeed(_map *Map, value int32) {
-	_map.CurrPlayer.Stats.MaxSpeed += value
-}
-
-func (item *Item) addRange(_map *Map, value int32) {
-	_map.CurrPlayer.Stats.Range += value
-}
 
 func (item *Item) applyEffectWaterBoots(_map *Map, prod int32) {
 	add := prod == 1
@@ -159,6 +153,19 @@ func (item *Item) applyEffectFireHelmet(_map *Map, prod int32) {
 	}
 }
 
+func (item *Item) applyEffectInvisibleCape(_map *Map, prod int32) {
+	add := prod == 1
+	item.addFurtivity(_map, prod * 40)
+	if item.Level > 1 {//lvl2
+		_map.CurrPlayer.Settings[SPEED_IF_FURTIVE] = add
+	}
+	if item.Level > 2 {//lvl3
+		_map.CurrPlayer.Settings[RANGE_IF_FURTIVE] = add
+	}
+}
+
+//ADD APPLY FUNCTIONS ABOVE
+
 func (item *Item) apply(_map *Map, value int32) {
 	switch item.Name {
 		case WATER_BOOTS:
@@ -173,6 +180,9 @@ func (item *Item) apply(_map *Map, value int32) {
 		case FIRE_HELMET:
 			item.applyEffectFireHelmet(_map, value)
 			break
+		case INVISIBLE_CAPE:
+			item.applyEffectInvisibleCape(_map, value)
+			break
 	}
 }
 
@@ -182,23 +192,6 @@ func (item *Item) ApplyEffect(_map *Map) {
 
 func (item *Item) RemoveEffect(_map *Map) {
 	item.apply(_map, -1)
-}
-
-func (item *Item) LevelUp(_map *Map) bool {
-	possible := item.CanLevelUp()
-	if possible {
-		item.RemoveEffect(_map)
-		item.Level++
-		item.ApplyEffect(_map)
-	}
-	return possible
-}
-
-func (item *Item) CanLevelUp() bool {
-	if item.Level < IML {
-		return true
-	}
-	return false
 }
 
 /* Draw */
@@ -218,6 +211,12 @@ func (item *Item) drawTurboReactor() {
 func (item *Item) drawFireHelmet() {
 	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.Orange)
 }
+
+func (item *Item) drawInvisibleCape() {
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(25, 2, 93, 200))
+}
+
+//ADD DRAW FUNCTIONS ABOVE
 
 func (item *Item) Draw() {
 	if item.Selected {
@@ -241,10 +240,56 @@ func (item *Item) Draw() {
 		case FIRE_HELMET:
 			item.drawFireHelmet()
 			break
+		case INVISIBLE_CAPE:
+			item.drawInvisibleCape()
+			break
 	}
 }
 
 //////
+
+func (item *Item) GetLevelUpDescription(i int32) string {
+	space := ""
+	if i == 0 {
+		space += " "
+	}
+	return "Lvl " + space + strconv.Itoa(int(i+1)) + ")   " + item.LevelUpDescription[i]
+}
+
+func (item *Item) LevelUp(_map *Map) bool {
+	possible := item.CanLevelUp()
+	if possible {
+		item.RemoveEffect(_map)
+		item.Level++
+		item.ApplyEffect(_map)
+	}
+	return possible
+}
+
+func (item *Item) CanLevelUp() bool {
+	if item.Level < IML {
+		return true
+	}
+	return false
+}
+
+func (item *Item) addHealthPoints(_map *Map, value int32) {
+	var hpPercentage float32 = float32(_map.CurrPlayer.Stats.Hp) / float32(_map.CurrPlayer.Stats.MaxHp)
+	_map.CurrPlayer.Stats.MaxHp += value
+	_map.CurrPlayer.Stats.Hp = int32(float32(_map.CurrPlayer.Stats.MaxHp) * hpPercentage)
+}
+
+func (item *Item) addSpeed(_map *Map, value int32) {
+	_map.CurrPlayer.Stats.MaxSpeed += value
+}
+
+func (item *Item) addRange(_map *Map, value int32) {
+	_map.CurrPlayer.Stats.Range += value
+}
+
+func (item *Item) addFurtivity(_map *Map, value int32) {
+	_map.CurrPlayer.Stats.Furtivity += value
+}
 
 func (item *Item) GetHitbox() rl.Rectangle {
 	return rl.Rectangle{float32(item.X), float32(item.Y), float32(item.Size), float32(item.Size)}

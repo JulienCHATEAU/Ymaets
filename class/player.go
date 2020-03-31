@@ -142,9 +142,11 @@ var PMS int32 = 4
 // Player health max
 var PHM int32 = 100
 // Player Max bag size
-var PMBS int32 = 2
+var PMBS int32 = 10
 // Player level up timer
 var PLUT int32 = 350
+// Player default furtivity
+var PDF int32 = 0
 
 // Player timers count
 var PTC int32 = 4
@@ -162,6 +164,7 @@ const (
 	CAN_WALK_ON_WATER = "canWalkOnWater"
 	IS_ON_WATER = "isOnWater"
 	IS_ON_LAVA = "isOnLava"
+	IS_FURTIVE = "isFurtive"
 	SPEED_ON_WATER = "speedOnWater"
 	SPEED_ON_WATER_APPLIED = "speedOnWaterApplied"
 	REGEN_ON_WATER = "regenOnWater"
@@ -171,6 +174,10 @@ const (
 	RANGE_ON_LAVA_APPLIED = "rangeOnLavaApplied"
 	LAVA_EXIT_APPLIED = "lavaExitApplied"
 	COLLISION_ON_LAST_MOVE = "collisionOnLastMove"
+	SPEED_IF_FURTIVE = "speedIfFurtive"
+	SPEED_IF_FURTIVE_APPLIED = "speedIfFurtiveApplied"
+	RANGE_IF_FURTIVE = "rangeIfFurtive"
+	RANGE_IF_FURTIVE_APPLIED = "rangeIfFurtiveApplied"
 )
 
 type Stat struct {
@@ -183,6 +190,7 @@ type Stat struct {
 	Def						int32
 	MaxDef				int32
 	Range					int32
+	Furtivity			int32
 }
 
 type Player struct {
@@ -214,6 +222,7 @@ func (stats *Stat) Init() {
 	stats.Def = 50
 	stats.MaxDef = 50
 	stats.Range = PSR
+	stats.Furtivity = PDF
 }
 
 func (player *Player) Init(x, y int32, ori Orientation) {
@@ -452,37 +461,53 @@ func (player *Player) Every2SecAction() {
 
 // ITEM FUNCTIONS
 
-func (player *Player) HandleWaterBootsSpeed() {
-	if player.Settings[SPEED_ON_WATER] {
-		if player.Settings[IS_ON_WATER] {
-			if !player.Settings[SPEED_ON_WATER_APPLIED] {
-				player.Settings[SPEED_ON_WATER_APPLIED] = true
-				player.Stats.MaxSpeed += 1
+func (player *Player) addSpeedOnCondition(buff_unlocked, cond, buff_applied Setting, value int32) {
+	if player.Settings[buff_unlocked] {
+		if player.Settings[cond] {
+			if !player.Settings[buff_applied] {
+				player.Settings[buff_applied] = true
+				player.Stats.MaxSpeed += value
 			}
 		} else {
-			if player.Settings[SPEED_ON_WATER_APPLIED] {
-				player.Settings[SPEED_ON_WATER_APPLIED] = false
-				player.Stats.MaxSpeed -= 1
-				player.Stats.Speed -= 1
+			if player.Settings[buff_applied] {
+				player.Settings[buff_applied] = false
+				player.Stats.MaxSpeed -= value
+				player.Stats.Speed -= value
+			}
+		}
+	}
+}
+
+func (player *Player) HandleWaterBootsSpeed() {
+	player.addSpeedOnCondition(SPEED_ON_WATER, IS_ON_WATER, SPEED_ON_WATER_APPLIED, 1)
+}
+
+func (player *Player) HandleInvisibleCapeSpeed() {
+	player.addSpeedOnCondition(SPEED_IF_FURTIVE, IS_FURTIVE, SPEED_IF_FURTIVE_APPLIED, 1)
+}
+
+func (player *Player) addRangeOnCondition(buff_unlocked, cond, buff_applied Setting, value int32) {
+	if player.Settings[buff_unlocked] {
+		if player.Settings[cond] {
+			if !player.Settings[buff_applied] {
+				player.Settings[buff_applied] = true
+				player.Stats.Range += value
+			}
+		} else {
+			if player.Settings[buff_applied] {
+				player.Settings[buff_applied] = false
+				player.Stats.Range -= value
 			}
 		}
 	}
 }
 
 func (player *Player) HandleFireHelmetRange() {
-	if player.Settings[RANGE_ON_LAVA] {
-		if player.Settings[IS_ON_LAVA] {
-			if !player.Settings[RANGE_ON_LAVA_APPLIED] {
-				player.Settings[RANGE_ON_LAVA_APPLIED] = true
-				player.Stats.Range += 50
-			}
-		} else {
-			if player.Settings[RANGE_ON_LAVA_APPLIED] {
-				player.Settings[RANGE_ON_LAVA_APPLIED] = false
-				player.Stats.Range -= 50
-			}
-		}
-	}
+	player.addRangeOnCondition(RANGE_ON_LAVA, IS_ON_LAVA, RANGE_ON_LAVA_APPLIED, 50)
+}
+
+func (player *Player) HandleInvisibleCapeRange() {
+	player.addRangeOnCondition(RANGE_IF_FURTIVE, IS_FURTIVE, RANGE_IF_FURTIVE_APPLIED, 30)
 }
 
 func (player *Player) HandleWaterBootsRegen() {
