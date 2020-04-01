@@ -25,7 +25,9 @@ var r1 = rand.New(s1)
 
 var stageMapCount int32 = 10
 var foundStairsMap bool = false
+var foundShopMap bool = false
 
+var SHOP_COORDS ym.Coord = ym.Coord {5000, 5000}
 var MAP_SIZE int32 = 800
 var MAP_BORDER_SIZE int32 = 20
 var MENU_SIZE int32 = 300
@@ -72,16 +74,14 @@ func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, 
 		openings = ym.ShuffleOris(openings)
 	}
 	fmt.Println(openings)
-	var stairsProba int32 = 100 - deeperProba
+	var stairsProba int32 = 110 - deeperProba
+	var shopProba int32 = 200 - deeperProba
 	deeperProba -= (100 / stageMapCount)
 	var _map *ym.Map = &ym.Map{}
 	_map.CurrPlayer = player
 	_map.Init(currentMapCoord, MAP_SIZE, MAP_BORDER_SIZE, openings)
 	_map.InitBorders()
-	if !foundStairsMap && r1.Int31() % 100 < stairsProba {
-		foundStairsMap = true
-		_map.AddStairs()
-	} 
+	_map.Walls = append(_map.Walls, ym.GeneratePossibleWalls(_map, &foundStairsMap, &foundShopMap, stairsProba, shopProba)...)
 	_maps[currentMapCoord] = _map
 	var nextCoord ym.Coord
 	remainingMapsToCreate, _ := ym.RemoveOri(openings, oppositeOri)
@@ -282,7 +282,10 @@ func drawMiniStage(_maps map[ym.Coord]*ym.Map, playerMapCoord ym.Coord, currentS
 	borders := util.ToRectangle(MINI_STAGE_MIN_X - MINI_STAGE_BORDER_SIZE, MINI_STAGE_MIN_Y - MINI_STAGE_BORDER_SIZE, MINI_STAGE_WIDTH, MINI_STAGE_HEIGHT)
 	rl.DrawRectangleLinesEx(borders, MINI_STAGE_BORDER_SIZE, rl.NewColor(47, 70, 91, 255))
 	rl.DrawRectangle(MINI_STAGE_MIN_X, MINI_STAGE_MIN_Y, MINI_STAGE_WIDTH - MINI_STAGE_BORDER_SIZE*2, MINI_STAGE_HEIGHT - MINI_STAGE_BORDER_SIZE*2, rl.NewColor(215, 215, 215, 255))
-	if !drawMiniStage2(_maps, drawn_maps, playerMapCoord, ym.Coord{0, 0}, MINI_STAGE_START_X, MINI_STAGE_START_Y, ym.NONE) {
+	if playerMapCoord == SHOP_COORDS {
+		drawMiniMap(MINI_STAGE_START_X, MINI_STAGE_START_Y, true, NONE)
+		rl.DrawText("$", MINI_STAGE_START_X - 4, MINI_STAGE_START_Y - 8, 18, rl.NewColor(249, 218, 40, 255))
+	} else if !drawMiniStage2(_maps, drawn_maps, playerMapCoord, ym.Coord{0, 0}, MINI_STAGE_START_X, MINI_STAGE_START_Y, ym.NONE) {
 		_maps[playerMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE, currentStage)
 		drawn_maps = make(map[ym.Coord]bool)
 		rl.DrawRectangleLinesEx(borders, MINI_STAGE_BORDER_SIZE, rl.NewColor(47, 70, 91, 255))
@@ -312,15 +315,15 @@ func newStage(currentStage *int32, currentMapCoord *ym.Coord, player ym.Player) 
 	var _maps map[ym.Coord]*ym.Map
 	(*currentStage)++
 	*currentMapCoord = ym.Coord{0, 0}
-	for int32(len(_maps)) < stageMapCount - 1 {
+	for int32(len(_maps)) < stageMapCount - 1 && !foundStairsMap {
 		fmt.Println("START NEW STAGE GENERATION")
 		foundStairsMap = false
+		foundShopMap = false
 		remainingMapCount = stageMapCount
 		_maps = initStage(make(map[ym.Coord]*ym.Map), player, 100, ym.NONE, *currentMapCoord, &remainingMapCount)
 	}
-	if !foundStairsMap {
-		_maps[*currentMapCoord].AddStairs()
-	}
+	_maps[SHOP_COORDS] = &ym.Map{}
+	_maps[SHOP_COORDS].InitShop(MAP_SIZE, MAP_BORDER_SIZE)
 	_maps[*currentMapCoord].Visited = true;
 	_maps[*currentMapCoord].TimeCounters[ym.MONSTERS_AGRESSIVITY].On()
 	return _maps
@@ -411,9 +414,11 @@ func main() {
 				}
 				_maps[currentMapCoord].IncrementTimeCounters()
 	
-				// Stairs
-				if _maps[currentMapCoord].NextStage.X > 100 {
-					_maps[currentMapCoord].NextStage.Draw()
+				// Teleporters
+				for _, telep := range _maps[currentMapCoord].Teleporters {
+					if telep.IsOk() {
+						telep.Draw()
+					}
 				}
 
 				_maps[currentMapCoord].CoinsDraw()
@@ -463,8 +468,8 @@ func main() {
 					_maps[currentMapCoord].PlayerDraw()
 				}
 
-				// Player on stairs
-				if _maps[currentMapCoord].IsPlayerOnStairs() {
+				// Player on telep
+				if _maps[currentMapCoord].IsPlayerOnTeleporter(ym.STAIRS) {
 					if rl.IsKeyPressed(rl.KeyEnter) {
 						_maps[currentMapCoord].CurrPlayer.X = MAP_SIZE - 50
 						_maps[currentMapCoord].CurrPlayer.Y = MAP_SIZE - 50
@@ -474,7 +479,31 @@ func main() {
 						gameState = STAGE_SCREEN
 						framesCount = 0
 					}
-					util.ShowEnterKey(_maps[currentMapCoord].NextStage.X + ym.SBS + 13, _maps[currentMapCoord].NextStage.Y + 5)
+					util.ShowEnterKey(_maps[currentMapCoord].Teleporters[ym.STAIRS].X + ym.SBS + 13, _maps[currentMapCoord].Teleporters[ym.STAIRS].Y + 5)
+				}
+
+				// Player on shop
+				if _maps[currentMapCoord].IsPlayerOnTeleporter(ym.SHOP) {
+					util.ShowEnterKey(_maps[currentMapCoord].Teleporters[ym.SHOP].X + ym.SBS + 13, _maps[currentMapCoord].Teleporters[ym.SHOP].Y + 5)
+					if rl.IsKeyPressed(rl.KeyEnter) {
+						_maps[SHOP_COORDS].CurrPlayer = _maps[currentMapCoord].CurrPlayer
+						_maps[SHOP_COORDS].CurrPlayer.X = MAP_SIZE / 2 - ym.PBS / 2 + MAP_BORDER_SIZE / 2
+						_maps[SHOP_COORDS].CurrPlayer.Y = MAP_SIZE / 2 - ym.PBS / 2 + MAP_BORDER_SIZE / 2
+						_maps[SHOP_COORDS].CurrPlayer.Ori = ym.NORTH
+						_maps[SHOP_COORDS].Coords = currentMapCoord
+						currentMapCoord = SHOP_COORDS
+					}
+				}
+				if currentMapCoord == SHOP_COORDS {
+					_maps[currentMapCoord].DrawShop()
+				}
+
+				// Player on Return Stage teleporter
+				if _maps[currentMapCoord].IsPlayerOnTeleporter(ym.RETURN_STAGE) {
+					util.ShowEnterKey(_maps[currentMapCoord].Teleporters[ym.RETURN_STAGE].X + ym.SBS + 13, _maps[currentMapCoord].Teleporters[ym.RETURN_STAGE].Y + 5)
+					if rl.IsKeyPressed(rl.KeyEnter) {
+						currentMapCoord = _maps[SHOP_COORDS].Coords
+					}
 				}
 
 				// Player on item

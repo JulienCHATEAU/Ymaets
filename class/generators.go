@@ -309,14 +309,28 @@ func GenerateWalls(_map *Map) []Wall {
 	return walls
 }
 
-func GeneratePossibleWalls(_map *Map) []Wall {
+func GeneratePossibleWalls(_map *Map, foundStairsMap, foundShopMap *bool, stairsProba, shopProba int32) []Wall {
 	var walls []Wall
 	pathFound := false
+	fstmTemp := *foundStairsMap
+	fshmTemp := *foundShopMap
 	for !pathFound {
+		fstmTemp = *foundStairsMap
+		fshmTemp = *foundShopMap
 		walls = GenerateWalls(_map)
+		if !fstmTemp && r1.Int31() % 100 < stairsProba {
+			fstmTemp = true
+			_map.AddStairs(walls)
+		}
+		if !fshmTemp && r1.Int31() % 100 < shopProba {
+			fshmTemp = true
+			_map.AddShop(walls)
+		} 
 		pathFound = _map.aStar(walls)
 		fmt.Println(pathFound)
 	}
+	*foundStairsMap = fstmTemp
+	*foundShopMap = fshmTemp
 	var wallHitbox rl.Rectangle
 	for index := 0; index < len(walls); index++ {
 		wallHitbox = walls[index].GetHitbox()

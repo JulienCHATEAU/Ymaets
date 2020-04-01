@@ -37,7 +37,7 @@ type Map struct {
 	Opening 			[]Orientation
 	Shots 				[]Shot
 	Walls 				[]Wall
-	NextStage			Stairs
+	Teleporters		map[TeleporterType]*Teleporter
 	CoinsCount		int32
 	Coins 				[]Coin
 	MonstersCount	int32
@@ -103,8 +103,28 @@ func (_map *Map) InitBorders() {
 			break
 		}
 	}
-	//Obstacles
-	_map.Walls = append(_map.Walls, GeneratePossibleWalls(_map)...)
+}
+
+func (_map *Map) InitShop(windowSize, borderSize int32) {
+	_map.Visited = true
+	_map.BorderSize = borderSize
+	_map.Width = windowSize
+	_map.Height = windowSize
+	_map.Opening = []Orientation{}
+	_map.Coins = make([]Coin, 0)
+	_map.Monsters = make([]Monster, 50)
+	_map.Teleporters = make(map[TeleporterType]*Teleporter)
+	_map.Teleporters[STAIRS] = &Teleporter{}
+	_map.Teleporters[STAIRS].Init(TELEPORTER_NOT_OK, TELEPORTER_NOT_OK, STAIRS)
+	_map.Teleporters[SHOP] = &Teleporter{}
+	_map.Teleporters[SHOP].Init(TELEPORTER_NOT_OK, TELEPORTER_NOT_OK, SHOP)
+	_map.Teleporters[RETURN_STAGE] = &Teleporter{}
+	_map.Teleporters[RETURN_STAGE].Init(windowSize / 2 - SBS / 2 + _map.BorderSize / 2, windowSize / 2 + 50, RETURN_STAGE)
+	_map.Shots = make([]Shot, 50)
+	_map.ItemsCount = r1.Int31() % 2 + 3
+	_map.Items = make([]Item, _map.ItemsCount)
+	_map.TimeCounters = make([]TimeCounter, MTCC)
+	_map.InitBorders()
 }
 
 func (_map *Map) Init(coord Coord, windowSize, borderSize int32, opening []Orientation) {
@@ -123,8 +143,14 @@ func (_map *Map) Init(coord Coord, windowSize, borderSize int32, opening []Orien
 	_map.Monsters[1].Init(150, 350, ONE_CANON_KAMIKAZE) 
 	_map.Monsters[2].Init(250, 50, SNIPER) 
 	_map.Monsters[3].Init(100, 450, KAMIKAZE)
-	_map.NextStage.Init(-100, -100)
 	_map.ShotsCount = 0
+	_map.Teleporters = make(map[TeleporterType]*Teleporter)
+	_map.Teleporters[STAIRS] = &Teleporter{}
+	_map.Teleporters[STAIRS].Init(TELEPORTER_NOT_OK, TELEPORTER_NOT_OK, STAIRS)
+	_map.Teleporters[SHOP] = &Teleporter{}
+	_map.Teleporters[SHOP].Init(TELEPORTER_NOT_OK, TELEPORTER_NOT_OK, SHOP)
+	_map.Teleporters[RETURN_STAGE] = &Teleporter{}
+	_map.Teleporters[RETURN_STAGE].Init(TELEPORTER_NOT_OK, TELEPORTER_NOT_OK, RETURN_STAGE)
 	_map.Shots = make([]Shot, 50)
 	_map.ItemsCount = 0
 	_map.Items = make([]Item, 50)
@@ -191,7 +217,7 @@ func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 	var textCount int32 = 0
 	rl.DrawRectangle(_map.Width, 0, size, _map.Height, rl.NewColor(65, 87, 106, 255))
 	rl.DrawRectangle(_map.Width + borderSize, borderSize, size - borderSize*2, _map.Height - borderSize*2, rl.RayWhite)
-
+	rl.DrawFPS(_map.Width + size - 100, 20)
 	// rl.DrawRectangle(_map.Width + 44, textStarting + 50 * textCount - 8, 150, 28, rl.Gray)
 	// rl.DrawRectangle(_map.Width + 46, textStarting + 50 * textCount - 6, 150, 28, rl.LightGray)
 	rl.DrawText("Stage n° " + strconv.Itoa(int(currentStage)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
@@ -401,8 +427,8 @@ func (_map *Map) PlayerCheckOriCollision(savedOri Orientation) {
 	}
 }
 
-func (_map *Map) IsPlayerOnStairs() bool {
-	return rl.CheckCollisionRecs(_map.CurrPlayer.GetHitbox(), _map.NextStage.GetHitbox())
+func (_map *Map) IsPlayerOnTeleporter(telep TeleporterType) bool {
+	return rl.CheckCollisionRecs(_map.CurrPlayer.GetHitbox(), _map.Teleporters[telep].GetHitbox())
 }
 
 func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
@@ -668,29 +694,34 @@ func (_map *Map) aStar(walls []Wall) bool {
 			}
 		}
 
-		// Player to (0;0) stairs
-		if _map.NextStage.X != -100 {
-			source = []astar.Point {astar.Point{int(_map.CurrPlayer.X * rows / _map.Width), int(_map.CurrPlayer.Y * cols / _map.Height)}}
-			target = []astar.Point {astar.Point{int(_map.NextStage.X * rows / _map.Width), int(_map.NextStage.Y * cols / _map.Height)}}
-			if aStar.FindPath(p2p, source, target) == nil {
-				return false
+		// Player to (0;0) telep
+		for _, telep := range _map.Teleporters {
+			if telep.IsOk() {
+				source = []astar.Point {astar.Point{int(_map.CurrPlayer.X * rows / _map.Width), int(_map.CurrPlayer.Y * cols / _map.Height)}}
+				target = []astar.Point {astar.Point{int(telep.X * rows / _map.Width), int(telep.Y * cols / _map.Height)}}
+				if aStar.FindPath(p2p, source, target) == nil {
+					return false
+				}
 			}
 		}
 	}
 
+	// Each opening to telporters
 	openingLength := len(_map.Opening)
-	if _map.NextStage.X != -100 {
-		var found bool = false
-		for t := 0; t<openingLength; t++ {
-			source = OriToAstarCoord(_map.Opening[t], rowsint, colsint)
-			target = []astar.Point {astar.Point{int(_map.NextStage.X * rows / _map.Width), int(_map.NextStage.Y * cols / _map.Height)}}
-			if aStar.FindPath(p2p, source, target) != nil {
-				found = true
-				break
+	for _, telep := range _map.Teleporters {
+		if telep.IsOk() {
+			var found bool = false
+			for t := 0; t<openingLength; t++ {
+				source = OriToAstarCoord(_map.Opening[t], rowsint, colsint)
+				target = []astar.Point {astar.Point{int(telep.X * rows / _map.Width), int(telep.Y * cols / _map.Height)}}
+				if aStar.FindPath(p2p, source, target) != nil {
+					found = true
+					break
+				}
 			}
-		}
-		if !found {
-			return false
+			if !found {
+				return false
+			}
 		}
 	}
 
@@ -707,18 +738,31 @@ func (_map *Map) aStar(walls []Wall) bool {
 	return true
 }
 
-func (_map *Map) AddStairs() {
+func (_map *Map) AddTeleporter(typee TeleporterType, walls []Wall) {
 	var found = false
   for !found {
 		found = true
-		_map.NextStage.Init(r1.Int31() % 600 + 50, r1.Int31() % 600 + 50)
-		hitbox := _map.NextStage.GetHitbox()
-		for _, wall := range _map.Walls {
+		_map.Teleporters[typee].Init(r1.Int31() % 600 + 50, r1.Int31() % 600 + 50, typee)
+		hitbox := _map.Teleporters[typee].GetHitbox()
+		for _, wall := range walls {
 			if rl.CheckCollisionRecs(hitbox, wall.GetHitbox()) {
 				found = false
 				break
 			}
 		}
 	}
+}
+
+func (_map *Map) AddStairs(walls []Wall) {
+	_map.AddTeleporter(STAIRS, walls)
 	fmt.Println("\n\nSTAIRS\n\n")
+}
+
+func (_map *Map) AddShop(walls []Wall) {
+	_map.AddTeleporter(SHOP, walls)
+	fmt.Println("\n\nSHOP\n\n")
+}
+
+func (_map * Map) DrawShop() {
+	rl.DrawText("$hop", 270, 50, 120, rl.NewColor(241, 190, 55, 255))
 }
