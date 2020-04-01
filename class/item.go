@@ -135,6 +135,9 @@ func (item *Item) Init(x, y int32, name ItemName) {
 		case ABUNDANT_PURSE:
 			item.initAbundantPurse()
 			break
+		case TRIFORCE_LOCKET:
+			item.initTriforceLocket()
+			break
 		case GOLDEN_CLOVER:
 			item.initGoldenClover()
 			break
@@ -249,6 +252,9 @@ func (item *Item) apply(_map *Map, value int32) {
 		case ABUNDANT_PURSE:
 			item.applyEffectAbundantPurse(_map, value)
 			break
+		case TRIFORCE_LOCKET:
+			item.applyEffectTriforceLocket(_map, value)
+			break
 		case GOLDEN_CLOVER:
 			item.applyEffectGoldenClover(_map, value)
 			break
@@ -290,7 +296,7 @@ func (item *Item) drawAbundantPurse() {
 }
 
 func (item *Item) drawTriforceLocket() {
-	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(247, 225, 84, 255))
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(100, 100, 84, 255))
 }
 
 func (item *Item) drawGoldenClover() {
@@ -326,6 +332,9 @@ func (item *Item) Draw() {
 			break
 		case ABUNDANT_PURSE:
 			item.drawAbundantPurse()
+			break
+		case TRIFORCE_LOCKET:
+			item.drawTriforceLocket()
 			break
 		case GOLDEN_CLOVER:
 			item.drawGoldenClover()

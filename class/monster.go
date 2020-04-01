@@ -32,7 +32,7 @@ var KFC int32 = 20
 var SFC int32 = 40
 
 // Monster timers count
-var MTC int32 = 4
+var MTC int32 = 5
 
 type MonsterTimers int32
 const (
@@ -40,6 +40,7 @@ const (
 	MONSTER_FIRE_COOLDOWN
 	MONSTER_LAVA_DAMAGE
 	CRIT_DAMAGE
+	EXCLAMATION_POINT
 )
 
 type MonsterType int32
@@ -56,9 +57,10 @@ type Monster struct {
 	MoveSpeed		 	int32
 	Hp					 	int32
 	MaxHp				 	int32
-	Range			int32
+	Range					int32
 	FireCooldown  int32
 	HasCanon			bool
+	Aggressive		bool
 	Type					MonsterType
 	Ori						Orientation
 	Settings			map[Setting]bool
@@ -106,8 +108,10 @@ func (monster *Monster) Init(x, y int32, monsterType MonsterType) {
 	monster.MaxHp = MMH
 	monster.Settings = make(map[Setting]bool)
 	monster.LavaExit = NONE
+	monster.Aggressive = false
 	monster.Animations.Init(MTC)
 	monster.Animations.Decrements[CRIT_DAMAGE] = 15
+	monster.Animations.Decrements[EXCLAMATION_POINT] = 15
 	switch monsterType {
 	case KAMIKAZE:
 		monster.initKamikaze()
@@ -349,6 +353,14 @@ func (monster *Monster) HandleAnimation(notEnded []int32) {
 				opacity = 255
 			}
 			rl.DrawText("Crit !", monster.X - 16, monster.Y - int32(monster.Radius) - 27, 15, rl.NewColor(246, 50, 27, uint8(opacity)))
+			break
+
+		case EXCLAMATION_POINT:
+			opacity := monster.Animations.Values[EXCLAMATION_POINT]
+			if opacity > 255 {
+				opacity = 255
+			}
+			rl.DrawText("!", monster.X + 13, monster.Y - int32(monster.Radius) - 16, 18, rl.NewColor(246, 50, 27, uint8(opacity)))
 			break
 
 		//ADD ANIMATION HANDLER HERE

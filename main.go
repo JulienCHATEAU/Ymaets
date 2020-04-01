@@ -322,6 +322,7 @@ func newStage(currentStage *int32, currentMapCoord *ym.Coord, player ym.Player) 
 		_maps[*currentMapCoord].AddStairs()
 	}
 	_maps[*currentMapCoord].Visited = true;
+	_maps[*currentMapCoord].TimeCounters[ym.MONSTERS_AGRESSIVITY].On()
 	return _maps
 }
 
@@ -407,7 +408,8 @@ func main() {
 				if (((framesCounter/60)%2) == 1) {
 					ym.IncrementSeconds(_maps[currentMapCoord])
           framesCounter = 0
-        }
+				}
+				_maps[currentMapCoord].IncrementTimeCounters()
 	
 				// Stairs
 				if _maps[currentMapCoord].NextStage.X > 100 {
@@ -449,7 +451,9 @@ func main() {
 						_maps[currentMapCoord].PlayerFire()
 						_maps[currentMapCoord].PlayerDraw()
 					} else {
+						_maps[currentMapCoord].ResetTimeCounters()
 						newMapIndex = ym.GetNextCoord(changeMapOri, currentMapCoord)
+						_maps[newMapIndex].TimeCounters[ym.MONSTERS_AGRESSIVITY].On()
 						_maps[newMapIndex].CurrPlayer = _maps[currentMapCoord].CurrPlayer
 						_maps[newMapIndex].Update(changeMapOri, MAP_SIZE)
 						_maps[newMapIndex].Visited = true

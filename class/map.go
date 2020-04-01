@@ -14,9 +14,16 @@ import (
 var MOS int32 = 80
 //Map opening hitbox edge
 var MOHE int32 = 50
+//Map time counters count
+var MTCC int32 = 1
 
 var source = rand.NewSource(time.Now().UnixNano())
 var random = rand.New(source)
+
+type MapTimeCounters int
+const (
+	MONSTERS_AGRESSIVITY = iota
+)
 
 type Map struct {
 	Visited				bool
@@ -35,8 +42,9 @@ type Map struct {
 	Coins 				[]Coin
 	MonstersCount	int32
 	Monsters 			[]Monster
-	ItemsCount 	int32
+	ItemsCount 		int32
 	Items 				[]Item
+	TimeCounters	[]TimeCounter
 } 
 
 func (_map *Map) GetOpeningHitboxes() []rl.Rectangle {
@@ -120,6 +128,35 @@ func (_map *Map) Init(coord Coord, windowSize, borderSize int32, opening []Orien
 	_map.Shots = make([]Shot, 50)
 	_map.ItemsCount = 0
 	_map.Items = make([]Item, 50)
+	_map.TimeCounters = make([]TimeCounter, MTCC)
+	_map.TimeCounters[MONSTERS_AGRESSIVITY].Init(false, 60)
+}
+
+func (_map *Map) ResetTimeCounters() {
+	for index, _ := range _map.TimeCounters {
+		_map.TimeCounters[index].Reset()
+		_map.TimeCounters[index].Off()
+	}
+}
+
+func (_map *Map) HandleTimeCountersEnd(index int) {
+	switch index {
+	case MONSTERS_AGRESSIVITY:
+		for i, _ := range _map.Monsters {
+			_map.Monsters[i].Aggressive = true
+		}
+		break
+	}
+}
+
+func (_map *Map) IncrementTimeCounters() {
+	ended := false
+	for index, _ := range _map.TimeCounters {
+		ended = _map.TimeCounters[index].Increment()
+		if ended {
+			_map.HandleTimeCountersEnd(index)
+		}
+	}
 }
 
 func (_map *Map) Update(ori Orientation, windowSize int32) {
@@ -187,7 +224,11 @@ func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 }
 
 func (_map *Map) MonsterMove(index int32) {
-	if util.PointsDistance(_map.Monsters[index].X, _map.Monsters[index].Y, _map.CurrPlayer.X, _map.CurrPlayer.Y) <= _map.Monsters[index].AggroDist - float64(_map.CurrPlayer.Stats.Furtivity) {
+	if _map.Monsters[index].Aggressive && util.PointsDistance(_map.Monsters[index].X, _map.Monsters[index].Y, _map.CurrPlayer.X, _map.CurrPlayer.Y) <= _map.Monsters[index].AggroDist - float64(_map.CurrPlayer.Stats.Furtivity) {
+		if !_map.Monsters[index].Settings[PLAYER_NEAR] {
+			_map.Monsters[index].Settings[PLAYER_NEAR] = true
+			_map.Monsters[index].Animations.Values[EXCLAMATION_POINT] = 350
+		}
 		_map.Monsters[index].Move(_map)
 		_map.Monsters[index].Orient(_map)
 		if _map.Monsters[index].HasCanon && _map.Monsters[index].Animations.Values[FIRE_COOLDOWN] == 0 {
@@ -196,6 +237,7 @@ func (_map *Map) MonsterMove(index int32) {
 		_map.CurrPlayer.Settings[IS_FURTIVE] = false
 	} else {
 		_map.Monsters[index].FindSeat(_map)
+		_map.Monsters[index].Settings[PLAYER_NEAR] = false
 		_map.CurrPlayer.Settings[IS_FURTIVE] = true
 	}
 }
@@ -593,7 +635,7 @@ func (_map *Map) aStar(walls []Wall) bool {
 		for j = 0; j<cols; j++ {
 			x = "."
 			for _, wall := range walls {
-				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(j * PBS + 1), float32(i * PBS + 1), float32(PBS), float32(PBS)}) {
+				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(j * PBS - 1), float32(i * PBS - 1), float32(PBS + 1), float32(PBS + 1)}) {
 					aStar.FillTile(astar.Point{int(i), int(j)}, -1)
 					x = "@"
 					break

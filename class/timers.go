@@ -4,6 +4,45 @@ import (
 	// "fmt"
 )
 
+type TimeCounter struct {
+	Active	bool
+	Counter int32
+	Time		int32
+}
+
+func (tc *TimeCounter) Off() {
+	tc.Active = false
+}
+
+func (tc *TimeCounter) On() {
+	tc.Active = true
+}
+
+func (tc *TimeCounter) Reset() {
+	tc.Counter = 0
+}
+
+func (tc *TimeCounter) Init(active bool, time int32) {
+	tc.Active = active
+	tc.Counter = 0
+	tc.Time = time
+}
+
+func (tc *TimeCounter) Increment() bool {
+	ended := false
+	if tc.Active {
+		tc.Counter++
+		if tc.Counter == tc.Time {
+			ended = true
+			tc.Active = false
+			tc.Counter = 0
+		}
+	}
+	return ended
+}
+
+/////////////
+
 var secondCounter int32 = 0
 
 func IncrementSeconds(_map *Map) {
