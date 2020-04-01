@@ -60,40 +60,6 @@ func removeImpossibleOris(_maps map[ym.Coord]*ym.Map, currentMapCoord ym.Coord, 
 	return oris
 }
 
-func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, ori ym.Orientation, currentMapCoord ym.Coord, remainingMapCount *int32) map[ym.Coord]*ym.Map {
-	fmt.Println()
-	fmt.Println(_maps)
-	fmt.Println(currentMapCoord)
-	fmt.Printf("remainingMapCount : %d\n", *remainingMapCount)
-	var oppositeOri ym.Orientation = ym.GetOpositeOri(ori)
-	var openings []ym.Orientation
-	if *remainingMapCount > 0 {
-		var oris []ym.Orientation = []ym.Orientation {ym.NORTH, ym.SOUTH, ym.EAST, ym.WEST}
-		oris = removeImpossibleOris(_maps, currentMapCoord, oris)
-		openings = ym.GenerateOris(remainingMapCount, oppositeOri, oris, _maps, currentMapCoord, r1.Int31() % 100 < deeperProba)
-		openings = ym.ShuffleOris(openings)
-	}
-	fmt.Println(openings)
-	var stairsProba int32 = 110 - deeperProba
-	var shopProba int32 = 200 - deeperProba
-	deeperProba -= (100 / stageMapCount)
-	var _map *ym.Map = &ym.Map{}
-	_map.CurrPlayer = player
-	_map.Init(currentMapCoord, MAP_SIZE, MAP_BORDER_SIZE, openings)
-	_map.InitBorders()
-	_map.Walls = append(_map.Walls, ym.GeneratePossibleWalls(_map, &foundStairsMap, &foundShopMap, stairsProba, shopProba)...)
-	_maps[currentMapCoord] = _map
-	var nextCoord ym.Coord
-	remainingMapsToCreate, _ := ym.RemoveOri(openings, oppositeOri)
-	for _, opening := range remainingMapsToCreate {
-		nextCoord = ym.GetNextCoord(opening, currentMapCoord)
-		if _, ok := _maps[nextCoord]; !ok {
-			_maps = initStage(_maps, player, deeperProba, opening, nextCoord, remainingMapCount)
-		}
-	}
-	return _maps
-}
-
 func getNextMiniMapCoord(x, y int32, ori ym.Orientation) (int32, int32) {
 	var nextX, nextY int32 = x, y
 	switch ori {
@@ -310,12 +276,48 @@ func newStageAnimation(framesCount *int32, maxFrame, currentStage int32) {
 	}
 }
 
+func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, ori ym.Orientation, currentMapCoord ym.Coord, remainingMapCount *int32) map[ym.Coord]*ym.Map {
+	fmt.Println()
+	fmt.Println(_maps)
+	fmt.Println(currentMapCoord)
+	fmt.Printf("remainingMapCount : %d\n", *remainingMapCount)
+	var oppositeOri ym.Orientation = ym.GetOpositeOri(ori)
+	var openings []ym.Orientation
+	if *remainingMapCount > 0 {
+		var oris []ym.Orientation = []ym.Orientation {ym.NORTH, ym.SOUTH, ym.EAST, ym.WEST}
+		oris = removeImpossibleOris(_maps, currentMapCoord, oris)
+		openings = ym.GenerateOris(remainingMapCount, oppositeOri, oris, _maps, currentMapCoord, r1.Int31() % 100 < deeperProba)
+		openings = ym.ShuffleOris(openings)
+	}
+	fmt.Println(openings)
+	var stairsProba int32 = 100 - deeperProba
+	var shopProba int32 = 200 - deeperProba
+	deeperProba -= (100 / stageMapCount)
+	var _map *ym.Map = &ym.Map{}
+	_map.CurrPlayer = player
+	_map.Init(currentMapCoord, MAP_SIZE, MAP_BORDER_SIZE, openings)
+	_map.InitBorders()
+	_map.Walls = append(_map.Walls, ym.GeneratePossibleWalls(_map, &foundStairsMap, &foundShopMap, stairsProba, shopProba)...)
+	_maps[currentMapCoord] = _map
+	var nextCoord ym.Coord
+	remainingMapsToCreate, _ := ym.RemoveOri(openings, oppositeOri)
+	for _, opening := range remainingMapsToCreate {
+		nextCoord = ym.GetNextCoord(opening, currentMapCoord)
+		if _, ok := _maps[nextCoord]; !ok {
+			_maps = initStage(_maps, player, deeperProba, opening, nextCoord, remainingMapCount)
+		}
+	}
+	return _maps
+}
+
 func newStage(currentStage *int32, currentMapCoord *ym.Coord, player ym.Player) map[ym.Coord]*ym.Map {
 	var remainingMapCount int32
 	var _maps map[ym.Coord]*ym.Map
 	(*currentStage)++
 	*currentMapCoord = ym.Coord{0, 0}
-	for int32(len(_maps)) < stageMapCount - 1 && !foundStairsMap {
+	foundStairsMap = false
+	foundShopMap = false
+	for int32(len(_maps)) < stageMapCount - 1 || !foundStairsMap {
 		fmt.Println("START NEW STAGE GENERATION")
 		foundStairsMap = false
 		foundShopMap = false
