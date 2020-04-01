@@ -217,7 +217,7 @@ func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 	var textCount int32 = 0
 	rl.DrawRectangle(_map.Width, 0, size, _map.Height, rl.NewColor(65, 87, 106, 255))
 	rl.DrawRectangle(_map.Width + borderSize, borderSize, size - borderSize*2, _map.Height - borderSize*2, rl.RayWhite)
-	rl.DrawFPS(_map.Width + size - 100, 20)
+	// rl.DrawFPS(_map.Width + size - 100, 20)
 	// rl.DrawRectangle(_map.Width + 44, textStarting + 50 * textCount - 8, 150, 28, rl.Gray)
 	// rl.DrawRectangle(_map.Width + 46, textStarting + 50 * textCount - 6, 150, 28, rl.LightGray)
 	rl.DrawText("Stage n° " + strconv.Itoa(int(currentStage)), _map.Width + 30, textStarting + 50 * textCount, 20, rl.DarkGray)
