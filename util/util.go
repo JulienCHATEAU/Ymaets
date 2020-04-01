@@ -5,6 +5,44 @@ import (
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
+type Stat struct {
+	Speed				 	int32
+	MaxSpeed		 	int32
+	Hp						int32
+	MaxHp					int32
+	Att						int32
+	MaxAtt				int32
+	Def						int32
+	MaxDef				int32
+	Range					int32
+	Furtivity			int32
+	CritRate			int32
+}
+
+func (stats *Stat) Init(pms, phm, pda, pdd, psr, pdf, pcr int32) {
+	stats.Speed = 0
+	stats.MaxSpeed = pms
+	stats.Hp = phm
+	stats.MaxHp = phm
+	stats.Att = pda
+	stats.MaxAtt = pda
+	stats.Def = pdd
+	stats.MaxDef = pdd
+	stats.Range = psr
+	stats.Furtivity = pdf
+	stats.CritRate = pcr
+}
+
+type Entity interface {
+	GetStats() Stat
+}
+
+func GetDamage(shooter Entity, baseDamage int32, target Entity) int32 {
+	shooterStats := shooter.GetStats()
+	targetStats := target.GetStats()
+	return shooterStats.Att - targetStats.Def + baseDamage
+}
+
 func ToRectangle(x, y, width, height int32) rl.Rectangle {
 	return rl.Rectangle {float32(x), float32(y), float32(width), float32(height)}
 }

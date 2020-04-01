@@ -149,7 +149,10 @@ var PLUT int32 = 350
 var PDF int32 = 0
 // Player default furtivity
 var PCR int32 = 10
-
+// Player default attack
+var PDA int32 = 50 
+// Player default defense
+var PDD int32 = 50 
 
 // Player timers count
 var PTC int32 = 4
@@ -188,19 +191,7 @@ const (
 	PLAYER_NEAR = "playerNear"
 )
 
-type Stat struct {
-	Speed				 	int32
-	MaxSpeed		 	int32
-	Hp						int32
-	MaxHp					int32
-	Att						int32
-	MaxAtt				int32
-	Def						int32
-	MaxDef				int32
-	Range					int32
-	Furtivity			int32
-	CritRate			int32
-}
+
 
 type Player struct {
 	X 						int32
@@ -211,7 +202,7 @@ type Player struct {
 	Experience		int32
 	UpgradePoint	int32
 	StatsPoint		int32
-	Stats					Stat
+	Stats					util.Stat
 	Move_keys 		[4]int32 // right, left, up, down
 	Ori_keys 			[4]int32 // east, west, north, south
 	Color 				rl.Color
@@ -221,25 +212,12 @@ type Player struct {
 	Bag 					[]Item
 }
 
-func (stats *Stat) Init() {
-	stats.Speed = 0
-	stats.MaxSpeed = PMS
-	stats.Hp = PHM
-	stats.MaxHp = PHM
-	stats.Att = 50
-	stats.MaxAtt = 50
-	stats.Def = 50
-	stats.MaxDef = 50
-	stats.Range = PSR
-	stats.Furtivity = PDF
-	stats.CritRate = PCR
-}
 
 func (player *Player) Init(x, y int32, ori Orientation) {
 		player.X = x
 		player.Y = y
 		player.Ori = ori
-		player.Stats.Init()
+		player.Stats.Init(PMS, PHM, PDA, PDD, PSR, PDF, PCR)
 		player.Level = 1
 		player.Experience = 0
 		player.UpgradePoint = 15
@@ -304,37 +282,10 @@ func (player *Player) RemoveFromBag(toRemove Item) {
 }
 
 func (player *Player) GetHitbox() rl.Rectangle {
-	// var x int32 = 0
-	// var y int32 = 0
 	var x int32 = player.X
 	var y int32 = player.Y
 	width := PBS
 	height := PBS
-	// switch player.Ori {
-	// case NORTH:
-	// 	x = player.X
-	// 	y = player.Y - PCH
-	// 	height += PCH
-	// 	break
-
-	// case SOUTH:
-	// 	x = player.X
-	// 	y = player.Y
-	// 	height += PCH
-	// 	break
-
-	// case EAST:
-	// 	x = player.X
-	// 	y = player.Y
-	// 	width += PCH
-	// 	break
-
-	// case WEST:
-	// 	x = player.X - PCH
-	// 	y = player.Y
-	// 	width += PCH
-	// 	break
-	// }
 	return util.ToRectangle(x, y, width, height)
 }
 
@@ -355,10 +306,9 @@ func (player *Player) SetOriFromMouse(mouseX, mouseY int32) {
 	}
 }
 
-	// shot := Shot {50, 50, 4, 10, 3, NORTH, rl.Brown}
 func (player *Player) GetShot() Shot {
 	var shot Shot
-	shot.Init(player.Ori, PSC, PSS, PSH, PSW, player.Stats.Range, PLAYER)
+	shot.Init(player.Ori, PSC, PSS, PSH, PSW, player.Stats.Range, 10, PLAYER, player.GetStats())
 	switch player.Ori {
 	case NORTH:
 		shot.X = player.X + PBS/2-PCW/2
@@ -396,13 +346,14 @@ func (player *Player) HasItem(toFound Item) bool {
 }
 
 func (player *Player) TakeDamage(damage int32) {
-	if damage > 0 {
-		player.Stats.Hp -= damage
-		if player.Stats.Hp - damage < 0 {
-			player.Stats.Hp = 0
-		}
-		player.Animations.Values[PLAYER_TAKE_DAMAGE] = 5
+	if damage <= 0 {
+		damage = 1
 	}
+	player.Stats.Hp -= damage
+	if player.Stats.Hp - damage < 0 {
+		player.Stats.Hp = 0
+	}
+	player.Animations.Values[PLAYER_TAKE_DAMAGE] = 5
 }
 
 func (player *Player) Heal(percentage int32) {
@@ -526,4 +477,8 @@ func (player *Player) HandleWaterBootsRegen() {
 			player.Heal(1)
 		}
 	}
+}
+
+func (player Player) GetStats() util.Stat {
+	return player.Stats
 }

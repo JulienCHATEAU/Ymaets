@@ -1,6 +1,7 @@
 package class
 
 import (
+	"Ymaets/util"
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -9,7 +10,11 @@ var MBS int32 = 20
 // Monster move speed
 var MMS int32 = 3
 // Monster max health
-var MMH int32 = 50
+var MMH int32 = 75
+// Monster max attack
+var MMA int32 = 50
+// Monster max defense
+var MMD int32 = 50
 // Monster aggro dist
 var MAD float64 = 250.0
 // Monster canon width
@@ -55,9 +60,7 @@ type Monster struct {
 	Y 						int32
 	Radius				float32
 	MoveSpeed		 	int32
-	Hp					 	int32
-	MaxHp				 	int32
-	Range					int32
+	Stats					util.Stat
 	FireCooldown  int32
 	HasCanon			bool
 	Aggressive		bool
@@ -76,27 +79,24 @@ func (monster *Monster) initKamikaze() {
 	monster.HasCanon = false
 	monster.Color = rl.NewColor(144, 227, 217, 255)
 	monster.FireCooldown = KFC
-	monster.Range = KSR
-	monster.AggroDist = float64(monster.Range + 20)
-	monster.MoveSpeed = MMS + 1
+	monster.Stats.Init(MMS + 1, MMH + 5, MMA + 1, MMD, KSR, 0, 0)
+	monster.AggroDist = float64(monster.Stats.Range + 20)
 }
 
 func (monster *Monster) initOneCanonKamikaze() {
 	monster.HasCanon = true
 	monster.Color = rl.NewColor(255, 112, 0, 255)
 	monster.FireCooldown = KFC
-	monster.Range = KSR
-	monster.AggroDist = float64(monster.Range + 20)
-	monster.MoveSpeed = MMS
+	monster.Stats.Init(MMS, MMH + 5, MMA, MMD + 1, KSR, 0, 0)
+	monster.AggroDist = float64(monster.Stats.Range + 20)
 }
 
 func (monster *Monster) initSniper() {
 	monster.HasCanon = true
 	monster.Color = rl.NewColor(16, 57, 120, 255)
 	monster.FireCooldown = SFC
-	monster.Range = SSR
-	monster.AggroDist = float64(monster.Range + 80)
-	monster.MoveSpeed = MMS - 1
+	monster.Stats.Init(MMS - 1, MMH, MMA + 3, MMD, SSR, 0, 0)
+	monster.AggroDist = float64(monster.Stats.Range + 80)
 }
 
 func (monster *Monster) Init(x, y int32, monsterType MonsterType) {
@@ -104,8 +104,6 @@ func (monster *Monster) Init(x, y int32, monsterType MonsterType) {
 	monster.Y = y
 	monster.Radius = float32(MBS / 2)
 	monster.Ori = NORTH
-	monster.Hp = MMH
-	monster.MaxHp = MMH
 	monster.Settings = make(map[Setting]bool)
 	monster.LavaExit = NONE
 	monster.Aggressive = false
@@ -132,14 +130,14 @@ func (monster *Monster) moveKamikaze(_map *Map) {
 	var dx int32 = 0
 	var dy int32 = 0
 	if monster.X < _map.CurrPlayer.X {
-		dx = monster.MoveSpeed
+		dx = monster.Stats.MaxSpeed
 	} else if monster.X > _map.CurrPlayer.X {
-		dx = -monster.MoveSpeed
+		dx = -monster.Stats.MaxSpeed
 	}
 	if monster.Y < _map.CurrPlayer.Y {
-		dy = monster.MoveSpeed
+		dy = monster.Stats.MaxSpeed
 	} else if monster.Y > _map.CurrPlayer.Y {
-		dy = -monster.MoveSpeed
+		dy = -monster.Stats.MaxSpeed
 	}
 	monster.X += dx
 	monster.Y += dy
@@ -152,25 +150,25 @@ func (monster *Monster) moveSniper(_map *Map) {
 	var playerDy int32 = _map.CurrPlayer.Y - monster.Y
 	if playerDx < playerDy {
 		if monster.X < _map.CurrPlayer.X {
-			dx = monster.MoveSpeed
+			dx = monster.Stats.MaxSpeed
 		} else if monster.X > _map.CurrPlayer.X {
-			dx = -monster.MoveSpeed
+			dx = -monster.Stats.MaxSpeed
 		}
 		// if monster.Y < _map.CurrPlayer.Y {
-		// 	dy = -monster.MoveSpeed
+		// 	dy = -monster.Stats.MaxSpeed
 		// } else if monster.Y > _map.CurrPlayer.Y {
-		// 	dy = monster.MoveSpeed
+		// 	dy = monster.Stats.MaxSpeed
 		// }
 	} else {
 		if monster.Y < _map.CurrPlayer.Y {
-			dy = monster.MoveSpeed
+			dy = monster.Stats.MaxSpeed
 		} else if monster.Y > _map.CurrPlayer.Y {
-			dy = -monster.MoveSpeed
+			dy = -monster.Stats.MaxSpeed
 		}
 		// if monster.X < _map.CurrPlayer.X {
-		// 	dx = monster.MoveSpeed
+		// 	dx = monster.Stats.MaxSpeed
 		// } else if monster.X > _map.CurrPlayer.X {
-		// 	dx = -monster.MoveSpeed
+		// 	dx = -monster.Stats.MaxSpeed
 		// }
 	}
 	monster.X += dx
@@ -209,19 +207,19 @@ func (monster *Monster) FindSeat(_map *Map) {
 	if monster.Settings[IS_ON_LAVA] {
 		switch monster.LavaExit {
 		case NORTH:
-			monster.Y -= monster.MoveSpeed
+			monster.Y -= monster.Stats.MaxSpeed
 			break
 	
 		case SOUTH:
-			monster.Y += monster.MoveSpeed
+			monster.Y += monster.Stats.MaxSpeed
 			break
 	
 		case EAST:
-			monster.X += monster.MoveSpeed
+			monster.X += monster.Stats.MaxSpeed
 			break
 	
 		case WEST:
-			monster.X -= monster.MoveSpeed
+			monster.X -= monster.Stats.MaxSpeed
 			break
 		}
 	}
@@ -286,16 +284,16 @@ func (monster *Monster) GetExperience() int32 {
 }
 
 func (monster *Monster) Kill() {
-	monster.Hp = 0
+	monster.Stats.Hp = 0
 }
 
 func (monster *Monster) IsDead() bool {
-	return monster.Hp == 0
+	return monster.Stats.Hp == 0
 }
 
 func (monster *Monster) GetShot() Shot {
 	var shot Shot
-	shot.Init(monster.Ori, monster.Color, MSS, MSH, MSW, monster.Range, MONSTER)
+	shot.Init(monster.Ori, monster.Color, MSS, MSH, MSW, monster.Stats.Range, 5, MONSTER, monster.GetStats())
 	radius := int32(monster.Radius)
 	switch monster.Ori {
 	case NORTH:
@@ -327,13 +325,14 @@ func (monster *Monster) GetHitbox() (rl.Vector2, float32) {
 
 
 func (monster *Monster) TakeDamage(damage int32) {
-	if damage > 0 {
-		monster.Hp -= damage
-		if monster.Hp - damage < 0 {
-			monster.Hp = 0
-		}
-		monster.Animations.Values[MONSTER_TAKE_DAMAGE] = 5
+	if damage <= 0 {
+		damage = 1
 	}
+	monster.Stats.Hp -= damage
+	if monster.Stats.Hp - damage < 0 {
+		monster.Stats.Hp = 0
+	}
+	monster.Animations.Values[MONSTER_TAKE_DAMAGE] = 5
 }
 
 func (monster *Monster) HandleAnimation(notEnded []int32) {
@@ -404,4 +403,8 @@ func (monster *Monster) Draw() {
 	// Animations
 	notEnded, _ := monster.Animations.Decrement()
 	monster.HandleAnimation(notEnded)
+}
+
+func (monster Monster) GetStats() util.Stat {
+	return monster.Stats
 }

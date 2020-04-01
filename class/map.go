@@ -591,7 +591,10 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 
 	if rl.CheckCollisionRecs(hitbox, _map.CurrPlayer.GetHitbox()) {
 		if _map.Shots[*index].Owner != PLAYER {
-			_map.CurrPlayer.TakeDamage(5)
+			var damage int32 = util.GetDamage(_map.Shots[*index], _map.Shots[*index].BaseDamage, _map.CurrPlayer)
+			fmt.Print("To player : ")
+			fmt.Println(damage)
+			_map.CurrPlayer.TakeDamage(damage)
 		}
 		_map.removeShot(index)
 	} else {
@@ -599,7 +602,9 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 			center, radius = _map.Monsters[i].GetHitbox()
 			if rl.CheckCollisionCircleRec(center, radius, hitbox) {
 				if _map.Shots[*index].Owner != MONSTER {
-					var damage int32 = 10
+					var damage int32 = util.GetDamage(_map.Shots[*index], _map.Shots[*index].BaseDamage, _map.Monsters[i])
+					fmt.Print("To monster : ")
+					fmt.Println(damage)
 					if r1.Int31() % 100 < _map.CurrPlayer.Stats.CritRate {
 						damage += damage * 50 / 100
 						_map.Monsters[i].Animations.Values[CRIT_DAMAGE] = 350
