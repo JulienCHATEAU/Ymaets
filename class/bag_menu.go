@@ -64,12 +64,14 @@ func (bagMenu *BagMenu) HandleFocus() {
 			if rl.IsKeyPressed(rl.KeyLeft) {
 				bagMenu.SelectedItem--
 				if bagMenu.SelectedItem < 0 {
-					bagMenu.SelectedItem = bagMenu.CurrMap.CurrPlayer.BagSize - 1
+					bagMenu.SelectedItem = 0
+					// bagMenu.SelectedItem = bagMenu.CurrMap.CurrPlayer.BagSize - 1
 				}
 			} else if rl.IsKeyPressed(rl.KeyRight) {
 				bagMenu.SelectedItem++
 				if bagMenu.SelectedItem > bagMenu.CurrMap.CurrPlayer.BagSize - 1 {
-					bagMenu.SelectedItem = 0
+					bagMenu.SelectedItem = bagMenu.CurrMap.CurrPlayer.BagSize - 1
+					// bagMenu.SelectedItem = 0
 				}
 			}
 		}
@@ -150,13 +152,31 @@ func (bagMenu *BagMenu) Draw() {
 	rl.DrawRectangle(startX + itemListMargin, startY + currDY, contentWidth - itemListMargin*2, itemListHeigth, listBorderColor)
 	rl.DrawRectangle(startX + itemListMargin + infoBorderSize, startY + currDY + infoBorderSize, contentWidth - itemListMargin*2 - infoBorderSize*2, itemListHeigth - infoBorderSize*2, rl.LightGray)
 
+	var bagSize = bagMenu.CurrMap.CurrPlayer.BagSize
 	var itemMarginLeft, itemMarginTop int32 = 15, 5
 	var currItemX, currItemY int32 = startX + itemListMargin + itemMarginLeft + 8, startY + currDY + itemMarginTop
-	if bagMenu.CurrMap.CurrPlayer.BagSize > 0 {
+	v1, v2, v3 := rl.Vector2{float32(startX + itemListMargin - 8), float32(startY + currDY + itemListHeigth/2)}, rl.Vector2{float32(startX + itemListMargin + itemMarginLeft - 7), float32(startY + currDY + itemListHeigth/2 - 10)}, rl.Vector2{float32(startX + itemListMargin + itemMarginLeft - 7), float32(startY + currDY + itemListHeigth/2 + 10)}
+	if bagMenu.SelectedItem >= 7 {
+		rl.DrawTriangle(v1, v3, v2, rl.NewColor(120, 100, 95, 255))
+	}
+	if bagMenu.SelectedItem < bagSize - 1 && bagSize > 7 {
+		v1.X += float32(contentWidth - itemListMargin*2 + 16)
+		v2.X += float32(contentWidth - itemListMargin*2 - 17)
+		v3.X += float32(contentWidth - itemListMargin*2 - 17)
+		rl.DrawTriangle(v1, v2, v3, rl.NewColor(120, 100, 95, 255))
+	}
+	if bagSize > 0 {
 		var itemSize = bagMenu.CurrMap.CurrPlayer.Bag[0].Size + 5
 		var currItemY = startY + currDY + itemListHeigth - (itemListHeigth-itemSize)/2 - itemSize
-		var i int32
-		for i = 0; i < bagMenu.CurrMap.CurrPlayer.BagSize; i++ {
+		var i int32 = 0
+		if bagMenu.SelectedItem >= 7 {
+			i = bagMenu.SelectedItem
+		}
+		var count int32 = 0
+		for i = i; i < bagSize; i++ {
+			if count >= 7 {
+				break
+			}
 			item := bagMenu.CurrMap.CurrPlayer.Bag[i]
 			item.X = currItemX
 			item.Y = currItemY
@@ -166,6 +186,7 @@ func (bagMenu *BagMenu) Draw() {
 			}
 			item.Draw()
 			currItemX += itemSize + itemMarginLeft
+			count++
 		}
 	} else {
 		rl.DrawText("Empty", currItemX, currItemY + 15, 20, rl.DarkGray)
@@ -198,7 +219,7 @@ func (bagMenu *BagMenu) Draw() {
 
 	currY += 10
 	currItem := bagMenu.CurrMap.CurrPlayer.Bag[bagMenu.SelectedItem]
-	if bagMenu.CurrMap.CurrPlayer.BagSize > 0 {
+	if bagSize > 0 {
 		bagMenu.drawTabContent(currItem, currX, currY)
 	}
 
@@ -206,7 +227,7 @@ func (bagMenu *BagMenu) Draw() {
 	startX += 20
 	rl.DrawText("Close : ", startX + 20, currY, 19, rl.DarkGray)
 	util.ShowBackspaceKey(startX + 90, currY)
-	if bagMenu.CurrMap.CurrPlayer.BagSize > 0 {
+	if bagSize > 0 {
 		rl.DrawText("Drop : ", startX + 140, currY, 19, rl.DarkGray)
 		util.ShowClassicKey(startX + 205, currY, "A")
 		if bagMenu.CurrMap.CurrPlayer.UpgradePoint >= currItem.Level && currItem.CanLevelUp() {
