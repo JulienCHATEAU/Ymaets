@@ -3,8 +3,16 @@ package class
 import (
 	"github.com/gen2brain/raylib-go/raylib"
 	"strconv"
+	"strings"
 	util "Ymaets/util"
 )
+
+var items []ItemName = []ItemName {WATER_BOOTS, HEART_OF_STEEL, TURBO_REACTOR, FIRE_HELMET, INVISIBLE_CAPE, ABUNDANT_PURSE, TRIFORCE_LOCKET, GOLDEN_CLOVER}
+// ADD ITEMNAME ABOVE
+
+func GetItems() []ItemName {
+	return items
+}
 
 type ItemName string
 const (
@@ -29,6 +37,8 @@ type Item struct {
 	Y 									int32
 	Size 								int32
 	Level								int32
+	Price 							int32
+	OnSale							bool
 	Name								ItemName
 	Description					string
 	LevelUpDescription	[]string
@@ -43,7 +53,8 @@ func (item *Item) initWaterBoots() {
 		"Water is walkable",
 		"On water, Move speed : +1",
 		"On water, Regen : 0.5 Hp/sec",
-	} 
+	}
+	item.Price = 2500
 }
 
 func (item *Item) initHeartOfSteel() {
@@ -53,6 +64,7 @@ func (item *Item) initHeartOfSteel() {
 		"Max Hp : +30",
 		"Max Hp : +50",
 	} 
+	item.Price = 2000
 }
 
 func (item *Item) initTurboReactor() {
@@ -62,6 +74,7 @@ func (item *Item) initTurboReactor() {
 		"Move speed : +1",
 		"Move speed : +1",
 	} 
+	item.Price = 2000
 }
 
 func (item *Item) initFireHelmet() {
@@ -71,6 +84,7 @@ func (item *Item) initFireHelmet() {
 		"Lava no longer deals damage",
 		"On lava, Range : +50",
 	} 
+	item.Price = 2300
 }
 
 func (item *Item) initInvisibleCape() {
@@ -80,6 +94,7 @@ func (item *Item) initInvisibleCape() {
 		"If furtive, Move speed : +1",
 		"If furtive, Range : +30",
 	} 
+	item.Price = 2700
 }
 
 func (item *Item) initAbundantPurse() {
@@ -89,6 +104,7 @@ func (item *Item) initAbundantPurse() {
 		"Prices in shop : -20%",
 		"Regen : 1 Hp/100 golds picked",
 	} 
+	item.Price = 3000
 }
 
 func (item *Item) initTriforceLocket() {
@@ -98,6 +114,7 @@ func (item *Item) initTriforceLocket() {
 		"Max Hp, Att, Def : +10, +4, +4",
 		"Max Hp, Att, Def : +15, +6, +6",
 	} 
+	item.Price = 2200
 }
 
 func (item *Item) initGoldenClover() {
@@ -107,15 +124,17 @@ func (item *Item) initGoldenClover() {
 		"Critical rate : +10%",
 		"On critical, Money : +5",
 	} 
+	item.Price = 2600
 }
 
 //ADD INIT FUNCTIONS ABOVE
 
-func (item *Item) Init(x, y int32, name ItemName) {
+func (item *Item) Init(x, y int32, name ItemName, onSale bool) {
 	item.X = x
 	item.Y = y
 	item.Level = 1
 	item.Size = IBS
+	item.OnSale = onSale
 	switch name {
 		case WATER_BOOTS:
 			item.initWaterBoots()
@@ -405,4 +424,49 @@ func (item *Item) addFurtivity(_map *Map, value int32) {
 
 func (item *Item) GetHitbox() rl.Rectangle {
 	return rl.Rectangle{float32(item.X), float32(item.Y), float32(item.Size), float32(item.Size)}
+}
+
+func DrawItemName(currItem Item, currX, currY int32) {
+	name := string(currItem.Name)
+	if currItem.OnSale {
+		name += " - Price : " + strconv.Itoa(int(currItem.Price)) + " gold"
+	}
+	rl.DrawText(name, currX, currY + 50, 23, rl.NewColor(144, 12, 63, 255))
+	rl.DrawRectangle(currX, currY + 85, 140, 2, rl.DarkGray)
+}
+
+func DrawItemDescription(currItem Item, currX, currY int32) {
+	var lineCount int32 = 0
+		var maxLineChar int32 = 30
+		var currLine string = ""
+		var currWordLength int32
+		var currLineLength int32
+		for _, word := range strings.Split(currItem.Description, " ") {
+			currWordLength = int32(len(word))
+			currLineLength = int32(len(currLine))
+			if currLineLength + currWordLength + 1 > maxLineChar {
+				rl.DrawText(currLine, currX, currY + lineCount * 30, 20, rl.DarkGray)
+				lineCount++
+				currLine = word
+			} else {
+				if currLine != "" {
+					currLine += " "
+				}
+				currLine += word
+			}
+		}
+		rl.DrawText(currLine, currX, currY + lineCount * 30, 20, rl.DarkGray)
+}
+
+func DrawItemUpgrades(currItem Item, currX, currY int32) {
+	var i int32
+		var color rl.Color = rl.DarkGray
+		for i = 0; i<IML; i++ {
+			if i+1 <= currItem.Level {
+				color = rl.NewColor(200, 32, 16, 255)
+			} else {
+				color = rl.DarkGray
+			}
+			rl.DrawText(currItem.GetLevelUpDescription(i), currX, currY + i * 30, 18, color)
+		}
 }

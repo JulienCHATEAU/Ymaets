@@ -112,6 +112,7 @@ func (_map *Map) InitShop(windowSize, borderSize int32) {
 	_map.Height = windowSize
 	_map.Opening = []Orientation{}
 	_map.Coins = make([]Coin, 0)
+	_map.Curs.Init()
 	_map.Monsters = make([]Monster, 50)
 	_map.Teleporters = make(map[TeleporterType]*Teleporter)
 	_map.Teleporters[STAIRS] = &Teleporter{}
@@ -119,12 +120,39 @@ func (_map *Map) InitShop(windowSize, borderSize int32) {
 	_map.Teleporters[SHOP] = &Teleporter{}
 	_map.Teleporters[SHOP].Init(TELEPORTER_NOT_OK, TELEPORTER_NOT_OK, SHOP)
 	_map.Teleporters[RETURN_STAGE] = &Teleporter{}
-	_map.Teleporters[RETURN_STAGE].Init(windowSize / 2 - SBS / 2 + _map.BorderSize / 2, windowSize / 2 + 50, RETURN_STAGE)
+	_map.Teleporters[RETURN_STAGE].Init(windowSize / 2 - SBS / 2 + _map.BorderSize / 2, windowSize / 2 + 300, RETURN_STAGE)
 	_map.Shots = make([]Shot, 50)
 	_map.ItemsCount = r1.Int31() % 2 + 3
-	_map.Items = make([]Item, _map.ItemsCount)
+	_map.Items = make([]Item, 50)
+	items := GetItems()
+	rand, length := 0, 0
+	var baseMargin int32 = 120
+	var margin int32 = baseMargin
+	size := IBS * 4 + margin * 3
+	fmt.Println(size)
+	fmt.Println(_map.Width)
+	var index int32
+	for index = 0; index < _map.ItemsCount; index++ {
+		length = len(items)
+		rand = r1.Int() % length
+		fmt.Println(items[rand])
+		_map.Items[index].Init(8 + (_map.Width / 2 - size / 2) + margin * index, 500, items[rand], true)
+		margin = baseMargin + IBS
+		items[rand] = items[length-1]
+		items = items[:length-1]
+		fmt.Println(items)
+	}
 	_map.TimeCounters = make([]TimeCounter, MTCC)
 	_map.InitBorders()
+	var shopBck Wall
+	shopBck.InitWall(250, 40, 317, 140, rl.LightGray)
+	_map.Walls = append(_map.Walls, shopBck)
+	shopBck.InitWall(247, 37, 323, 146, rl.Gray)
+	_map.Walls = append(_map.Walls, shopBck)
+	shopBck.InitWall(40, 210, 720, 200, rl.RayWhite)
+	_map.Walls = append(_map.Walls, shopBck)
+	shopBck.InitWall(37, 207, 726, 206, rl.Gray)
+	_map.Walls = append(_map.Walls, shopBck)
 }
 
 func (_map *Map) Init(coord Coord, windowSize, borderSize int32, opening []Orientation) {
@@ -159,6 +187,9 @@ func (_map *Map) Init(coord Coord, windowSize, borderSize int32, opening []Orien
 }
 
 func (_map *Map) ResetTimeCounters() {
+	for index, _ := range _map.Monsters {
+		_map.Monsters[index].Aggressive = false
+	}
 	for index, _ := range _map.TimeCounters {
 		_map.TimeCounters[index].Reset()
 		_map.TimeCounters[index].Off()
@@ -323,7 +354,7 @@ func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
 }
 
 func (_map *Map) CursorMove(mouseX, mouseY int32) {
-	_map.Curs.X = mouseX	
+	_map.Curs.X = mouseX
 	_map.Curs.Y = mouseY
 }
 
@@ -501,13 +532,23 @@ func (_map *Map) PlayerOnItem() {
 	var i int32
 	for i = 0; i<_map.ItemsCount; i++ {
 		if rl.CheckCollisionRecs(_map.Items[i].GetHitbox(), hitbox) {
+			if _map.Items[i].OnSale {
+				DrawItemName(_map.Items[i], 60, 180)
+				DrawItemDescription(_map.Items[i], 60, 300)
+				DrawItemUpgrades(_map.Items[i], 420, 300)
+			}
 			if !_map.CurrPlayer.HasItem(_map.Items[i]) {
-				util.ShowEnterKey(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
-				if rl.IsKeyPressed(rl.KeyEnter) {
-					if !_map.CurrPlayer.IsBagFull() {
-						_map.CurrPlayer.AddInBag(_map.Items[i])
-						_map.Items[i].ApplyEffect(_map)
-						_map.removeItem(int32(i))
+				if (_map.Items[i].OnSale && _map.CurrPlayer.Money >= _map.Items[i].Price) || !_map.Items[i].OnSale {
+					util.ShowEnterKey(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
+					if rl.IsKeyPressed(rl.KeyEnter) {
+						if !_map.CurrPlayer.IsBagFull() {
+							if _map.Items[i].OnSale {
+								_map.CurrPlayer.UseMoney(_map.Items[i].Price)
+							}
+							_map.CurrPlayer.AddInBag(_map.Items[i])
+							_map.Items[i].ApplyEffect(_map)
+							_map.removeItem(int32(i))
+						}
 					}
 				}
 			}
@@ -764,5 +805,5 @@ func (_map *Map) AddShop(walls []Wall) {
 }
 
 func (_map * Map) DrawShop() {
-	rl.DrawText("$hop", 270, 50, 120, rl.NewColor(241, 190, 55, 255))
+	rl.DrawText("$hop", 270, 50, 120, rl.NewColor(240, 149, 16, 255))
 }

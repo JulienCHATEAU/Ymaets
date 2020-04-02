@@ -266,6 +266,7 @@ func (player *Player) IsBagFull() bool {
 
 func (player *Player) AddInBag(item Item) {
 	if player.BagSize < PMBS {
+		item.OnSale = false
 		player.Bag[player.BagSize] = item
 		player.BagSize++
 	}
@@ -279,6 +280,10 @@ func (player *Player) RemoveFromBag(toRemove Item) {
 			break
 		}
 	}
+}
+
+func (player *Player) UseMoney(amount int32) {
+	player.Money -= amount
 }
 
 func (player *Player) GetHitbox() rl.Rectangle {

@@ -2,7 +2,6 @@ package class
 
 import (
 	// "fmt"
-	"strings"
 	"github.com/gen2brain/raylib-go/raylib"
 	util "Ymaets/util"
 )
@@ -92,44 +91,15 @@ func (bagMenu *BagMenu) HandleFocus() {
 
 func (bagMenu *BagMenu) drawTabContent(currItem Item, currX, currY int32) {
 	currX += 20
-	rl.DrawText(string(currItem.Name), currX, currY + 50, 23, rl.NewColor(144, 12, 63, 255))
-	rl.DrawRectangle(currX, currY + 85, 140, 2, rl.DarkGray)
+	DrawItemName(currItem, currX, currY)
 	currY += 120
 	switch tabs[bagMenu.SelectedTab] {
 	case "Description":
-		var lineCount int32 = 0
-		var maxLineChar int32 = 30
-		var currLine string = ""
-		var currWordLength int32
-		var currLineLength int32
-		for _, word := range strings.Split(currItem.Description, " ") {
-			currWordLength = int32(len(word))
-			currLineLength = int32(len(currLine))
-			if currLineLength + currWordLength + 1 > maxLineChar {
-				rl.DrawText(currLine, currX, currY + lineCount * 30, 20, rl.DarkGray)
-				lineCount++
-				currLine = word
-			} else {
-				if currLine != "" {
-					currLine += " "
-				}
-				currLine += word
-			}
-		}
-		rl.DrawText(currLine, currX, currY + lineCount * 30, 20, rl.DarkGray)
+		DrawItemDescription(currItem, currX, currY)
 		break
 
 	case "Upgrades":
-		var i int32
-		var color rl.Color = rl.DarkGray
-		for i = 0; i<IML; i++ {
-			if i+1 <= currItem.Level {
-				color = rl.NewColor(200, 32, 16, 255)
-			} else {
-				color = rl.DarkGray
-			}
-			rl.DrawText(currItem.GetLevelUpDescription(i), currX, currY + i * 30, 18, color)
-		}
+		DrawItemUpgrades(currItem, currX, currY)
 		break
 	}
 }
