@@ -422,7 +422,8 @@ func (_map *Map) PlayerOri(mouseX, mouseY int32) {
 }
 
 func (_map *Map) PlayerFire() {
-	if (rl.IsMouseButtonDown(rl.MouseLeftButton) || rl.IsKeyDown(rl.KeySpace)) && _map.CurrPlayer.Animations.Values[FIRE_COOLDOWN] == 0 {
+	// if (rl.IsMouseButtonDown(rl.MouseLeftButton) || rl.IsKeyDown(rl.KeySpace)) && _map.CurrPlayer.Animations.Values[FIRE_COOLDOWN] == 0 {
+	if (rl.IsKeyDown(rl.KeySpace)) && _map.CurrPlayer.Animations.Values[FIRE_COOLDOWN] == 0 {
 		shot := _map.CurrPlayer.GetShot()
 		_map.CurrPlayer.Animations.Values[FIRE_COOLDOWN] = PFC
 		if int32(len(_map.Shots)) > _map.ShotsCount {

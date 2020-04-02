@@ -534,8 +534,8 @@ func main() {
 			}
 			_maps[currentMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE, currentStage)
 			drawMiniStage(_maps, currentMapCoord, currentStage)
-			_maps[currentMapCoord].CursorMove(mouseX, mouseY)
-			_maps[currentMapCoord].CursorDraw()
+			// _maps[currentMapCoord].CursorMove(mouseX, mouseY)
+			// _maps[currentMapCoord].CursorDraw()
 			
 		rl.EndDrawing()
 
