@@ -32,8 +32,21 @@ func (telep *Teleporter) Init(x, y int32, typee TeleporterType) {
 	telep.Y = y
 }
 
+func (telep *Teleporter) DrawShop(opacity uint8) {
+	green := rl.NewColor(48, 125, 74, 255)
+	rl.DrawRectangle(telep.X, telep.Y, SBS, SBS, green)
+	green.A = opacity
+	var border int32 = 3
+	width := SBS - border * 2
+	rl.DrawRectangle(telep.X + border, telep.Y + border, width, width, rl.NewColor(200, 200, 200, opacity))
+	rl.DrawCircle(telep.X + border + width/2, telep.Y + width - 8, 8, green)
+	rl.DrawText("$", telep.X + border + width/2 - 3, telep.Y + width - 12, 5, rl.NewColor(255, 203, 0, opacity))
+	rl.DrawRectangle(telep.X + border + width/2 - 3, telep.Y + width/2 - 4, 6, 6, green)
+	rl.DrawCircle(telep.X + border + width/2 - 1, telep.Y + border + 3, 2, rl.NewColor(227, 123, 216, opacity))
+	rl.DrawCircle(telep.X + border + width/2 + 2, telep.Y + 10, 2, rl.NewColor(227, 123, 216, opacity))
+}
+
 func (telep *Teleporter) Draw() {
-		green := rl.NewColor(48, 125, 74, 255)
 	switch telep.Type {
 	case STAIRS:
 		rl.DrawRectangle(telep.X, telep.Y, SBS+2, SBS+2, rl.NewColor(50, 50, 50, 255))
@@ -51,19 +64,15 @@ func (telep *Teleporter) Draw() {
 		break
 
 	case SHOP:
-		rl.DrawRectangle(telep.X, telep.Y, SBS, SBS, green)
-		var border int32 = 3
-		width := SBS - border * 2
-		rl.DrawRectangle(telep.X + border, telep.Y + border, width, width, rl.LightGray)
-		rl.DrawCircle(telep.X + border + width/2, telep.Y + width - 8, 8, green)
-		rl.DrawText("$", telep.X + border + width/2 - 3, telep.Y + width - 12, 5, rl.Gold)
-		rl.DrawRectangle(telep.X + border + width/2 - 3, telep.Y + width/2 - 4, 6, 6, green)
-		rl.DrawCircle(telep.X + border + width/2 - 1, telep.Y + border + 3, 2, rl.NewColor(227, 123, 216, 255))
-		rl.DrawCircle(telep.X + border + width/2 + 2, telep.Y + 10, 2, rl.NewColor(227, 123, 216, 255))
+		telep.DrawShop(255)
 		break
 
 	case RETURN_STAGE:
-		rl.DrawRectangle(telep.X, telep.Y, SBS, SBS, green)
+		telep.DrawShop(180)
+		rl.DrawRectangle(telep.X + 25, telep.Y + 10, 5, 16, rl.Black)
+		rl.DrawRectangle(telep.X + 15, telep.Y + 20, 12, 6, rl.Black)
+		v1, v2, v3 := rl.Vector2{float32(telep.X + 9), float32(telep.Y + 23)}, rl.Vector2{float32(telep.X + 15), float32(telep.Y + 16)}, rl.Vector2{float32(telep.X + 15), float32(telep.Y + 30)}
+		rl.DrawTriangle(v1, v3, v2, rl.Black)
 		break
 	}
 }
