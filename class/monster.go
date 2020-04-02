@@ -147,27 +147,33 @@ func (monster *Monster) moveSniper(_map *Map) {
 	var dx int32 = 0
 	var dy int32 = 0
 	var playerDx int32 = _map.CurrPlayer.X - monster.X
+	if playerDx < 0 {
+		playerDx = -playerDx
+	}
 	var playerDy int32 = _map.CurrPlayer.Y - monster.Y
+	if playerDy < 0 {
+		playerDy = -playerDy
+	}
 	if playerDx < playerDy {
-		if monster.X < _map.CurrPlayer.X {
+		if monster.X < _map.CurrPlayer.X + PBS/2 {
 			dx = monster.Stats.MaxSpeed
-		} else if monster.X > _map.CurrPlayer.X {
+		} else if monster.X > _map.CurrPlayer.X + PBS/2 {
 			dx = -monster.Stats.MaxSpeed
 		}
-		// if monster.Y < _map.CurrPlayer.Y {
+		// if monster.Y < _map.CurrPlayer.Y + PBS/2 {
 		// 	dy = -monster.Stats.MaxSpeed
-		// } else if monster.Y > _map.CurrPlayer.Y {
+		// } else if monster.Y > _map.CurrPlayer.Y + PBS/2 {
 		// 	dy = monster.Stats.MaxSpeed
 		// }
 	} else {
-		if monster.Y < _map.CurrPlayer.Y {
+		if monster.Y < _map.CurrPlayer.Y + PBS/2 {
 			dy = monster.Stats.MaxSpeed
-		} else if monster.Y > _map.CurrPlayer.Y {
+		} else if monster.Y > _map.CurrPlayer.Y + PBS/2 {
 			dy = -monster.Stats.MaxSpeed
 		}
-		// if monster.X < _map.CurrPlayer.X {
+		// if monster.X < _map.CurrPlayer.X + PBS/2 {
 		// 	dx = monster.Stats.MaxSpeed
-		// } else if monster.X > _map.CurrPlayer.X {
+		// } else if monster.X > _map.CurrPlayer.X + PBS/2 {
 		// 	dx = -monster.Stats.MaxSpeed
 		// }
 	}
@@ -297,12 +303,12 @@ func (monster *Monster) GetShot() Shot {
 	radius := int32(monster.Radius)
 	switch monster.Ori {
 	case NORTH:
-		shot.X = monster.X
+		shot.X = monster.X - MCH/2
 		shot.Y = monster.Y - radius - MCH - shot.Height
 		break
 
 	case SOUTH:
-		shot.X = monster.X
+		shot.X = monster.X - MCH/2
 		shot.Y = monster.Y + radius + MCH
 		break
 

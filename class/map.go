@@ -169,7 +169,7 @@ func (_map *Map) Init(coord Coord, windowSize, borderSize int32, opening []Orien
 	_map.Monsters = make([]Monster, 50)
 	_map.Monsters[0].Init(50, 50, KAMIKAZE) 
 	_map.Monsters[1].Init(150, 350, ONE_CANON_KAMIKAZE) 
-	_map.Monsters[2].Init(250, 50, SNIPER) 
+	_map.Monsters[2].Init(250, 650, SNIPER) 
 	_map.Monsters[3].Init(100, 450, KAMIKAZE)
 	_map.ShotsCount = 0
 	_map.Teleporters = make(map[TeleporterType]*Teleporter)
