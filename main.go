@@ -276,7 +276,7 @@ func newStageAnimation(framesCount *int32, maxFrame, currentStage int32) {
 	}
 }
 
-func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, ori ym.Orientation, currentMapCoord ym.Coord, remainingMapCount *int32) map[ym.Coord]*ym.Map {
+func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, ori ym.Orientation, currentMapCoord ym.Coord, remainingMapCount, currentStage *int32) map[ym.Coord]*ym.Map {
 	fmt.Println()
 	fmt.Println(_maps)
 	fmt.Println(currentMapCoord)
@@ -298,14 +298,14 @@ func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, 
 	_map.Init(currentMapCoord, MAP_SIZE, MAP_BORDER_SIZE, openings)
 	_map.InitBorders()
 	_map.Walls = append(_map.Walls, ym.GeneratePossibleWalls(_map, &foundStairsMap, &foundShopMap, stairsProba, shopProba)...)
-	_map.Monsters = ym.GenerateMonsters(_map, r1.Int31() % 3 + 4)
+	_map.Monsters = ym.GenerateMonsters(_map, r1.Int31() % 3 + 4, *currentStage)
 	_maps[currentMapCoord] = _map
 	var nextCoord ym.Coord
 	remainingMapsToCreate, _ := ym.RemoveOri(openings, oppositeOri)
 	for _, opening := range remainingMapsToCreate {
 		nextCoord = ym.GetNextCoord(opening, currentMapCoord)
 		if _, ok := _maps[nextCoord]; !ok {
-			_maps = initStage(_maps, player, deeperProba, opening, nextCoord, remainingMapCount)
+			_maps = initStage(_maps, player, deeperProba, opening, nextCoord, remainingMapCount, currentStage)
 		}
 	}
 	return _maps
@@ -323,7 +323,7 @@ func newStage(currentStage *int32, currentMapCoord *ym.Coord, player ym.Player) 
 		foundStairsMap = false
 		foundShopMap = false
 		remainingMapCount = stageMapCount
-		_maps = initStage(make(map[ym.Coord]*ym.Map), player, 100, ym.NONE, *currentMapCoord, &remainingMapCount)
+		_maps = initStage(make(map[ym.Coord]*ym.Map), player, 100, ym.NONE, *currentMapCoord, &remainingMapCount, currentStage)
 	}
 	_maps[SHOP_COORDS] = &ym.Map{}
 	_maps[SHOP_COORDS].InitShop(MAP_SIZE, MAP_BORDER_SIZE)
@@ -538,8 +538,8 @@ func main() {
 			}
 			_maps[currentMapCoord].DrawMenu(MENU_SIZE, MENU_BORDER_SIZE, currentStage)
 			drawMiniStage(_maps, currentMapCoord, currentStage)
-			// _maps[currentMapCoord].CursorMove(mouseX, mouseY)
-			// _maps[currentMapCoord].CursorDraw()
+			_maps[currentMapCoord].CursorMove(mouseX, mouseY)
+			_maps[currentMapCoord].CursorDraw()
 			
 		rl.EndDrawing()
 

@@ -309,7 +309,7 @@ func GenerateWalls(_map *Map) []Wall {
 	return walls
 }
 
-func GenerateMonsters(_map *Map, monstersAmount int32) []Monster {
+func GenerateMonsters(_map *Map, monstersAmount, currentStage int32) []Monster {
 	var count int32 = 0
 	var monsters []Monster = make([]Monster, monstersAmount)
 	allMonstersType := GetMonsters()
@@ -317,6 +317,7 @@ func GenerateMonsters(_map *Map, monstersAmount int32) []Monster {
 	var found bool = true
 	var center rl.Vector2
 	var radius float32
+	var i int32
 	for count < monstersAmount {
 		found = true
 		length = len(allMonstersType)
@@ -329,7 +330,15 @@ func GenerateMonsters(_map *Map, monstersAmount int32) []Monster {
 				break
 			}
 		}
+		for i = 0; i<count; i++ {
+			monsterCenter, monsterRadius := monsters[i].GetHitbox()
+			if rl.CheckCollisionCircles(center, radius, monsterCenter, monsterRadius) {	
+				found = false
+				break
+			}
+		}
 		if found {
+			monsters[count].BuffDepOnStage(currentStage)
 			count++
 		}
 	}

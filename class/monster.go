@@ -12,9 +12,9 @@ var MMS int32 = 3
 // Monster max health
 var MMH int32 = 75
 // Monster max attack
-var MMA int32 = 50
+var MMA int32 = 46
 // Monster max defense
-var MMD int32 = 50
+var MMD int32 = 46
 // Monster aggro dist
 var MAD float64 = 250.0
 // Monster canon width
@@ -72,6 +72,7 @@ type Monster struct {
 	FireCooldown  int32
 	HasCanon			bool
 	Aggressive		bool
+	GivenExp	int32
 	Type					MonsterType
 	Ori						Orientation
 	Settings			map[Setting]bool
@@ -89,6 +90,7 @@ func (monster *Monster) initKamikaze() {
 	monster.FireCooldown = KFC
 	monster.Stats.Init(MMS, MMH + 5, MMA + 1, MMD, KSR, 0, 0)
 	monster.AggroDist = float64(monster.Stats.Range + 20)
+	monster.GivenExp = 5
 }
 
 func (monster *Monster) initOneCanonKamikaze() {
@@ -97,6 +99,7 @@ func (monster *Monster) initOneCanonKamikaze() {
 	monster.FireCooldown = KFC
 	monster.Stats.Init(MMS, MMH + 5, MMA, MMD + 1, KSR, 0, 0)
 	monster.AggroDist = float64(monster.Stats.Range + 20)
+	monster.GivenExp = 6
 }
 
 func (monster *Monster) initSniper() {
@@ -105,6 +108,7 @@ func (monster *Monster) initSniper() {
 	monster.FireCooldown = SFC
 	monster.Stats.Init(MMS - 1, MMH, MMA + 3, MMD, SSR, 0, 0)
 	monster.AggroDist = float64(monster.Stats.Range + 80)
+	monster.GivenExp = 7
 }
 
 func (monster *Monster) Init(x, y int32, monsterType MonsterType) {
@@ -294,7 +298,17 @@ func (monster *Monster) PlayerCollision(_map *Map) {
 /////
 
 func (monster *Monster) GetExperience() int32 {
-	return 6
+	return monster.GivenExp
+}
+
+func (monster *Monster) BuffDepOnStage(currStage int32) {
+	monster.Stats.MaxHp += 2*currStage
+	monster.Stats.Hp += 2*currStage
+	monster.Stats.MaxAtt += currStage
+	monster.Stats.Att += currStage
+	monster.Stats.MaxDef += currStage
+	monster.Stats.Def += currStage
+	monster.GivenExp += currStage*3/2
 }
 
 func (monster *Monster) Kill() {

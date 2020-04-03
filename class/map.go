@@ -241,6 +241,12 @@ func (_map *Map) GetFreeSurface() int32 {
 	return freeSurface
 }
 
+func (_map *Map) BuffMonstersDepOnStage(currentStage int32) {
+	for i, _ := range _map.Monsters {
+		_map.Monsters[i].BuffDepOnStage(currentStage)
+	}
+}
+
 func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 	var textStarting int32 = 50 
 	var textCount int32 = 0
@@ -672,6 +678,7 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 				if _map.Shots[*index].Owner != MONSTER {
 					var damage int32 = util.GetDamage(_map.Shots[*index], _map.Shots[*index].BaseDamage, _map.Monsters[i])
 					fmt.Print("To monster : ")
+					fmt.Println(_map.Monsters[i].Stats)
 					fmt.Println(damage)
 					if r1.Int31() % 100 < _map.CurrPlayer.Stats.CritRate {
 						damage += damage * 50 / 100
@@ -705,7 +712,8 @@ func (_map *Map) DiscountItems(value int32) {
 }
 
 func (_map *Map) aStar(walls []Wall) bool {
-	var rows, cols int32 = (_map.Width - _map.BorderSize*2) / PBS, (_map.Height - _map.BorderSize/2) / PBS
+	var caseSize int32 = PBS + 1
+	var rows, cols int32 = (_map.Width - _map.BorderSize*2) / caseSize, (_map.Height - _map.BorderSize/2) / caseSize
 	var rowsint, colsint int = int(rows), int(cols)
 	var i, j int32
 	fmt.Println(len(_map.Opening))
@@ -715,8 +723,13 @@ func (_map *Map) aStar(walls []Wall) bool {
 	for i = 0; i<rows; i++ {
 		for j = 0; j<cols; j++ {
 			x = "."
+			xx := _map.BorderSize + j * caseSize
+			yy := _map.BorderSize + i * caseSize
+			w := caseSize
+			h := caseSize
+			hitbox := rl.Rectangle {float32(xx), float32(yy), float32(w), float32(h)}
 			for _, wall := range walls {
-				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(_map.BorderSize + j * (PBS + 1)), float32(_map.BorderSize + i * (PBS + 1)), float32(PBS + 1), float32(PBS + 1)}) {
+				if rl.CheckCollisionRecs(wall.GetHitbox(), hitbox) {
 					aStar.FillTile(astar.Point{int(i), int(j)}, -1)
 					x = "@"
 					break
@@ -732,7 +745,6 @@ func (_map *Map) aStar(walls []Wall) bool {
 	}
 
 	var source, target []astar.Point
-	
 
 	if _map.Coords.X == 0 && _map.Coords.Y == 0 {
 		// Players to each (0;0) map opening
