@@ -366,7 +366,7 @@ func main() {
 	var bagMenuMargin int32 = 150
 	var bagMenuWidth int32 = MAP_SIZE - 2 * MAP_BORDER_SIZE - bagMenuMargin*2
 
-	var item ym.Item
+	// var item ym.Item
 	// item.Init(250, 250, ym.WATER_BOOTS, false)
 	// _maps[currentMapCoord].AddItem(item)
 	// item.Init(450, 250, ym.HEART_OF_STEEL, false)
@@ -377,8 +377,8 @@ func main() {
 	// _maps[currentMapCoord].AddItem(item)
 	// item.Init(250, 650, ym.INVISIBLE_CAPE, false)
 	// _maps[currentMapCoord].AddItem(item)
-	item.Init(450, 650, ym.ABUNDANT_PURSE, false)
-	_maps[currentMapCoord].AddItem(item)
+	// item.Init(450, 650, ym.ABUNDANT_PURSE, false)
+	// _maps[currentMapCoord].AddItem(item)
 	// item.Init(650, 250, ym.TRIFORCE_LOCKET, false)
 	// _maps[currentMapCoord].AddItem(item)
 	// item.Init(650, 450, ym.GOLDEN_CLOVER, false)
