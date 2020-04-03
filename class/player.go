@@ -220,7 +220,7 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Stats.Init(PMS, PHM, PDA, PDD, PSR, PDF, PCR)
 		player.Level = 1
 		player.Experience = 0
-		player.UpgradePoint = 15
+		player.UpgradePoint = 0
 		player.StatsPoint = 0
 		player.Money = 0
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}

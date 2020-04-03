@@ -114,8 +114,8 @@ func (item *Item) initTriforceLocket() {
 	item.Description = "The triforce locket increases your 3 base stats."
 	item.LevelUpDescription = []string {
 		"Max Hp, Att, Def : +5, +2, +2",
-		"Max Hp, Att, Def : +10, +4, +4",
 		"Max Hp, Att, Def : +15, +6, +6",
+		"Max Hp, Att, Def : +50, +20, +20",
 	} 
 	item.Price = 2200
 }
@@ -232,14 +232,14 @@ func (item *Item) applyEffectTriforceLocket(_map *Map, prod int32) {
 	item.addAttack(_map, prod * 2)
 	item.addDefense(_map, prod * 2)
 	if item.Level > 1 {//lvl2
-		item.addHealthPoints(_map, prod * 10)
-		item.addAttack(_map, prod * 4)
-		item.addDefense(_map, prod * 4)
-	}
-	if item.Level > 2 {//lvl3
 		item.addHealthPoints(_map, prod * 15)
 		item.addAttack(_map, prod * 6)
 		item.addDefense(_map, prod * 6)
+	}
+	if item.Level > 2 {//lvl3
+		item.addHealthPoints(_map, prod * 50)
+		item.addAttack(_map, prod * 20)
+		item.addDefense(_map, prod * 20)
 	}
 }
 
