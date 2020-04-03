@@ -298,6 +298,7 @@ func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, 
 	_map.Init(currentMapCoord, MAP_SIZE, MAP_BORDER_SIZE, openings)
 	_map.InitBorders()
 	_map.Walls = append(_map.Walls, ym.GeneratePossibleWalls(_map, &foundStairsMap, &foundShopMap, stairsProba, shopProba)...)
+	_map.Monsters = ym.GenerateMonsters(_map, r1.Int31() % 3 + 4)
 	_maps[currentMapCoord] = _map
 	var nextCoord ym.Coord
 	remainingMapsToCreate, _ := ym.RemoveOri(openings, oppositeOri)

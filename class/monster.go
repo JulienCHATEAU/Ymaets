@@ -55,6 +55,14 @@ const (
 	SNIPER
 )
 
+var monsters []MonsterType = []MonsterType {KAMIKAZE, ONE_CANON_KAMIKAZE, SNIPER}
+
+func GetMonsters() []MonsterType {
+	b := make([]MonsterType, len(monsters))
+	copy(b, monsters)
+	return b
+}
+
 type Monster struct {
 	X 						int32
 	Y 						int32

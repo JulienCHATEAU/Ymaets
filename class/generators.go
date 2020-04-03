@@ -309,6 +309,33 @@ func GenerateWalls(_map *Map) []Wall {
 	return walls
 }
 
+func GenerateMonsters(_map *Map, monstersAmount int32) []Monster {
+	var count int32 = 0
+	var monsters []Monster = make([]Monster, monstersAmount)
+	allMonstersType := GetMonsters()
+	length, rand := 0, 0
+	var found bool = true
+	var center rl.Vector2
+	var radius float32
+	for count < monstersAmount {
+		found = true
+		length = len(allMonstersType)
+		rand = r1.Int() % length
+		monsters[count].Init(r1.Int31() % 600 + 100, r1.Int31() % 600 + 100, allMonstersType[rand])
+		center, radius = monsters[count].GetHitbox()
+		for _, wall := range _map.Walls {
+			if rl.CheckCollisionCircleRec(center, radius, wall.GetHitbox()) {	
+				found = false
+				break
+			}
+		}
+		if found {
+			count++
+		}
+	}
+	return monsters
+}
+
 func GeneratePossibleWalls(_map *Map, foundStairsMap, foundShopMap *bool, stairsProba, shopProba int32) []Wall {
 	var walls []Wall
 	pathFound := false
