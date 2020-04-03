@@ -11,7 +11,9 @@ var items []ItemName = []ItemName {WATER_BOOTS, HEART_OF_STEEL, TURBO_REACTOR, F
 // ADD ITEMNAME ABOVE
 
 func GetItems() []ItemName {
-	return items
+	b := make([]ItemName, len(items))
+	copy(b, items)
+	return b
 }
 
 type ItemName string
@@ -39,6 +41,7 @@ type Item struct {
 	Level								int32
 	Price 							int32
 	OnSale							bool
+	Discount 						int32
 	Name								ItemName
 	Description					string
 	LevelUpDescription	[]string
@@ -135,6 +138,7 @@ func (item *Item) Init(x, y int32, name ItemName, onSale bool) {
 	item.Level = 1
 	item.Size = IBS
 	item.OnSale = onSale
+	item.Discount = 0
 	switch name {
 		case WATER_BOOTS:
 			item.initWaterBoots()
@@ -426,22 +430,31 @@ func (item *Item) GetHitbox() rl.Rectangle {
 	return rl.Rectangle{float32(item.X), float32(item.Y), float32(item.Size), float32(item.Size)}
 }
 
-func DrawItemName(currItem Item, currX, currY int32) {
-	name := string(currItem.Name)
-	if currItem.OnSale {
-		name += " - Price : " + strconv.Itoa(int(currItem.Price)) + " gold"
+func (item *Item) GetPrice() int32 {
+	price := item.Price
+	price -= (price * item.Discount / 100)
+	return price
+}
+
+func (item *Item) DrawItemName(currX, currY int32) {
+	name := string(item.Name)
+	if item.OnSale {
+		name += " - Price : " + strconv.Itoa(int(item.GetPrice())) + " gold "
+		if item.Discount > 0 {
+			name += "(-" + strconv.Itoa(int(item.Discount)) + "%)"
+		}
 	}
 	rl.DrawText(name, currX, currY + 50, 23, rl.NewColor(144, 12, 63, 255))
 	rl.DrawRectangle(currX, currY + 85, 140, 2, rl.DarkGray)
 }
 
-func DrawItemDescription(currItem Item, currX, currY int32) {
+func (item *Item) DrawItemDescription(currX, currY int32) {
 	var lineCount int32 = 0
 		var maxLineChar int32 = 30
 		var currLine string = ""
 		var currWordLength int32
 		var currLineLength int32
-		for _, word := range strings.Split(currItem.Description, " ") {
+		for _, word := range strings.Split(item.Description, " ") {
 			currWordLength = int32(len(word))
 			currLineLength = int32(len(currLine))
 			if currLineLength + currWordLength + 1 > maxLineChar {
@@ -458,15 +471,15 @@ func DrawItemDescription(currItem Item, currX, currY int32) {
 		rl.DrawText(currLine, currX, currY + lineCount * 30, 20, rl.DarkGray)
 }
 
-func DrawItemUpgrades(currItem Item, currX, currY int32) {
+func (item *Item) DrawItemUpgrades(currX, currY int32) {
 	var i int32
 		var color rl.Color = rl.DarkGray
 		for i = 0; i<IML; i++ {
-			if i+1 <= currItem.Level {
+			if i+1 <= item.Level {
 				color = rl.NewColor(200, 32, 16, 255)
 			} else {
 				color = rl.DarkGray
 			}
-			rl.DrawText(currItem.GetLevelUpDescription(i), currX, currY + i * 30, 18, color)
+			rl.DrawText(item.GetLevelUpDescription(i), currX, currY + i * 30, 18, color)
 		}
 }

@@ -91,15 +91,15 @@ func (bagMenu *BagMenu) HandleFocus() {
 
 func (bagMenu *BagMenu) drawTabContent(currItem Item, currX, currY int32) {
 	currX += 20
-	DrawItemName(currItem, currX, currY)
+	currItem.DrawItemName(currX, currY)
 	currY += 120
 	switch tabs[bagMenu.SelectedTab] {
 	case "Description":
-		DrawItemDescription(currItem, currX, currY)
+		currItem.DrawItemDescription(currX, currY)
 		break
 
 	case "Upgrades":
-		DrawItemUpgrades(currItem, currX, currY)
+		currItem.DrawItemUpgrades(currX, currY)
 		break
 	}
 }

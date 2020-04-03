@@ -79,7 +79,7 @@ func (monster *Monster) initKamikaze() {
 	monster.HasCanon = false
 	monster.Color = rl.NewColor(144, 227, 217, 255)
 	monster.FireCooldown = KFC
-	monster.Stats.Init(MMS + 1, MMH + 5, MMA + 1, MMD, KSR, 0, 0)
+	monster.Stats.Init(MMS, MMH + 5, MMA + 1, MMD, KSR, 0, 0)
 	monster.AggroDist = float64(monster.Stats.Range + 20)
 }
 
@@ -314,12 +314,12 @@ func (monster *Monster) GetShot() Shot {
 
 	case EAST:
 		shot.X = monster.X + radius + MCH
-		shot.Y = monster.Y
+		shot.Y = monster.Y - MCH/2
 		break
 
 	case WEST:
 		shot.X = monster.X  - radius - MCH - shot.Width
-		shot.Y = monster.Y
+		shot.Y = monster.Y - MCH/2
 		break
 	}
 	return shot

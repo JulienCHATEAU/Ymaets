@@ -137,6 +137,9 @@ func (_map *Map) InitShop(windowSize, borderSize int32) {
 		rand = r1.Int() % length
 		fmt.Println(items[rand])
 		_map.Items[index].Init(8 + (_map.Width / 2 - size / 2) + margin * index, 500, items[rand], true)
+		if r1.Int31() % 100 < 5 {
+			_map.Items[index].Discount += 15
+		}
 		margin = baseMargin + IBS
 		items[rand] = items[length-1]
 		items = items[:length-1]
@@ -534,17 +537,18 @@ func (_map *Map) PlayerOnItem() {
 	for i = 0; i<_map.ItemsCount; i++ {
 		if rl.CheckCollisionRecs(_map.Items[i].GetHitbox(), hitbox) {
 			if _map.Items[i].OnSale {
-				DrawItemName(_map.Items[i], 60, 180)
-				DrawItemDescription(_map.Items[i], 60, 300)
-				DrawItemUpgrades(_map.Items[i], 420, 300)
+				_map.Items[i].DrawItemName(60, 180)
+				_map.Items[i].DrawItemDescription(60, 300)
+				_map.Items[i].DrawItemUpgrades(420, 300)
 			}
 			if !_map.CurrPlayer.HasItem(_map.Items[i]) {
-				if (_map.Items[i].OnSale && _map.CurrPlayer.Money >= _map.Items[i].Price) || !_map.Items[i].OnSale {
+				price := _map.Items[i].GetPrice()
+				if (_map.Items[i].OnSale && _map.CurrPlayer.Money >= price) || !_map.Items[i].OnSale {
 					util.ShowEnterKey(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
 					if rl.IsKeyPressed(rl.KeyEnter) {
 						if !_map.CurrPlayer.IsBagFull() {
 							if _map.Items[i].OnSale {
-								_map.CurrPlayer.UseMoney(_map.Items[i].Price)
+								_map.CurrPlayer.UseMoney(price)
 							}
 							_map.CurrPlayer.AddInBag(_map.Items[i])
 							_map.Items[i].ApplyEffect(_map)
@@ -665,6 +669,7 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 			_map.CurrPlayer.TakeDamage(damage)
 		}
 		_map.removeShot(index)
+		return
 	} else {
 		for i = 0; i < _map.MonstersCount; i++ {
 			center, radius = _map.Monsters[i].GetHitbox()
@@ -679,7 +684,8 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 						if _map.CurrPlayer.Settings[MONEY_CRIT_BONUS] {
 							_map.CurrPlayer.Money += 5
 						}
-					} 
+					}
+					_map.Monsters[i].Aggressive = true
 					_map.Monsters[i].TakeDamage(damage)
 					if _map.Monsters[i].IsDead() {
 						coins := _map.Monsters[i].SpreadCoins()
@@ -696,8 +702,15 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 	}
 }
 
+func (_map *Map) DiscountItems(value int32) {
+	var i int32
+	for i = 0; i<_map.ItemsCount; i++ {
+		_map.Items[i].Discount += value
+	}
+}
+
 func (_map *Map) aStar(walls []Wall) bool {
-	var rows, cols int32 = _map.Width / PBS, _map.Height / PBS
+	var rows, cols int32 = (_map.Width - _map.BorderSize*2) / PBS, (_map.Height - _map.BorderSize/2) / PBS
 	var rowsint, colsint int = int(rows), int(cols)
 	var i, j int32
 	fmt.Println(len(_map.Opening))
@@ -708,7 +721,7 @@ func (_map *Map) aStar(walls []Wall) bool {
 		for j = 0; j<cols; j++ {
 			x = "."
 			for _, wall := range walls {
-				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(j * PBS - 1), float32(i * PBS - 1), float32(PBS + 1), float32(PBS + 1)}) {
+				if rl.CheckCollisionRecs(wall.GetHitbox(), rl.Rectangle {float32(_map.BorderSize + j * (PBS + 1)), float32(_map.BorderSize + i * (PBS + 1)), float32(PBS + 1), float32(PBS + 1)}) {
 					aStar.FillTile(astar.Point{int(i), int(j)}, -1)
 					x = "@"
 					break
@@ -793,6 +806,9 @@ func (_map *Map) AddTeleporter(typee TeleporterType, walls []Wall) {
 			}
 		}
 	}
+	fmt.Print(_map.Teleporters[typee].X)
+	fmt.Print(" - ")
+	fmt.Println(_map.Teleporters[typee].Y)
 }
 
 func (_map *Map) AddStairs(walls []Wall) {

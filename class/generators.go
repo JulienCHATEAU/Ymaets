@@ -315,20 +315,26 @@ func GeneratePossibleWalls(_map *Map, foundStairsMap, foundShopMap *bool, stairs
 	fstmTemp := *foundStairsMap
 	fshmTemp := *foundShopMap
 	for !pathFound {
+		fmt.Printf("fSTmTemp : %d\n", fstmTemp)
+		fmt.Printf("fSHmTemp : %d\n", fshmTemp)
 		fstmTemp = *foundStairsMap
 		fshmTemp = *foundShopMap
 		walls = GenerateWalls(_map)
 		if !fstmTemp && r1.Int31() % 100 < stairsProba {
 			fstmTemp = true
-			_map.AddStairs(walls)
 		}
 		if !fshmTemp && r1.Int31() % 100 < shopProba {
 			fshmTemp = true
-			_map.AddShop(walls)
 		} 
-		pathFound = _map.aStar(walls)
-		fmt.Println(pathFound)
-	}
+			pathFound = _map.aStar(walls)
+			fmt.Println(pathFound)
+		}
+		if !*foundStairsMap && fstmTemp {
+			_map.AddStairs(walls)
+		}
+		if !*foundShopMap && fshmTemp {
+			_map.AddShop(walls)
+		}
 	*foundStairsMap = fstmTemp
 	*foundShopMap = fshmTemp
 	var wallHitbox rl.Rectangle
