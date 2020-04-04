@@ -291,7 +291,7 @@ func initStage(_maps map[ym.Coord]*ym.Map, player ym.Player, deeperProba int32, 
 	}
 	fmt.Println(openings)
 	var stairsProba int32 = 100 - deeperProba
-	var shopProba int32 = 200 - deeperProba
+	var shopProba int32 = 100 - deeperProba
 	deeperProba -= (100 / stageMapCount)
 	var _map *ym.Map = &ym.Map{}
 	_map.CurrPlayer = player
@@ -366,23 +366,23 @@ func main() {
 	var bagMenuMargin int32 = 150
 	var bagMenuWidth int32 = MAP_SIZE - 2 * MAP_BORDER_SIZE - bagMenuMargin*2
 
-	var item ym.Item
-	item.Init(250, 250, ym.WATER_BOOTS, false)
-	_maps[currentMapCoord].AddItem(item)
-	item.Init(450, 250, ym.HEART_OF_STEEL, false)
-	_maps[currentMapCoord].AddItem(item)
-	item.Init(250, 450, ym.TURBO_REACTOR, false)
-	_maps[currentMapCoord].AddItem(item)
-	item.Init(450, 450, ym.FIRE_HELMET, false)
-	_maps[currentMapCoord].AddItem(item)
-	item.Init(250, 650, ym.INVISIBLE_CAPE, false)
-	_maps[currentMapCoord].AddItem(item)
-	item.Init(450, 650, ym.ABUNDANT_PURSE, false)
-	_maps[currentMapCoord].AddItem(item)
-	item.Init(650, 250, ym.TRIFORCE_LOCKET, false)
-	_maps[currentMapCoord].AddItem(item)
-	item.Init(650, 450, ym.GOLDEN_CLOVER, false)
-	_maps[currentMapCoord].AddItem(item)
+	// var item ym.Item
+	// item.Init(250, 250, ym.WATER_BOOTS, false)
+	// _maps[currentMapCoord].AddItem(item)
+	// item.Init(450, 250, ym.HEART_OF_STEEL, false)
+	// _maps[currentMapCoord].AddItem(item)
+	// item.Init(250, 450, ym.TURBO_REACTOR, false)
+	// _maps[currentMapCoord].AddItem(item)
+	// item.Init(450, 450, ym.FIRE_HELMET, false)
+	// _maps[currentMapCoord].AddItem(item)
+	// item.Init(250, 650, ym.INVISIBLE_CAPE, false)
+	// _maps[currentMapCoord].AddItem(item)
+	// item.Init(450, 650, ym.ABUNDANT_PURSE, false)
+	// _maps[currentMapCoord].AddItem(item)
+	// item.Init(650, 250, ym.TRIFORCE_LOCKET, false)
+	// _maps[currentMapCoord].AddItem(item)
+	// item.Init(650, 450, ym.GOLDEN_CLOVER, false)
+	// _maps[currentMapCoord].AddItem(item)
 	
 	fmt.Println("Ymaets")
 	rl.InitWindow(_maps[currentMapCoord].Width + MENU_SIZE, _maps[currentMapCoord].Height, "Ymaets")

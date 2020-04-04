@@ -703,9 +703,7 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 					_map.Monsters[i].Aggressive = true
 					_map.Monsters[i].TakeDamage(damage)
 					if _map.Monsters[i].IsDead() {
-						coins := _map.Monsters[i].SpreadCoins()
-						_map.CoinsCount += int32(len(coins))
-						_map.Coins = append(_map.Coins, coins...)
+						_map.Monsters[i].SpreadLoots(_map)
 						_map.CurrPlayer.AddExperience(_map.Monsters[i].GetExperience())
 						_map.removeMonster(&i)
 					}

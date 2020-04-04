@@ -223,7 +223,7 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Experience = 0
 		player.UpgradePoint = 0
 		player.StatsPoint = 0
-		player.Money = 15500
+		player.Money = 0
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
 		player.Color = rl.Blue
@@ -237,7 +237,7 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 
 func (player *Player) GetCurrentExperienceStage() int32 {
 	nextLevel := player.Level + 1;
-  return nextLevel * nextLevel * nextLevel;
+  return 15*player.Level + nextLevel * nextLevel * nextLevel;
 }
 
 func (player *Player) levelUp() {

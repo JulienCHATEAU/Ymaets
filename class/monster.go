@@ -141,14 +141,14 @@ func (monster *Monster) Init(x, y int32, monsterType MonsterType) {
 func (monster *Monster) moveKamikaze(_map *Map) {
 	var dx int32 = 0
 	var dy int32 = 0
-	if monster.X < _map.CurrPlayer.X {
+	if monster.X < _map.CurrPlayer.X + PBS/2 {
 		dx = monster.Stats.MaxSpeed
-	} else if monster.X > _map.CurrPlayer.X {
+	} else if monster.X > _map.CurrPlayer.X + PBS/2 {
 		dx = -monster.Stats.MaxSpeed
 	}
-	if monster.Y < _map.CurrPlayer.Y {
+	if monster.Y < _map.CurrPlayer.Y + PBS/2 {
 		dy = monster.Stats.MaxSpeed
-	} else if monster.Y > _map.CurrPlayer.Y {
+	} else if monster.Y > _map.CurrPlayer.Y + PBS/2 {
 		dy = -monster.Stats.MaxSpeed
 	}
 	monster.X += dx
@@ -395,11 +395,21 @@ func (monster *Monster) HandleAnimation(notEnded []int32) {
 	}
 }
 
-func (monster *Monster) SpreadCoins() []Coin {
+func (monster *Monster) SpreadLoots(_map *Map) {
 	var coins []Coin = make([]Coin, 2)
 	coins[0].Init(monster.X + r1.Int31() % 30 - 15, monster.Y + r1.Int31() % 30 - 15)
 	coins[1].Init(monster.X + r1.Int31() % 30 - 15, monster.Y + r1.Int31() % 30 - 15)
-	return coins
+	_map.CoinsCount += int32(len(coins))
+	_map.Coins = append(_map.Coins, coins...)
+	if r1.Int() % 200 < 1 {
+		var item Item
+		items := GetItems()
+		length := len(items)
+		rand := r1.Int() % length
+		typee := items[rand]
+		item.Init(monster.X + r1.Int31() % 30 - 15, monster.Y + r1.Int31() % 30 - 15, typee, false)
+		_map.AddItem(item)
+	}
 }
 
 func (monster *Monster) Draw() {
