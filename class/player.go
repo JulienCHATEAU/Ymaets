@@ -142,7 +142,7 @@ var PMS int32 = 4
 // Player health max
 var PHM int32 = 100
 // Player Max bag size
-var PMBS int32 = 10
+var PMBS int32 = 3
 // Player level up timer
 var PLUT int32 = 350
 // Player default furtivity
@@ -209,6 +209,7 @@ type Player struct {
 	Animations		Timers
 	Settings			map[Setting]bool
 	BagSize 			int32
+	MaxBagSize		int32
 	Bag 					[]Item
 }
 
@@ -222,7 +223,7 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Experience = 0
 		player.UpgradePoint = 0
 		player.StatsPoint = 0
-		player.Money = 0
+		player.Money = 15500
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
 		player.Color = rl.Blue
@@ -230,7 +231,8 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Animations.Decrements[LEVEL_UP] = 3
 		player.Settings = make(map[Setting]bool)
 		player.BagSize = 0
-		player.Bag = make([]Item, PMBS)
+		player.MaxBagSize = PMBS
+		player.Bag = make([]Item, player.MaxBagSize)
 }
 
 func (player *Player) GetCurrentExperienceStage() int32 {
@@ -260,12 +262,17 @@ func (player *Player) AddExperience(amount int32) int32 {
 	return levelUps
 }
 
+func (player *Player) ExtendBag() {
+	player.MaxBagSize++
+	player.Bag = append(player.Bag, make([]Item, player.MaxBagSize)...)
+}
+
 func (player *Player) IsBagFull() bool {
-	return player.BagSize == PMBS
+	return player.BagSize >= player.MaxBagSize
 }
 
 func (player *Player) AddInBag(item Item) {
-	if player.BagSize < PMBS {
+	if !player.IsBagFull() {
 		item.OnSale = false
 		player.Bag[player.BagSize] = item
 		player.BagSize++
@@ -363,6 +370,14 @@ func (player *Player) TakeDamage(damage int32) {
 
 func (player *Player) Heal(percentage int32) {
 	amount := player.Stats.MaxHp * percentage / 100
+	player.Stats.Hp += amount
+	if player.Stats.Hp > player.Stats.MaxHp {
+		player.Stats.Hp = player.Stats.MaxHp
+	}
+}
+
+func (player *Player) HealMissingHp(percentage int32) {
+	amount := (player.Stats.MaxHp - player.Stats.Hp) * percentage / 100
 	player.Stats.Hp += amount
 	if player.Stats.Hp > player.Stats.MaxHp {
 		player.Stats.Hp = player.Stats.MaxHp

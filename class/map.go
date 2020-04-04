@@ -122,7 +122,7 @@ func (_map *Map) InitShop(windowSize, borderSize int32) {
 	_map.Teleporters[RETURN_STAGE] = &Teleporter{}
 	_map.Teleporters[RETURN_STAGE].Init(windowSize / 2 - SBS / 2 + _map.BorderSize / 2, windowSize / 2 + 300, RETURN_STAGE)
 	_map.Shots = make([]Shot, 50)
-	_map.ItemsCount = r1.Int31() % 2 + 3
+	_map.ItemsCount = 4
 	_map.Items = make([]Item, 50)
 	items := GetItems()
 	rand, length := 0, 0
@@ -132,18 +132,28 @@ func (_map *Map) InitShop(windowSize, borderSize int32) {
 	fmt.Println(size)
 	fmt.Println(_map.Width)
 	var index int32
+	var typee ItemName
 	for index = 0; index < _map.ItemsCount; index++ {
-		length = len(items)
-		rand = r1.Int() % length
-		fmt.Println(items[rand])
-		_map.Items[index].Init(8 + (_map.Width / 2 - size / 2) + margin * index, 500, items[rand], true)
+		if index == _map.ItemsCount-1 {
+			if r1.Int() % 100 < 50 {
+				typee = BAG_POCKET
+			} else {
+				typee = HEALTH_POTION
+			}
+		} else {
+			length = len(items)
+			rand = r1.Int() % length
+			typee = items[rand]
+			items[rand] = items[length-1]
+			items = items[:length-1]
+			fmt.Println(items)
+		}
+		fmt.Println(typee)
+		_map.Items[index].Init(8 + (_map.Width / 2 - size / 2) + margin * index, 500, typee, true)
 		if r1.Int31() % 100 < 5 {
 			_map.Items[index].Discount += 15
 		}
 		margin = baseMargin + IBS
-		items[rand] = items[length-1]
-		items = items[:length-1]
-		fmt.Println(items)
 	}
 	_map.TimeCounters = make([]TimeCounter, MTCC)
 	_map.InitBorders()
@@ -168,7 +178,7 @@ func (_map *Map) Init(coord Coord, windowSize, borderSize int32, opening []Orien
 	_map.Curs.Init()
 	_map.CoinsCount = 0
 	_map.Coins = make([]Coin, 0)
-	_map.MonstersCount = 4
+	_map.MonstersCount = 0
 	_map.ShotsCount = 0
 	_map.Teleporters = make(map[TeleporterType]*Teleporter)
 	_map.Teleporters[STAIRS] = &Teleporter{}
@@ -536,6 +546,7 @@ func (_map *Map) PlayerOnItem() {
 	hitbox := _map.CurrPlayer.GetHitbox()
 	var i int32
 	for i = 0; i<_map.ItemsCount; i++ {
+		canTakeItem := !_map.CurrPlayer.IsBagFull() || _map.Items[i].IsConsumable
 		if rl.CheckCollisionRecs(_map.Items[i].GetHitbox(), hitbox) {
 			if _map.Items[i].OnSale {
 				_map.Items[i].DrawItemName(60, 180)
@@ -545,9 +556,11 @@ func (_map *Map) PlayerOnItem() {
 			if !_map.CurrPlayer.HasItem(_map.Items[i]) {
 				price := _map.Items[i].GetPrice()
 				if (_map.Items[i].OnSale && _map.CurrPlayer.Money >= price) || !_map.Items[i].OnSale {
-					util.ShowEnterKey(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
+					if canTakeItem {
+						util.ShowEnterKey(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
+					}
 					if rl.IsKeyPressed(rl.KeyEnter) {
-						if !_map.CurrPlayer.IsBagFull() {
+						if canTakeItem {
 							if _map.Items[i].OnSale {
 								_map.CurrPlayer.UseMoney(price)
 							}
@@ -816,6 +829,19 @@ func (_map *Map) AddTeleporter(typee TeleporterType, walls []Wall) {
 	fmt.Print(_map.Teleporters[typee].X)
 	fmt.Print(" - ")
 	fmt.Println(_map.Teleporters[typee].Y)
+}
+
+func (_map *Map) RemoveTelep(typee TeleporterType) {
+	_map.Teleporters[typee].X = TELEPORTER_NOT_OK
+	_map.Teleporters[typee].Y = TELEPORTER_NOT_OK
+}
+
+func (_map *Map) RemoveStairs() {
+	_map.RemoveTelep(STAIRS)
+}
+
+func (_map *Map) RemoveShop() {
+	_map.RemoveTelep(SHOP)
 }
 
 func (_map *Map) AddStairs(walls []Wall) {

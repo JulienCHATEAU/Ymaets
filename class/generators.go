@@ -339,6 +339,7 @@ func GenerateMonsters(_map *Map, monstersAmount, currentStage int32) []Monster {
 		}
 		if found {
 			monsters[count].BuffDepOnStage(currentStage)
+			_map.MonstersCount++
 			count++
 		}
 	}
@@ -351,6 +352,8 @@ func GeneratePossibleWalls(_map *Map, foundStairsMap, foundShopMap *bool, stairs
 	fstmTemp := *foundStairsMap
 	fshmTemp := *foundShopMap
 	for !pathFound {
+		_map.RemoveStairs()
+		_map.RemoveShop()
 		fmt.Printf("fSTmTemp : %d\n", fstmTemp)
 		fmt.Printf("fSHmTemp : %d\n", fshmTemp)
 		fstmTemp = *foundStairsMap
@@ -358,18 +361,13 @@ func GeneratePossibleWalls(_map *Map, foundStairsMap, foundShopMap *bool, stairs
 		walls = GenerateWalls(_map)
 		if !fstmTemp && r1.Int31() % 100 < stairsProba {
 			fstmTemp = true
+			_map.AddStairs(walls)
 		}
 		if !fshmTemp && r1.Int31() % 100 < shopProba {
 			fshmTemp = true
-		} 
-			pathFound = _map.aStar(walls)
-			fmt.Println(pathFound)
-		}
-		if !*foundStairsMap && fstmTemp {
-			_map.AddStairs(walls)
-		}
-		if !*foundShopMap && fshmTemp {
 			_map.AddShop(walls)
+			} 
+			pathFound = _map.aStar(walls)			
 		}
 	*foundStairsMap = fstmTemp
 	*foundShopMap = fshmTemp

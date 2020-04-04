@@ -26,6 +26,8 @@ const (
 	ABUNDANT_PURSE = "Abundant purse"
 	TRIFORCE_LOCKET = "Triforce locket"
 	GOLDEN_CLOVER = "Golden clover"
+	HEALTH_POTION = "Health potion"
+	BAG_POCKET = "Bag pocket"
 	// ADD ITEMNAME ABOVE
 )
 
@@ -41,6 +43,7 @@ type Item struct {
 	Level								int32
 	Price 							int32
 	OnSale							bool
+	IsConsumable				bool
 	Discount 						int32
 	Name								ItemName
 	Description					string
@@ -130,6 +133,28 @@ func (item *Item) initGoldenClover() {
 	item.Price = 2600
 }
 
+func (item *Item) initHealthPotion() {
+	item.Description = "The health potion heals you depending on your missing health."
+	item.LevelUpDescription = []string {
+		"Hp : +30% of missing Hp",
+		"",
+		"",
+	} 
+	item.Price = 1500
+	item.IsConsumable = true
+}
+
+func (item *Item) initBagPocket() {
+	item.Description = "The bag pocket adds a new item slot in your bag."
+	item.LevelUpDescription = []string {
+		"Max bag size : +1",
+		"",
+		"",
+	} 
+	item.Price = 2000
+	item.IsConsumable = true
+}
+
 //ADD INIT FUNCTIONS ABOVE
 
 func (item *Item) Init(x, y int32, name ItemName, onSale bool) {
@@ -139,6 +164,7 @@ func (item *Item) Init(x, y int32, name ItemName, onSale bool) {
 	item.Size = IBS
 	item.OnSale = onSale
 	item.Discount = 0
+	item.IsConsumable = false
 	switch name {
 		case WATER_BOOTS:
 			item.initWaterBoots()
@@ -163,6 +189,12 @@ func (item *Item) Init(x, y int32, name ItemName, onSale bool) {
 			break
 		case GOLDEN_CLOVER:
 			item.initGoldenClover()
+			break
+		case HEALTH_POTION:
+			item.initHealthPotion()
+			break
+		case BAG_POCKET:
+			item.initBagPocket()
 			break
 	}
 	item.Name = name
@@ -253,6 +285,14 @@ func (item *Item) applyEffectGoldenClover(_map *Map, prod int32) {
 	}
 }
 
+func (item *Item) applyEffectHealthPotion(_map *Map, prod int32) {
+	_map.CurrPlayer.HealMissingHp(30)
+}
+
+func (item *Item) applyEffectBagPocket(_map *Map, prod int32) {
+	_map.CurrPlayer.ExtendBag()
+}
+
 //ADD APPLY FUNCTIONS ABOVE
 
 func (item *Item) apply(_map *Map, value int32) {
@@ -281,6 +321,15 @@ func (item *Item) apply(_map *Map, value int32) {
 		case GOLDEN_CLOVER:
 			item.applyEffectGoldenClover(_map, value)
 			break
+		case HEALTH_POTION:
+			item.applyEffectHealthPotion(_map, value)
+			break
+		case BAG_POCKET:
+			item.applyEffectBagPocket(_map, value)
+			break
+	}
+	if item.IsConsumable {
+		_map.CurrPlayer.RemoveFromBag(*item)
 	}
 }
 
@@ -326,6 +375,14 @@ func (item *Item) drawGoldenClover() {
 	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(163, 222, 18, 255))
 }
 
+func (item *Item) drawHealthPotion() {
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(255, 5, 5, 255))
+}
+
+func (item *Item) drawBagPocket() {
+	rl.DrawRectangle(item.X+5, item.Y+5, item.Size-10, item.Size-10, rl.NewColor(220, 191, 32, 255))
+}
+
 //ADD DRAW FUNCTIONS ABOVE
 
 func (item *Item) Draw() {
@@ -361,6 +418,12 @@ func (item *Item) Draw() {
 			break
 		case GOLDEN_CLOVER:
 			item.drawGoldenClover()
+			break
+		case HEALTH_POTION:
+			item.drawHealthPotion()
+			break
+		case BAG_POCKET:
+			item.drawBagPocket()
 			break
 	}
 }

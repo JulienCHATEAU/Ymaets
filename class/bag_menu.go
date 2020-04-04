@@ -2,6 +2,7 @@ package class
 
 import (
 	// "fmt"
+	"strconv"
 	"github.com/gen2brain/raylib-go/raylib"
 	util "Ymaets/util"
 )
@@ -110,7 +111,7 @@ func (bagMenu *BagMenu) Draw() {
 	rl.DrawRectangle(bagMenu.X, bagMenu.Y, bagMenu.Width, bagMenu.Heigth, rl.NewColor(65, 87, 106, 255))
 	rl.DrawRectangle(startX, startY, contentWidth, contentHeight, rl.RayWhite)
 	var currDY int32 = 10
-	rl.DrawText("Bag", startX + 190, startY + currDY, 25, rl.DarkGray)
+	rl.DrawText("Bag : " + strconv.Itoa(int(bagMenu.CurrMap.CurrPlayer.BagSize)) + " / " + strconv.Itoa(int(bagMenu.CurrMap.CurrPlayer.MaxBagSize)) + " slots", startX + 110, startY + currDY, 25, rl.DarkGray)
 	var infoBorderSize int32 = 5
 	var itemListMargin int32 = 30
 	var itemListHeigth int32 = 60
