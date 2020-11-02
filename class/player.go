@@ -1,7 +1,7 @@
 package class
 
 import (
-	// "fmt"
+	"fmt"
 	"github.com/gen2brain/raylib-go/raylib"
 	"github.com/nickdavies/go-astar/astar"
 	util "Ymaets/util"
@@ -191,8 +191,6 @@ const (
 	PLAYER_NEAR = "playerNear"
 )
 
-
-
 type Player struct {
 	X 						int32
 	Y 						int32
@@ -205,6 +203,8 @@ type Player struct {
 	Stats					util.Stat
 	Move_keys 		[4]int32 // right, left, up, down
 	Ori_keys 			[4]int32 // east, west, north, south
+	Spell_keys 		[3]int32 // classic, polyvalent, ultimate
+	Elem		 			Element
 	Color 				rl.Color
 	Animations		Timers
 	Settings			map[Setting]bool
@@ -213,7 +213,6 @@ type Player struct {
 	Bag 					[]Item
 }
 
-
 func (player *Player) Init(x, y int32, ori Orientation) {
 		player.X = x
 		player.Y = y
@@ -221,18 +220,29 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Stats.Init(PMS, PHM, PDA, PDD, PSR, PDF, PCR)
 		player.Level = 1
 		player.Experience = 0
-		player.UpgradePoint = 0
+		player.UpgradePoint = 10
 		player.StatsPoint = 0
 		player.Money = 0
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
+		player.Spell_keys = [3]int32{rl.MouseLeftButton, rl.MouseRightButton, rl.MouseMiddleButton}
 		player.Color = rl.Blue
+		player.Elem = GetDefaultElement("Fire")
 		player.Animations.Init(PTC)
 		player.Animations.Decrements[LEVEL_UP] = 3
 		player.Settings = make(map[Setting]bool)
 		player.BagSize = 0
 		player.MaxBagSize = PMBS
 		player.Bag = make([]Item, player.MaxBagSize)
+}
+
+func (player *Player) TriggerSpells() {
+	for i, spell := range player.Elem.Spells {
+		if rl.IsMouseButtonReleased(player.Spell_keys[i]) {
+			fmt.Println(spell.Name, "is cast")
+			player.Elem.Spells[i].Trigger(player)
+		}
+	}
 }
 
 func (player *Player) GetCurrentExperienceStage() int32 {
@@ -321,27 +331,7 @@ func (player *Player) SetOriFromMouse(mouseX, mouseY int32) {
 func (player *Player) GetShot() Shot {
 	var shot Shot
 	shot.Init(player.Ori, PSC, PSS, PSH, PSW, player.Stats.Range, 10, PLAYER, player.GetStats())
-	switch player.Ori {
-	case NORTH:
-		shot.X = player.X + PBS/2-PCW/2
-		shot.Y = player.Y - PCH - shot.Height
-		break
-
-	case SOUTH:
-		shot.X = player.X + PBS/2-PCW/2
-		shot.Y = player.Y + PBS
-		break
-
-	case EAST:
-		shot.X = player.X + PBS
-		shot.Y = player.Y + PBS/2-PCW/2
-		break
-
-	case WEST:
-		shot.X = player.X - PCH - shot.Width
-		shot.Y = player.Y + PBS/2-PCW/2
-		break
-	}
+	shot.SetCoordFromPlayer(player)
 	return shot
 }
 

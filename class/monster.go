@@ -2,6 +2,7 @@ package class
 
 import (
 	"Ymaets/util"
+	"fmt"
 	"github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -12,9 +13,9 @@ var MMS int32 = 3
 // Monster max health
 var MMH int32 = 75
 // Monster max attack
-var MMA int32 = 46
+var MMA int32 = 48
 // Monster max defense
-var MMD int32 = 46
+var MMD int32 = 48
 // Monster aggro dist
 var MAD float64 = 250.0
 // Monster canon width
@@ -309,6 +310,21 @@ func (monster *Monster) BuffDepOnStage(currStage int32) {
 	monster.Stats.MaxDef += currStage
 	monster.Stats.Def += currStage
 	monster.GivenExp += currStage*3/2
+}
+
+func (monster *Monster) HandleDamageTaken(damage int32, player Player) {
+	fmt.Print("To monster : ")
+	fmt.Println(monster.Stats)
+	fmt.Println(damage)
+	if r1.Int31() % 100 < player.Stats.CritRate {
+		damage += damage * 50 / 100
+		monster.Animations.Values[CRIT_DAMAGE] = 350
+		if player.Settings[MONEY_CRIT_BONUS] {
+			player.Money += 5
+		}
+	}
+	monster.Aggressive = true
+	monster.TakeDamage(damage)
 }
 
 func (monster *Monster) Kill() {

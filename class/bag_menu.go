@@ -34,14 +34,14 @@ func (bagMenu *BagMenu) Init(x, y, borderSize, width, heigth int32, _map *Map) {
 }
 
 func (bagMenu *BagMenu) HandleFocus() {
-	if rl.IsKeyPressed(rl.KeyUp) {
+	if rl.IsKeyPressed(rl.KeyUp) || rl.IsKeyPressed(rl.KeyW) {
 		bagMenu.IsListFocused = true
-	} else if rl.IsKeyPressed(rl.KeyDown) {
+	} else if rl.IsKeyPressed(rl.KeyDown) || rl.IsKeyPressed(rl.KeyS) {
 		bagMenu.IsListFocused = false
 	}
 	if bagMenu.CurrMap.CurrPlayer.BagSize >= 1 {
 		item := bagMenu.CurrMap.CurrPlayer.Bag[bagMenu.SelectedItem]
-		if rl.IsKeyPressed(rl.KeyQ) {
+		if rl.IsKeyPressed(rl.KeyT) {
 			if bagMenu.SelectedItem == bagMenu.CurrMap.CurrPlayer.BagSize - 1 && bagMenu.SelectedItem > 0 {
 				bagMenu.SelectedItem--
 			}
@@ -61,13 +61,13 @@ func (bagMenu *BagMenu) HandleFocus() {
 	}
 	if bagMenu.IsListFocused {
 		if bagMenu.CurrMap.CurrPlayer.BagSize >= 1 {
-			if rl.IsKeyPressed(rl.KeyLeft) {
+			if rl.IsKeyPressed(rl.KeyLeft) || rl.IsKeyPressed(rl.KeyA) {
 				bagMenu.SelectedItem--
 				if bagMenu.SelectedItem < 0 {
 					bagMenu.SelectedItem = 0
 					// bagMenu.SelectedItem = bagMenu.CurrMap.CurrPlayer.BagSize - 1
 				}
-			} else if rl.IsKeyPressed(rl.KeyRight) {
+			} else if rl.IsKeyPressed(rl.KeyRight) || rl.IsKeyPressed(rl.KeyD) {
 				bagMenu.SelectedItem++
 				if bagMenu.SelectedItem > bagMenu.CurrMap.CurrPlayer.BagSize - 1 {
 					bagMenu.SelectedItem = bagMenu.CurrMap.CurrPlayer.BagSize - 1
@@ -76,12 +76,12 @@ func (bagMenu *BagMenu) HandleFocus() {
 			}
 		}
 	} else {
-		if rl.IsKeyPressed(rl.KeyLeft) {
+		if rl.IsKeyPressed(rl.KeyLeft) || rl.IsKeyPressed(rl.KeyA) {
 			bagMenu.SelectedTab--
 			if bagMenu.SelectedTab < 0 {
 				bagMenu.SelectedTab = int32(len(tabs)) - 1
 			}
-		} else if rl.IsKeyPressed(rl.KeyRight) {
+		} else if rl.IsKeyPressed(rl.KeyRight) || rl.IsKeyPressed(rl.KeyD) {
 			bagMenu.SelectedTab++
 			if bagMenu.SelectedTab > int32(len(tabs)) - 1 {
 				bagMenu.SelectedTab = 0
@@ -199,11 +199,11 @@ func (bagMenu *BagMenu) Draw() {
 	rl.DrawText("Close : ", startX + 20, currY, 19, rl.DarkGray)
 	util.ShowBackspaceKey(startX + 90, currY)
 	if bagSize > 0 {
-		rl.DrawText("Drop : ", startX + 140, currY, 19, rl.DarkGray)
-		util.ShowClassicKey(startX + 205, currY, "A")
+		rl.DrawText("Throw : ", startX + 140, currY, 19, rl.DarkGray)
+		util.ShowClassicKey(startX + 215, currY, "T")
 		if bagMenu.CurrMap.CurrPlayer.UpgradePoint >= currItem.Level && currItem.CanLevelUp() {
-			rl.DrawText("Upgrade : ", startX + 250, currY, 19, rl.DarkGray)
-			util.ShowClassicKey(startX + 350, currY, "U")		
+			rl.DrawText("Upgrade : ", startX + 260, currY, 19, rl.DarkGray)
+			util.ShowClassicKey(startX + 360, currY, "U")		
 		}
 	}
 

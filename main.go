@@ -23,7 +23,7 @@ var gameState GameState = STAGE_SCREEN
 var s1 = rand.NewSource(time.Now().UnixNano())
 var r1 = rand.New(s1)
 
-var stageMapCount int32 = 10
+var stageMapCount int32 = 7
 var foundStairsMap bool = false
 var foundShopMap bool = false
 
@@ -315,6 +315,9 @@ func newStage(currentStage *int32, currentMapCoord *ym.Coord, player ym.Player) 
 	var remainingMapCount int32
 	var _maps map[ym.Coord]*ym.Map
 	(*currentStage)++
+	if *currentStage % 5 == 0 {
+		stageMapCount++
+	}
 	*currentMapCoord = ym.Coord{0, 0}
 	foundStairsMap = false
 	foundShopMap = false
@@ -333,7 +336,7 @@ func newStage(currentStage *int32, currentMapCoord *ym.Coord, player ym.Player) 
 }
 
 func debugPrint(_maps map[ym.Coord]*ym.Map, currentMapCoord ym.Coord, mouseX, mouseY int32) {
-	if rl.IsMouseButtonPressed(rl.MouseRightButton) {
+	if rl.IsMouseButtonPressed(rl.KeyZero) {
 		fmt.Printf("(%d, %d)\n", mouseX, mouseY)
 		fmt.Printf("Map coord : {%d, %d}\n", currentMapCoord.X, currentMapCoord.Y)
 		fmt.Printf("Player upgrade points : %d\n", _maps[currentMapCoord].CurrPlayer.UpgradePoint)
@@ -366,23 +369,23 @@ func main() {
 	var bagMenuMargin int32 = 150
 	var bagMenuWidth int32 = MAP_SIZE - 2 * MAP_BORDER_SIZE - bagMenuMargin*2
 
-	// var item ym.Item
-	// item.Init(250, 250, ym.WATER_BOOTS, false)
-	// _maps[currentMapCoord].AddItem(item)
-	// item.Init(450, 250, ym.HEART_OF_STEEL, false)
-	// _maps[currentMapCoord].AddItem(item)
-	// item.Init(250, 450, ym.TURBO_REACTOR, false)
-	// _maps[currentMapCoord].AddItem(item)
-	// item.Init(450, 450, ym.FIRE_HELMET, false)
-	// _maps[currentMapCoord].AddItem(item)
-	// item.Init(250, 650, ym.INVISIBLE_CAPE, false)
-	// _maps[currentMapCoord].AddItem(item)
-	// item.Init(450, 650, ym.ABUNDANT_PURSE, false)
-	// _maps[currentMapCoord].AddItem(item)
-	// item.Init(650, 250, ym.TRIFORCE_LOCKET, false)
-	// _maps[currentMapCoord].AddItem(item)
-	// item.Init(650, 450, ym.GOLDEN_CLOVER, false)
-	// _maps[currentMapCoord].AddItem(item)
+	var item ym.Item
+	item.Init(250, 250, ym.WATER_BOOTS, false)
+	_maps[currentMapCoord].AddItem(item)
+	item.Init(450, 250, ym.HEART_OF_STEEL, false)
+	_maps[currentMapCoord].AddItem(item)
+	item.Init(250, 450, ym.TURBO_REACTOR, false)
+	_maps[currentMapCoord].AddItem(item)
+	item.Init(450, 450, ym.FIRE_HELMET, false)
+	_maps[currentMapCoord].AddItem(item)
+	item.Init(250, 650, ym.INVISIBLE_CAPE, false)
+	_maps[currentMapCoord].AddItem(item)
+	item.Init(450, 650, ym.ABUNDANT_PURSE, false)
+	_maps[currentMapCoord].AddItem(item)
+	item.Init(650, 250, ym.TRIFORCE_LOCKET, false)
+	_maps[currentMapCoord].AddItem(item)
+	item.Init(650, 450, ym.GOLDEN_CLOVER, false)
+	_maps[currentMapCoord].AddItem(item)
 	
 	fmt.Println("Ymaets")
 	rl.InitWindow(_maps[currentMapCoord].Width + MENU_SIZE, _maps[currentMapCoord].Height, "Ymaets")
@@ -436,6 +439,10 @@ func main() {
 					_maps[currentMapCoord].ShotMove(&index)
 					_maps[currentMapCoord].ShotCheckMoveCollision(&index)
 				}
+
+				// Spells
+				_maps[currentMapCoord].TriggerSpells()
+				_maps[currentMapCoord].HandleSpells()
 				
 				// Monsters
 				for index = 0; index < _maps[currentMapCoord].MonstersCount; index++ {
@@ -471,9 +478,9 @@ func main() {
 					_maps[currentMapCoord].PlayerDraw()
 				}
 
-				// Player on telep
+				// Player on stairs
 				if _maps[currentMapCoord].IsPlayerOnTeleporter(ym.STAIRS) {
-					if rl.IsKeyPressed(rl.KeyEnter) {
+					if rl.IsKeyPressed(rl.KeyEnter) || rl.IsKeyPressed(rl.KeyKpEnter) {
 						_maps[currentMapCoord].CurrPlayer.X = MAP_SIZE - 50
 						_maps[currentMapCoord].CurrPlayer.Y = MAP_SIZE - 50
 						_maps[currentMapCoord].CurrPlayer.Ori = ym.NORTH
@@ -488,8 +495,9 @@ func main() {
 				// Player on shop
 				if _maps[currentMapCoord].IsPlayerOnTeleporter(ym.SHOP) {
 					util.ShowEnterKey(_maps[currentMapCoord].Teleporters[ym.SHOP].X + ym.SBS + 13, _maps[currentMapCoord].Teleporters[ym.SHOP].Y + 5)
-					if rl.IsKeyPressed(rl.KeyEnter) {
+					if rl.IsKeyPressed(rl.KeyEnter) || rl.IsKeyPressed(rl.KeyKpEnter) {
 						_maps[currentMapCoord].ResetTimeCounters()
+						_maps[currentMapCoord].ShotsCount = 0
 						_maps[SHOP_COORDS].CurrPlayer = _maps[currentMapCoord].CurrPlayer
 						_maps[SHOP_COORDS].CurrPlayer.X = MAP_SIZE / 2 - ym.PBS / 2 + MAP_BORDER_SIZE / 2
 						_maps[SHOP_COORDS].CurrPlayer.Y = MAP_SIZE / 2 - ym.PBS / 2 + MAP_BORDER_SIZE / 2 + 250
@@ -509,7 +517,7 @@ func main() {
 				// Player on Return Stage teleporter
 				if _maps[currentMapCoord].IsPlayerOnTeleporter(ym.RETURN_STAGE) {
 					util.ShowEnterKey(_maps[currentMapCoord].Teleporters[ym.RETURN_STAGE].X + ym.SBS + 13, _maps[currentMapCoord].Teleporters[ym.RETURN_STAGE].Y + 5)
-					if rl.IsKeyPressed(rl.KeyEnter) {
+					if rl.IsKeyPressed(rl.KeyEnter) || rl.IsKeyPressed(rl.KeyKpEnter) {
 						currentMapCoord = _maps[SHOP_COORDS].Coords
 						_maps[SHOP_COORDS].CurrPlayer.X = _maps[currentMapCoord].CurrPlayer.X
 						_maps[SHOP_COORDS].CurrPlayer.Y = _maps[currentMapCoord].CurrPlayer.Y
@@ -530,7 +538,7 @@ func main() {
 				if gameState == BAG_SCREEN {
 					bagMenu.HandleFocus()
 					bagMenu.Draw()
-					if rl.IsKeyPressed(rl.KeyBackspace) {
+					if rl.IsKeyPressed(rl.KeyBackspace) || rl.IsKeyPressed(rl.KeyEscape) {
 						gameState = GAME_SCREEN
 					}
 				}

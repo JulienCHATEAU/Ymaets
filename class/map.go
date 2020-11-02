@@ -418,9 +418,9 @@ func (_map *Map) PlayerMove() Orientation {
 }
 
 func (_map *Map) PlayerOri(mouseX, mouseY int32) {
-	// if mouseX > 0 && mouseX < _map.Width && mouseY > 0 && mouseY < _map.Height {
-	// 	_map.CurrPlayer.SetOriFromMouse(mouseX, mouseY)
-	// }
+	if mouseX > 0 && mouseX < _map.Width && mouseY > 0 && mouseY < _map.Height {
+		_map.CurrPlayer.SetOriFromMouse(mouseX, mouseY)
+	}
 	if rl.IsKeyDown(_map.CurrPlayer.Ori_keys[0]) {
 		_map.CurrPlayer.Ori = EAST;
 	}
@@ -559,7 +559,7 @@ func (_map *Map) PlayerOnItem() {
 					if canTakeItem {
 						util.ShowEnterKey(_map.Items[i].X + IBS + 13, _map.Items[i].Y + 5)
 					}
-					if rl.IsKeyPressed(rl.KeyEnter) {
+					if rl.IsKeyPressed(rl.KeyEnter) || rl.IsKeyPressed(rl.KeyKpEnter) {
 						if canTakeItem {
 							if _map.Items[i].OnSale {
 								_map.CurrPlayer.UseMoney(price)
@@ -573,6 +573,16 @@ func (_map *Map) PlayerOnItem() {
 			}
 			break
 		}
+	}
+}
+
+func (_map *Map) TriggerSpells() {
+	_map.CurrPlayer.TriggerSpells()
+}
+
+func (_map *Map) HandleSpells() {
+	for i, _ := range _map.CurrPlayer.Elem.Spells {
+		_map.CurrPlayer.Elem.Spells[i].ApplyEffect(_map)
 	}
 }
 
@@ -600,27 +610,9 @@ func (_map *Map) CoinsDraw() {
 }
 
 func (_map *Map) ShotMove(index *int32) {
-	if _map.Shots[*index].TravelDist >= _map.Shots[*index].Range {
+	var shouldBeRemoved bool = _map.Shots[*index].Move()
+	if shouldBeRemoved {
 		_map.removeShot(index)
-		return
-	}
-	_map.Shots[*index].TravelDist += _map.Shots[*index].Speed
-	switch _map.Shots[*index].Ori {
-	case NORTH:
-		_map.Shots[*index].Y -= _map.Shots[*index].Speed
-		break;
-
-	case SOUTH:
-		_map.Shots[*index].Y += _map.Shots[*index].Speed
-		break;
-
-	case EAST:
-		_map.Shots[*index].X += _map.Shots[*index].Speed		
-		break;
-
-	case WEST:
-		_map.Shots[*index].X -= _map.Shots[*index].Speed		
-		break;
 	}
 }
 
@@ -690,18 +682,7 @@ func (_map *Map) ShotCheckMoveCollision(index *int32) {
 			if rl.CheckCollisionCircleRec(center, radius, hitbox) {
 				if _map.Shots[*index].Owner != MONSTER {
 					var damage int32 = util.GetDamage(_map.Shots[*index], _map.Shots[*index].BaseDamage, _map.Monsters[i])
-					fmt.Print("To monster : ")
-					fmt.Println(_map.Monsters[i].Stats)
-					fmt.Println(damage)
-					if r1.Int31() % 100 < _map.CurrPlayer.Stats.CritRate {
-						damage += damage * 50 / 100
-						_map.Monsters[i].Animations.Values[CRIT_DAMAGE] = 350
-						if _map.CurrPlayer.Settings[MONEY_CRIT_BONUS] {
-							_map.CurrPlayer.Money += 5
-						}
-					}
-					_map.Monsters[i].Aggressive = true
-					_map.Monsters[i].TakeDamage(damage)
+					_map.Monsters[i].HandleDamageTaken(damage, _map.CurrPlayer)
 					if _map.Monsters[i].IsDead() {
 						_map.Monsters[i].SpreadLoots(_map)
 						_map.CurrPlayer.AddExperience(_map.Monsters[i].GetExperience())
