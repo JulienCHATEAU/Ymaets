@@ -445,15 +445,18 @@ func main() {
 				_maps[currentMapCoord].HandleSpells()
 				
 				// Monsters
+				var isPlayerFurtive bool = true
 				for index = 0; index < _maps[currentMapCoord].MonstersCount; index++ {
 					savedX = _maps[currentMapCoord].Monsters[index].X
 					savedY = _maps[currentMapCoord].Monsters[index].Y
 					_maps[currentMapCoord].Monsters[index].Draw()
-					_maps[currentMapCoord].MonsterMove(index)
+					isPlayerFurtive = _maps[currentMapCoord].MonsterMove(index) && isPlayerFurtive
 					_maps[currentMapCoord].MonsterCheckMoveCollision(&index, savedX, savedY)
 				}
+				_maps[currentMapCoord].CurrPlayer.Settings[ym.IS_FURTIVE] = isPlayerFurtive
 	
 				// Player and map change
+				_maps[currentMapCoord].PlayerHandleEffects()
 				if gameState == GAME_SCREEN {
 					savedX = _maps[currentMapCoord].CurrPlayer.X
 					savedY = _maps[currentMapCoord].CurrPlayer.Y

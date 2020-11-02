@@ -294,7 +294,8 @@ func (_map *Map) DrawMenu(size, borderSize, currentStage int32) {
 	util.ShowClassicKey(_map.Width + 95, textStarting + 50 * textCount, "E")
 }
 
-func (_map *Map) MonsterMove(index int32) {
+func (_map *Map) MonsterMove(index int32) bool {
+	var isPlayerFurtive bool 
 	if _map.Monsters[index].Aggressive && util.PointsDistance(_map.Monsters[index].X, _map.Monsters[index].Y, _map.CurrPlayer.X, _map.CurrPlayer.Y) <= _map.Monsters[index].AggroDist - float64(_map.CurrPlayer.Stats.Furtivity) {
 		if !_map.Monsters[index].Settings[PLAYER_NEAR] {
 			_map.Monsters[index].Settings[PLAYER_NEAR] = true
@@ -305,12 +306,13 @@ func (_map *Map) MonsterMove(index int32) {
 		if _map.Monsters[index].HasCanon && _map.Monsters[index].Animations.Values[FIRE_COOLDOWN] == 0 {
 			_map.Monsters[index].Fire(_map)
 		}
-		_map.CurrPlayer.Settings[IS_FURTIVE] = false
+		isPlayerFurtive = false
 	} else {
 		_map.Monsters[index].FindSeat(_map)
 		_map.Monsters[index].Settings[PLAYER_NEAR] = false
-		_map.CurrPlayer.Settings[IS_FURTIVE] = true
+		isPlayerFurtive = true
 	}
+	return isPlayerFurtive
 }
 
 func (_map *Map) MonsterCheckMoveCollision(index *int32, savedX, savedY int32) {
@@ -418,9 +420,9 @@ func (_map *Map) PlayerMove() Orientation {
 }
 
 func (_map *Map) PlayerOri(mouseX, mouseY int32) {
-	if mouseX > 0 && mouseX < _map.Width && mouseY > 0 && mouseY < _map.Height {
-		_map.CurrPlayer.SetOriFromMouse(mouseX, mouseY)
-	}
+	// if mouseX > 0 && mouseX < _map.Width && mouseY > 0 && mouseY < _map.Height {
+	// 	_map.CurrPlayer.SetOriFromMouse(mouseX, mouseY)
+	// }
 	if rl.IsKeyDown(_map.CurrPlayer.Ori_keys[0]) {
 		_map.CurrPlayer.Ori = EAST;
 	}
@@ -510,11 +512,6 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 		}
 	}
 
-	_map.CurrPlayer.HandleWaterBootsSpeed()
-	_map.CurrPlayer.HandleFireHelmetRange()
-	_map.CurrPlayer.HandleInvisibleCapeSpeed()
-	_map.CurrPlayer.HandleInvisibleCapeRange()
-
 	for index = 0; index < _map.CoinsCount; index++ {
 		center, radius = _map.Coins[index].GetHitbox()
 		if rl.CheckCollisionCircleRec(center, radius, hitbox) {
@@ -540,6 +537,13 @@ func (_map *Map) PlayerCheckMoveCollision(savedX, savedY int32) {
 			return
 		}
 	}
+}
+
+func (_map *Map) PlayerHandleEffects() {
+	_map.CurrPlayer.HandleWaterBootsSpeed()
+	_map.CurrPlayer.HandleFireHelmetRange()
+	_map.CurrPlayer.HandleInvisibleCapeSpeed()
+	_map.CurrPlayer.HandleInvisibleCapeRange()
 }
 
 func (_map *Map) PlayerOnItem() {

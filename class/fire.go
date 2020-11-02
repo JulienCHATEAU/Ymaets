@@ -2,7 +2,7 @@ package class
 
 import (
 	"github.com/gen2brain/raylib-go/raylib"
-	"fmt"
+	// "fmt"
 	// "time"
 )
 
@@ -15,8 +15,8 @@ func InitFire(e map[string]Element) {
 	var fireClassicSpells []Spell = make([]Spell, 1)
 
 	// Spark
-	var animFunctions	map[int32]AnimFunction = make(map[int32]AnimFunction)
-	animFunctions[CORE_ANIMATION] = func(remainingTime int32, spell *Spell) {
+	var sparkAnimFunctions map[int32]AnimFunction = make(map[int32]AnimFunction)
+	sparkAnimFunctions[CORE_ANIMATION] = func(remainingTime int32, spell *Spell) {
 		shot := spell.SpellShot
 		var delay int32 = 20
 		if remainingTime % delay > delay/2 {
@@ -35,7 +35,7 @@ func InitFire(e map[string]Element) {
 		rl.DrawCircle(shot.X+1, shot.Y+1, float32(shot.Width-2), rl.Red);
 		rl.DrawCircle(shot.X+2, shot.Y+1, float32(shot.Width-3), rl.Black);
 		DrawSparkBack(shot.X, shot.Y, shot.Width, shot.Height, shot.Ori)
-	}, animFunctions)
+	}, sparkAnimFunctions)
 	
 
 	/* Fire Polyvalent spells */
@@ -46,7 +46,7 @@ func InitFire(e map[string]Element) {
 		
 	}, func(spell *Spell) {
 		
-	}, animFunctions)
+	}, sparkAnimFunctions)
 
 
 	/* Fire Ultimate spells */
@@ -57,7 +57,7 @@ func InitFire(e map[string]Element) {
 
 	}, func(spell *Spell) {
 		
-	}, animFunctions)
+	}, sparkAnimFunctions)
 
 	// Fire default spell deck
 	fireElem.Spells[CLASSIC] = fireClassicSpells[0]

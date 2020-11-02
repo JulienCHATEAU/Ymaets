@@ -225,7 +225,9 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 		player.Money = 0
 		player.Move_keys = [4]int32{rl.KeyD, rl.KeyA, rl.KeyW, rl.KeyS}
 		player.Ori_keys = [4]int32{rl.KeyRight, rl.KeyLeft, rl.KeyUp, rl.KeyDown}
-		player.Spell_keys = [3]int32{rl.MouseLeftButton, rl.MouseRightButton, rl.MouseMiddleButton}
+		// player.Spell_keys = [3]int32{rl.MouseLeftButton, rl.MouseRightButton, rl.MouseMiddleButton}
+		// player.Spell_keys = [3]int32{rl.KeyOne, rl.KeyTwo, rl.KeyThree}
+		player.Spell_keys = [3]int32{rl.KeyRightControl, rl.KeyKp0, rl.KeyLeftShift}
 		player.Color = rl.Blue
 		player.Elem = GetDefaultElement("Fire")
 		player.Animations.Init(PTC)
@@ -238,7 +240,8 @@ func (player *Player) Init(x, y int32, ori Orientation) {
 
 func (player *Player) TriggerSpells() {
 	for i, spell := range player.Elem.Spells {
-		if rl.IsMouseButtonReleased(player.Spell_keys[i]) {
+		// if rl.IsMouseButtonReleased(player.Spell_keys[i]) {
+		if rl.IsKeyReleased(player.Spell_keys[i]) {
 			fmt.Println(spell.Name, "is cast")
 			player.Elem.Spells[i].Trigger(player)
 		}
@@ -446,6 +449,13 @@ func (player *Player) addSpeedOnCondition(buff_unlocked, cond, buff_applied Sett
 				player.Stats.Speed -= value
 			}
 		}
+	} else if player.Settings[buff_applied] {
+		player.Settings[buff_applied] = false
+		player.Stats.MaxSpeed -= value
+		player.Stats.Speed -= value
+		if player.Stats.Speed < 0 {
+			player.Stats.Speed = 0
+		}
 	}
 }
 
@@ -461,15 +471,21 @@ func (player *Player) addRangeOnCondition(buff_unlocked, cond, buff_applied Sett
 	if player.Settings[buff_unlocked] {
 		if player.Settings[cond] {
 			if !player.Settings[buff_applied] {
+				fmt.Println("add buff")
 				player.Settings[buff_applied] = true
 				player.Stats.Range += value
 			}
 		} else {
 			if player.Settings[buff_applied] {
+				fmt.Println("remove buff")
 				player.Settings[buff_applied] = false
 				player.Stats.Range -= value
 			}
 		}
+	} else if player.Settings[buff_applied] {
+		fmt.Println("remove buff")
+		player.Settings[buff_applied] = false
+		player.Stats.Range -= value
 	}
 }
 
